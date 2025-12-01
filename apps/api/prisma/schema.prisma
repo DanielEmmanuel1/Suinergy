@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User and Account Management
+model User {
+  id            String   @id @default(cuid())
+  walletAddress String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  deposits      Deposit[]
+  loyaltyScore  LoyaltyScore?
+  
+  @@index([walletAddress])
+}
+
+// Deposit Tracking
+model Deposit {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  txHash          String   @unique
+  amount          String   // Store as string to handle large numbers
+  token           String   // SUI or USDC
+  strategyId      String?
+  
+  depositedAt     DateTime @default(now())
+  withdrawnAt     DateTime?
+  
+  @@index([userId])
+  @@index([txHash])
+}
+
+// Strategy Performance Tracking
+model Strategy {
+  id              String   @id @default(cuid())
+  name            String
+  protocol        String
+  contractAddress String   @unique
+  
+  currentApy      Float
+  tvl             String
+  riskScore       Int      // 1-10
+  
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  apyHistory      ApyHistory[]
+  
+  @@index([protocol])
+  @@index([isActive])
+}
+
+// Historical APY Data
+model ApyHistory {
+  id          String   @id @default(cuid())
+  strategyId  String
+  strategy    Strategy @relation(fields: [strategyId], references: [id])
+  
+  apy         Float
+  tvl         String
+  timestamp   DateTime @default(now())
+  
+  @@index([strategyId, timestamp])
+}
+
+// Loyalty Scoring
+model LoyaltyScore {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  
+  score           Int      @default(0)
+  tier            String   @default("Bronze") // Bronze, Silver, Gold, Platinum
+  multiplier      Float    @default(1.0)
+  
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// On-chain Event Indexing
+model IndexedEvent {
+  id              String   @id @default(cuid())
+  eventType       String
+  txHash          String
+  checkpoint      String
+  timestamp       DateTime
+  
+  eventData       Json
+  processed       Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([eventType])
+  @@index([processed])
+  @@index([checkpoint])
+}
+
+// Performance Metrics Cache
+model MetricsCache {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  expiresAt   DateTime
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([key])
+  @@index([expiresAt])
+}

@@ -16,7 +16,7 @@ interface PortfolioChartProps {
 export function PortfolioChart({ data, height = 300 }: PortfolioChartProps) {
     return (
         <ResponsiveContainer width="100%" height={height}>
-            <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <AreaChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                     <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#1565c0" stopOpacity={0.8} />

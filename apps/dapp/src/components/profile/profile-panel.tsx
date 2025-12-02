@@ -112,9 +112,9 @@ export function ProfilePanel() {
                 tabClassName="bg-white"
                 contentClassName="bg-white"
             >
-                <div className="text-left mb-12">
-                    <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6 font-heading">Account Profile</h2>
-                    <p className="text-lg text-muted-foreground max-w-2xl">
+                <div className="text-left mb-8 sm:mb-12">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 sm:mb-6 font-heading">Account Profile</h2>
+                    <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl">
                         Your account overview and activity history
                     </p>
                 </div>
@@ -144,7 +144,7 @@ export function ProfilePanel() {
                 </Card>
 
                 {/* Portfolio Overview */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <Card className="border-black/10">
                         <CardHeader>
                             <CardTitle className="text-sm text-muted-foreground">Total Deposits</CardTitle>
@@ -203,15 +203,15 @@ export function ProfilePanel() {
                             {mockProfile.totalAllocations.map((allocation, index) => (
                                 <div
                                     key={index}
-                                    className="flex items-center justify-between p-4 rounded-xl bg-[#f4f3f0] border border-black/10"
+                                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl bg-[#f4f3f0] border border-black/10"
                                 >
-                                    <div>
-                                        <div className="font-semibold text-black">{allocation.strategy}</div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-semibold text-black break-words">{allocation.strategy}</div>
                                         <div className="text-sm text-muted-foreground">
                                             {formatCurrency(allocation.amount)}
                                         </div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="text-left sm:text-right flex-shrink-0">
                                         <div className="font-semibold text-transparent bg-clip-text bg-brand-gradient">{allocation.apy}% APY</div>
                                         <Badge variant="default" className="mt-1">
                                             Active

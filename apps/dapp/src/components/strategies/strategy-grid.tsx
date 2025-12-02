@@ -145,7 +145,7 @@ export function StrategyGrid({ strategies }: StrategyGridProps) {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                             <Button
                                 className="flex-1"
                                 onClick={() => handleDeposit(strategy.id)}

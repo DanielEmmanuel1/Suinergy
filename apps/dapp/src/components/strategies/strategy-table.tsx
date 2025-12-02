@@ -51,26 +51,26 @@ export function StrategyTable({ strategies }: StrategyTableProps) {
                 <table className="w-full">
                     <thead className="bg-[#f4f3f0] border-b border-[#000000]/10">
                         <tr>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-[#000000]">Strategy</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-[#000000]">Asset</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-[#000000]">APY</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-[#000000]">APR</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-[#000000]">TVL</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-[#000000]">Remaining</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-[#000000]">Risk</th>
-                            <th className="px-6 py-4 text-right text-sm font-semibold text-[#000000]">Action</th>
+                            <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#000000]">Strategy</th>
+                            <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#000000]">Asset</th>
+                            <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#000000]">APY</th>
+                            <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#000000] hidden md:table-cell">APR</th>
+                            <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#000000] hidden lg:table-cell">TVL</th>
+                            <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#000000] hidden lg:table-cell">Remaining</th>
+                            <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#000000]">Risk</th>
+                            <th className="px-4 sm:px-6 py-4 text-right text-xs sm:text-sm font-semibold text-[#000000]">Action</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-[#000000]/10">
                         {strategies.map((strategy) => (
                             <tr key={strategy.id} className="hover:bg-[#f4f3f0]/50 transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className="font-medium text-[#000000]">{strategy.name}</div>
+                                <td className="px-4 sm:px-6 py-4">
+                                    <div className="font-medium text-[#000000] text-sm sm:text-base">{strategy.name}</div>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-4 sm:px-6 py-4">
                                     <Badge variant="secondary">{strategy.asset}</Badge>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-4 sm:px-6 py-4">
                                     <div className="flex items-center gap-2">
                                         <span className="font-semibold text-transparent bg-clip-text bg-brand-gradient">{strategy.apy}%</span>
                                         {strategy.apyChange > 0 ? (
@@ -86,16 +86,16 @@ export function StrategyTable({ strategies }: StrategyTableProps) {
                                         )}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-4 sm:px-6 py-4 hidden md:table-cell">
                                     <span className="text-[#000000]">{strategy.apr}%</span>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-4 sm:px-6 py-4 hidden lg:table-cell">
                                     <span className="text-[#000000]">{formatCurrency(strategy.tvl)}</span>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-4 sm:px-6 py-4 hidden lg:table-cell">
                                     <span className="text-[#000000]">{formatCurrency(strategy.remaining)}</span>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-4 sm:px-6 py-4">
                                     <Badge
                                         variant={
                                             strategy.risk === 'low'
@@ -108,11 +108,12 @@ export function StrategyTable({ strategies }: StrategyTableProps) {
                                         {strategy.risk}
                                     </Badge>
                                 </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex items-center gap-2 justify-end">
+                                <td className="px-4 sm:px-6 py-4 text-right">
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 justify-end">
                                         <Button
                                             size="sm"
                                             onClick={() => handleDeposit(strategy.id)}
+                                            className="w-full sm:w-auto"
                                         >
                                             Deposit
                                         </Button>
@@ -120,6 +121,7 @@ export function StrategyTable({ strategies }: StrategyTableProps) {
                                             size="sm"
                                             variant="outline"
                                             asChild
+                                            className="w-full sm:w-auto"
                                         >
                                             <Link href={`/strategies/${strategy.id}`}>
                                                 View Details

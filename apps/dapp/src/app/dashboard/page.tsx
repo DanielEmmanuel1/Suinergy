@@ -72,15 +72,15 @@ export default function DashboardPage() {
                     tabClassName="bg-white"
                     contentClassName="bg-white"
                 >
-                    <div className="text-left mb-8">
-                        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-2 font-heading">Portfolio Overview</h1>
-                        <p className="text-lg text-muted-foreground max-w-2xl">
+                    <div className="text-left mb-6 sm:mb-8">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-2 font-heading">Portfolio Overview</h1>
+                        <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl">
                             Track your yield allocations, earnings, and portfolio performance
                         </p>
                     </div>
 
                     {/* Main Stats Grid */}
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <Card className="bg-brand-gradient border-transparent">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-sm text-white/80 flex items-center gap-2">
@@ -167,11 +167,13 @@ export default function DashboardPage() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <PortfolioChart data={mockPortfolioData} height={250} />
+                            <div className="w-full h-[200px] sm:h-[250px] md:h-[300px]">
+                                <PortfolioChart data={mockPortfolioData} height={250} />
+                            </div>
                         </CardContent>
                     </Card>
 
-                    <div className="grid lg:grid-cols-2 gap-6 mb-6">
+                    <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
                         {/* Active Positions */}
                         <Card className="border-black/10">
                             <CardHeader>
@@ -302,7 +304,7 @@ export default function DashboardPage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                                 <div className="text-center p-4 rounded-lg bg-[#f4f3f0]">
                                     <div className="text-2xl font-bold text-black mb-1">${totalEarned.toFixed(2)}</div>
                                     <div className="text-sm text-muted-foreground">Total Earned</div>
@@ -338,7 +340,7 @@ export default function DashboardPage() {
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div className="p-4 rounded-lg bg-brand-gradient text-white">
                                         <div className="text-sm text-white/80 mb-1">$SYN Balance</div>
                                         <div className="text-2xl font-bold">{rewards.synBalance.toLocaleString()}</div>
@@ -364,7 +366,7 @@ export default function DashboardPage() {
                             <CardTitle>Quick Actions</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                 <Link
                                     href="/strategies"
                                     className="p-4 rounded-xl bg-brand-gradient text-white hover:opacity-90 transition-opacity"

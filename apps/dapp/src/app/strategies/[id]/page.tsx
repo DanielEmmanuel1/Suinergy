@@ -256,24 +256,27 @@ export default function StrategyDetailPage() {
                 </div>
 
                 {/* Header */}
-                <div className="flex items-start justify-between">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-heading">{strategy.name}</h1>
-                            <Badge variant="secondary">{strategy.asset}</Badge>
-                            <Badge
-                                variant={
-                                    strategy.risk === 'low'
-                                        ? 'default'
-                                        : strategy.risk === 'medium'
-                                            ? 'secondary'
-                                            : 'destructive'
-                                }
-                            >
-                                {strategy.risk}
-                            </Badge>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-heading break-words">{strategy.name}</h1>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant="secondary" className="whitespace-nowrap">{strategy.asset}</Badge>
+                                <Badge
+                                    variant={
+                                        strategy.risk === 'low'
+                                            ? 'default'
+                                            : strategy.risk === 'medium'
+                                                ? 'secondary'
+                                                : 'destructive'
+                                    }
+                                    className="whitespace-nowrap"
+                                >
+                                    {strategy.risk}
+                                </Badge>
+                            </div>
                         </div>
-                        <p className="text-lg text-muted-foreground max-w-3xl">
+                        <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-3xl">
                             {strategy.description}
                         </p>
                     </div>
@@ -281,6 +284,7 @@ export default function StrategyDetailPage() {
                         variant="outline"
                         size="icon"
                         onClick={() => router.push('/strategies')}
+                        className="self-start sm:self-auto flex-shrink-0"
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
@@ -293,12 +297,12 @@ export default function StrategyDetailPage() {
                         <TabsTrigger value="position">My Position</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="overview" className="space-y-6 mt-6">
-                        <div className="grid lg:grid-cols-3 gap-6">
+                    <TabsContent value="overview" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
+                        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
                             {/* Left Column - Metrics and Charts */}
                             <div className="lg:col-span-2 space-y-6">
                                 {/* Key Metrics */}
-                                <div className="grid md:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                                     <Card className="border-black/10">
                                         <CardHeader className="pb-2">
                                             <CardTitle className="text-xs text-muted-foreground">Total Supplied</CardTitle>
@@ -337,9 +341,9 @@ export default function StrategyDetailPage() {
                                 {/* Supply APY Chart */}
                                 <Card className="border-black/10">
                                     <CardHeader>
-                                        <div className="flex items-center justify-between">
-                                            <CardTitle>Supply APY / Total Supply</CardTitle>
-                                            <div className="flex gap-2">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                            <CardTitle className="text-base sm:text-lg">Supply APY / Total Supply</CardTitle>
+                                            <div className="flex gap-2 flex-wrap">
                                                 <Button 
                                                     variant={timePeriod === '7D' ? 'default' : 'outline'} 
                                                     size="sm"
@@ -368,7 +372,7 @@ export default function StrategyDetailPage() {
                                         </div>
                                     </CardHeader>
                                     <CardContent>
-                                        <ResponsiveContainer width="100%" height={300}>
+                                        <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                                             <LineChart data={apyChartData}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
                                                 <XAxis 
@@ -427,14 +431,14 @@ export default function StrategyDetailPage() {
                                 {/* Interest Generated Chart */}
                                 <Card className="border-black/10">
                                     <CardHeader>
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <CardTitle>Interest Generated / Vault Share Price</CardTitle>
-                                                <p className="text-sm text-muted-foreground mt-1">
+                                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                            <div className="flex-1">
+                                                <CardTitle className="text-base sm:text-lg">Interest Generated / Vault Share Price</CardTitle>
+                                                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                                                     Total interest generated across all users in this vault.
                                                 </p>
                                             </div>
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 flex-wrap">
                                                 <Button 
                                                     variant={timePeriod === '7D' ? 'default' : 'outline'} 
                                                     size="sm"
@@ -468,7 +472,7 @@ export default function StrategyDetailPage() {
                                                 +{formatCurrency(strategy.totalInterestGenerated)}
                                             </div>
                                         </div>
-                                        <ResponsiveContainer width="100%" height={300}>
+                                        <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                                             <AreaChart data={interestChartData}>
                                                 <defs>
                                                     <linearGradient id="interestGradient" x1="0" y1="0" x2="0" y2="1">
@@ -512,7 +516,7 @@ export default function StrategyDetailPage() {
                                                 />
                                             </AreaChart>
                                         </ResponsiveContainer>
-                                        <div className="grid grid-cols-4 gap-4 mt-4">
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-4">
                                             <div>
                                                 <div className="text-xs text-muted-foreground mb-1">1D Growth</div>
                                                 <div className="text-sm font-semibold text-black">+{formatCurrency(4270)}</div>
@@ -539,8 +543,8 @@ export default function StrategyDetailPage() {
                                         <CardTitle>Allocation Breakdown</CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full">
+                                        <div className="overflow-x-auto -mx-4 sm:mx-0">
+                                            <table className="w-full min-w-[600px] sm:min-w-0">
                                                 <thead className="bg-[#f4f3f0] border-b border-black/10">
                                                     <tr>
                                                         <th className="px-4 py-3 text-left text-sm font-semibold text-black">Market</th>
@@ -601,14 +605,16 @@ export default function StrategyDetailPage() {
                                                 <span className="text-sm text-muted-foreground">Amount</span>
                                                 <span className="text-xs text-muted-foreground">Balance: 0 {strategy.asset}</span>
                                             </div>
-                                            <div className="flex gap-2">
+                                            <div className="flex flex-col sm:flex-row gap-2">
                                                 <input
                                                     type="number"
                                                     placeholder="0"
-                                                    className="flex-1 px-4 py-3 rounded-lg border border-black/10 bg-white text-black"
+                                                    className="flex-1 px-4 py-3 rounded-lg border border-black/10 bg-white text-black text-sm sm:text-base"
                                                 />
-                                                <Button variant="outline" size="sm">Half</Button>
-                                                <Button variant="outline" size="sm">Max</Button>
+                                                <div className="flex gap-2">
+                                                    <Button variant="outline" size="sm" className="flex-1 sm:flex-none">Half</Button>
+                                                    <Button variant="outline" size="sm" className="flex-1 sm:flex-none">Max</Button>
+                                                </div>
                                             </div>
                                         </div>
                                         <Button 
@@ -681,7 +687,7 @@ export default function StrategyDetailPage() {
                                         <CardTitle>Your Position</CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="grid md:grid-cols-3 gap-6">
+                                        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                                             <div>
                                                 <div className="text-sm text-muted-foreground mb-1">Deposited</div>
                                                 <div className="text-2xl font-bold text-black">{formatCurrency(userPosition.amount)}</div>

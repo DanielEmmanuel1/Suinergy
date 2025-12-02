@@ -101,30 +101,30 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
                     {transactions.map((tx) => (
                         <div
                             key={tx.id}
-                            className="flex items-center justify-between p-4 rounded-lg bg-[#f4f3f0] hover:bg-[#f4f3f0]/80 transition-colors"
+                            className="flex items-center justify-between p-3 sm:p-4 rounded-lg bg-[#f4f3f0] hover:bg-[#f4f3f0]/80 transition-colors"
                         >
-                            <div className="flex items-center gap-3 flex-1">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${getTypeColor(tx.type)}`}>
+                            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${getTypeColor(tx.type)}`}>
                                     {getTypeIcon(tx.type)}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-semibold text-black capitalize">
+                                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                                        <span className="font-semibold text-black capitalize text-sm sm:text-base">
                                             {tx.type}
                                         </span>
                                         {getStatusBadge(tx.status)}
                                     </div>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
                                         <span className="font-medium text-black">
                                             {formatCurrency(tx.amount)} {tx.token}
                                         </span>
                                         {showStrategy && tx.strategyName && (
                                             <>
-                                                <span>•</span>
-                                                <span>{tx.strategyName}</span>
+                                                <span className="hidden sm:inline">•</span>
+                                                <span className="truncate max-w-[150px] sm:max-w-none">{tx.strategyName}</span>
                                             </>
                                         )}
-                                        <span>•</span>
+                                        <span className="hidden sm:inline">•</span>
                                         <span>{formatDistanceToNow(tx.timestamp, { addSuffix: true })}</span>
                                     </div>
                                 </div>

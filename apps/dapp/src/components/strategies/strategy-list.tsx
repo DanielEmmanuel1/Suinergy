@@ -73,14 +73,14 @@ export function StrategyList() {
                 contentClassName="bg-white"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div>
-                        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-2 font-heading">Yield Strategies</h2>
-                        <p className="text-lg text-muted-foreground">
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-2 font-heading">Yield Strategies</h2>
+                        <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
                             Browse and allocate to yield-generating strategies
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>

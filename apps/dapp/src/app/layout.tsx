@@ -21,6 +21,9 @@ const outfit = Outfit({
 export const metadata: Metadata = {
     title: 'Suinergy dApp - Yield Aggregator',
     description: 'Maximize your yields on Sui with intelligent strategy allocation',
+    icons: {
+        icon: '/favicon.ico',
+    },
 };
 
 export default function RootLayout({

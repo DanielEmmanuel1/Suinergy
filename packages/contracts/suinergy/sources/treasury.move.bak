@@ -1,0 +1,65 @@
+module suinergy::treasury {
+    use sui::object::{Self, UID};
+    use sui::coin::{Self, Coin};
+    use sui::balance::{Self, Balance};
+    use sui::tx_context::{Self, TxContext};
+    use sui::transfer;
+
+    /// Treasury object that holds idle funds for a strategy vault
+    /// Owned by the StrategyVault, manages base asset balance
+    public struct Treasury<phantom BaseAsset> has key {
+        id: UID,
+        balance: Balance<BaseAsset>,
+    }
+
+    /// Create a new treasury for a vault
+    public fun new<BaseAsset>(ctx: &mut TxContext): Treasury<BaseAsset> {
+        Treasury<BaseAsset> {
+            id: object::new(ctx),
+            balance: balance::zero(),
+        }
+    }
+
+    /// Deposit funds into treasury
+    public fun deposit<BaseAsset>(
+        treasury: &mut Treasury<BaseAsset>,
+        coin: Coin<BaseAsset>
+    ) {
+        balance::join(&mut treasury.balance, coin::into_balance(coin));
+    }
+
+    /// Withdraw funds from treasury
+    public fun withdraw<BaseAsset>(
+        treasury: &mut Treasury<BaseAsset>,
+        amount: u64,
+        ctx: &mut TxContext
+    ): Coin<BaseAsset> {
+        let withdrawn_balance = balance::split(&mut treasury.balance, amount);
+        coin::from_balance(withdrawn_balance, ctx)
+    }
+
+    /// Get treasury balance
+    public fun balance<BaseAsset>(treasury: &Treasury<BaseAsset>): u64 {
+        balance::value(&treasury.balance)
+    }
+
+    /// Check if treasury has sufficient balance
+    public fun has_sufficient_balance<BaseAsset>(
+        treasury: &Treasury<BaseAsset>,
+        amount: u64
+    ): bool {
+        balance::value(&treasury.balance) >= amount
+    }
+
+    /// Transfer treasury ownership to vault (called during vault initialization)
+    public fun transfer_to_vault<BaseAsset>(
+        treasury: Treasury<BaseAsset>,
+        vault_id: UID
+    ) {
+        // Treasury becomes owned by vault
+        // In Sui, we use transfer::share_object or transfer::transfer
+        // For now, treasury is stored as a field in StrategyVault
+        transfer::transfer(treasury, object::uid_to_address(&vault_id));
+    }
+}
+

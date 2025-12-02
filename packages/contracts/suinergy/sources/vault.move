@@ -6,7 +6,7 @@ module suinergy::vault {
     use sui::transfer;
     use sui::event;
     
-    use suinergy::registry::{ProtocolRegistry, ProtocolConfig};
+    use suinergy::registry::ProtocolConfig;
     use suinergy::position::{Self, UserPosition};
     use suinergy::events;
 
@@ -68,7 +68,7 @@ module suinergy::vault {
 
         events::emit_deposit(tx_context::sender(ctx), object::uid_to_inner(&vault.id), amount, shares);
 
-        position::new(object::uid_to_address(&vault.id), shares, ctx)
+        position::new_user_position(object::uid_to_inner(&vault.id), shares, ctx)
     }
 
     /// Withdraw assets from the vault

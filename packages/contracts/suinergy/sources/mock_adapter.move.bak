@@ -133,6 +133,22 @@ module suinergy::mock_adapter {
         adapter.apy_basis_points
     }
 
+    /// Get position value - implements adapter interface
+    /// Returns current value including simulated yield
+    public fun get_position_value<T>(
+        adapter: &MockAdapter<T>,
+        position_id: ID,
+        clock: &Clock
+    ): u64 {
+        // Update yield to current time
+        let mut temp_adapter = *adapter;
+        update_yield(&mut temp_adapter, clock);
+        
+        // Return total assets including yield
+        // In a real implementation, this would be position-specific
+        balance::value(&adapter.balance) + adapter.accumulated_yield
+    }
+
     /// Get adapter info for view functions
     public fun get_adapter_info<T>(adapter: &MockAdapter<T>, clock: &Clock): AdapterInfo {
         let total_assets = query_balance(adapter, clock);

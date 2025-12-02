@@ -27,39 +27,9 @@ export function useTokenBalances() {
                 }
             }
 
+
             try {
-                // Try to use the on-chain view function first
-                const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID
-                if (packageId) {
-                    try {
-                        const result = await client.devInspectTransactionBlock({
-                            sender: account.address,
-                            transactionBlock: {
-                                kind: 'moveCall',
-                                data: {
-                                    packageId,
-                                    module: 'balance_reader',
-                                    function: 'get_balances',
-                                    arguments: [account.address],
-                                },
-                            },
-                        })
-
-                        const returnValues = result.results?.[0]?.returnValues
-                        if (returnValues && returnValues.length >= 1) {
-                            const balances = returnValues[0]
-                            return {
-                                sui: BigInt(balances[0] || 0),
-                                usdc: BigInt(balances[1] || 0),
-                                usdt: BigInt(balances[2] || 0),
-                            }
-                        }
-                    } catch (error) {
-                        console.warn('Failed to use on-chain balance reader, falling back to RPC', error)
-                    }
-                }
-
-                // Fallback to direct RPC queries
+                // Note: balance_reader module is not deployed, using direct RPC queries
                 const [suiBalance, usdcBalance, usdtBalance] = await Promise.all([
                     client.getBalance({
                         owner: account.address,
@@ -68,20 +38,20 @@ export function useTokenBalances() {
                     // Query USDC if testnet package ID is known
                     process.env.NEXT_PUBLIC_USDC_COIN_TYPE
                         ? client
-                              .getBalance({
-                                  owner: account.address,
-                                  coinType: process.env.NEXT_PUBLIC_USDC_COIN_TYPE,
-                              })
-                              .catch(() => ({ totalBalance: '0' }))
+                            .getBalance({
+                                owner: account.address,
+                                coinType: process.env.NEXT_PUBLIC_USDC_COIN_TYPE,
+                            })
+                            .catch(() => ({ totalBalance: '0' }))
                         : Promise.resolve({ totalBalance: '0' }),
                     // Query USDT if testnet package ID is known
                     process.env.NEXT_PUBLIC_USDT_COIN_TYPE
                         ? client
-                              .getBalance({
-                                  owner: account.address,
-                                  coinType: process.env.NEXT_PUBLIC_USDT_COIN_TYPE,
-                              })
-                              .catch(() => ({ totalBalance: '0' }))
+                            .getBalance({
+                                owner: account.address,
+                                coinType: process.env.NEXT_PUBLIC_USDT_COIN_TYPE,
+                            })
+                            .catch(() => ({ totalBalance: '0' }))
                         : Promise.resolve({ totalBalance: '0' }),
                 ])
 

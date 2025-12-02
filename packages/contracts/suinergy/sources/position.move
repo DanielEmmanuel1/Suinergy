@@ -1,15 +1,65 @@
 module suinergy::position {
-    use sui::object::{Self, UID};
+    use sui::object::{Self, UID, ID};
     use sui::tx_context::TxContext;
 
-    /// Represents a user's position in a specific vault
-    public struct UserPosition has key, store {
+    /// Position object representing funds deployed to an external protocol
+    /// Each position is linked to an adapter that knows how to value it
+    public struct Position has key {
         id: UID,
-        vault_id: address, // The ID of the vault this position belongs to
-        shares: u64,       // The number of shares owned
+        adapter_id: ID, // The adapter that manages this position
+        position_data: vector<u8>, // Opaque data specific to the adapter
     }
 
-    public fun new(vault_id: address, shares: u64, ctx: &mut TxContext): UserPosition {
+    /// Create a new position
+    public fun new(
+        adapter_id: ID,
+        position_data: vector<u8>,
+        ctx: &mut TxContext
+    ): Position {
+        Position {
+            id: object::new(ctx),
+            adapter_id,
+            position_data,
+        }
+    }
+
+    /// Get adapter ID for this position
+    public fun adapter_id(position: &Position): ID {
+        position.adapter_id
+    }
+
+    /// Get position data (opaque to vault, interpreted by adapter)
+    public fun position_data(position: &Position): &vector<u8> {
+        &position.position_data
+    }
+
+    /// Update position data (called by adapter during rebalancing)
+    public fun update_data(
+        position: &mut Position,
+        new_data: vector<u8>
+    ) {
+        position.position_data = new_data;
+    }
+
+    /// Destroy position (called when fully withdrawn)
+    public fun destroy(position: Position) {
+        let Position { id, adapter_id: _, position_data: _ } = position;
+        object::delete(id);
+    }
+
+    /// User Position - receipt token for user's vault shares
+    public struct UserPosition has key, store {
+        id: UID,
+        vault_id: ID,
+        shares: u64,
+    }
+
+    /// Create a new user position
+    public fun new_user_position(
+        vault_id: ID,
+        shares: u64,
+        ctx: &mut TxContext
+    ): UserPosition {
         UserPosition {
             id: object::new(ctx),
             vault_id,
@@ -17,29 +67,19 @@ module suinergy::position {
         }
     }
 
+    /// Get shares from user position
     public fun shares(position: &UserPosition): u64 {
         position.shares
     }
 
-    public fun vault_id(position: &UserPosition): address {
+    /// Get vault ID from user position
+    public fun vault_id(position: &UserPosition): ID {
         position.vault_id
     }
 
+    /// Burn user position (called during withdrawal)
     public fun burn(position: UserPosition) {
         let UserPosition { id, vault_id: _, shares: _ } = position;
         object::delete(id);
-    }
-
-    public fun join(self: &mut UserPosition, other: UserPosition) {
-        let UserPosition { id, vault_id, shares } = other;
-        assert!(self.vault_id == vault_id, 0); // Must be same vault
-        self.shares = self.shares + shares;
-        object::delete(id);
-    }
-
-    public fun split(self: &mut UserPosition, amount: u64, ctx: &mut TxContext): UserPosition {
-        assert!(self.shares >= amount, 0);
-        self.shares = self.shares - amount;
-        new(self.vault_id, amount, ctx)
     }
 }

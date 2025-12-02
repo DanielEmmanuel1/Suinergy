@@ -52,8 +52,24 @@ export function Ecosystem() {
                                 transition={{ duration: 0.4, delay: index * 0.05 }}
                                 className="group relative cursor-pointer"
                             >
-                                <div className="relative bg-[#1a1a1a] p-6 rounded-xl border border-white/5 transition-all group-hover:-translate-y-1 overflow-hidden">
-                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#b92b27] to-[#1565c0] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div 
+                                    className="relative bg-[#1a1a1a] p-6 rounded-xl border-2 border-white/5 transition-all group-hover:-translate-y-1 overflow-visible"
+                                    style={{
+                                        position: 'relative',
+                                    }}
+                                >
+                                    {/* Gradient border overlay - only visible on hover */}
+                                    <div 
+                                        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                                        style={{
+                                            background: 'linear-gradient(to right, #b92b27, #1565c0)',
+                                            padding: '2px',
+                                            margin: '-2px',
+                                            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                                            WebkitMaskComposite: 'xor',
+                                            maskComposite: 'exclude',
+                                        }}
+                                    />
                                 <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <ArrowUpRight className="w-4 h-4 text-transparent bg-clip-text bg-brand-gradient" />
                                 </div>

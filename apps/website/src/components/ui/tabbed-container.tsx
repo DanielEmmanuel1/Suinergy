@@ -25,7 +25,7 @@ export function TabbedContainer({
             <div className="flex items-end relative z-10 -mb-[1px] ml-px">
                 <div className={cn("bg-[#f4f3f0] px-6 py-2 rounded-t-xl border-t border-l border-r border-black/10", tabClassName)}>
                     <span className={cn("text-xs font-bold tracking-wider uppercase font-heading", 
-                        tabClassName?.includes('bg-[#111]') ? "text-white" : "text-black/60"
+                        tabClassName?.includes('bg-[#111]') || tabClassName?.includes('bg-black') || tabClassName?.includes('bg-[#000000]') || tabClassName?.includes('bg-[#000]') ? "text-white" : "text-black/60"
                     )}>
                         {label}
                     </span>

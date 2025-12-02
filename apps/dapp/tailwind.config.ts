@@ -9,6 +9,10 @@ const config: Config = {
     ],
     theme: {
         extend: {
+            fontFamily: {
+                sans: ['var(--font-sans)', 'sans-serif'],
+                heading: ['var(--font-heading)', 'sans-serif'],
+            },
             colors: {
                 border: 'hsl(var(--border))',
                 input: 'hsl(var(--input))',
@@ -16,7 +20,7 @@ const config: Config = {
                 background: 'hsl(var(--background))',
                 foreground: 'hsl(var(--foreground))',
                 primary: {
-                    DEFAULT: '#1055C9',
+                    DEFAULT: '#1565c0', // Deep Blue from gradient (website)
                     foreground: '#FFFFFF',
                 },
                 secondary: {
@@ -32,7 +36,7 @@ const config: Config = {
                     foreground: 'hsl(var(--muted-foreground))',
                 },
                 accent: {
-                    DEFAULT: '#1055C9',
+                    DEFAULT: '#b92b27', // Reddish-brown from gradient (website)
                     foreground: '#FFFFFF',
                 },
                 popover: {
@@ -44,11 +48,9 @@ const config: Config = {
                     foreground: 'hsl(var(--card-foreground))',
                 },
                 brand: {
-                    neutral: '#f4f3f0',
-                    black: '#000000',
-                    white: '#FFFFFF',
-                    blue: '#1055C9',
-                },
+                    start: '#b92b27',
+                    end: '#1565c0',
+                }
             },
             borderRadius: {
                 lg: 'var(--radius)',
@@ -56,10 +58,7 @@ const config: Config = {
                 sm: 'calc(var(--radius) - 4px)',
             },
             backgroundImage: {
-                'gradient-primary': 'linear-gradient(135deg, #1055C9 0%, #000000 100%)',
-                'gradient-secondary': 'linear-gradient(135deg, #f4f3f0 0%, #FFFFFF 100%)',
-                'gradient-accent': 'linear-gradient(135deg, #1055C9 0%, #f4f3f0 100%)',
-                'gradient-radial': 'radial-gradient(circle, #1055C9 0%, #000000 100%)',
+                'brand-gradient': 'linear-gradient(to right, #b92b27, #1565c0)',
             },
             keyframes: {
                 'accordion-down': {
@@ -70,10 +69,15 @@ const config: Config = {
                     from: { height: 'var(--radix-accordion-content-height)' },
                     to: { height: '0' },
                 },
+                'gradient': {
+                    '0%, 100%': { backgroundPosition: '0% 50%' },
+                    '50%': { backgroundPosition: '100% 50%' },
+                },
             },
             animation: {
                 'accordion-down': 'accordion-down 0.2s ease-out',
                 'accordion-up': 'accordion-up 0.2s ease-out',
+                'gradient': 'gradient 3s ease infinite',
             },
         },
     },

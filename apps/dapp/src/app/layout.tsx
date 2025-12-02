@@ -1,10 +1,22 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Bungee, Outfit } from 'next/font/google';
 import './globals.css';
 import '@mysten/dapp-kit/dist/index.css';
 import { Providers } from '@/providers/providers';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
-const inter = Inter({ subsets: ['latin'] });
+const bungee = Bungee({
+    weight: '400',
+    subsets: ['latin'],
+    variable: '--font-heading',
+    display: 'swap',
+});
+
+const outfit = Outfit({
+    subsets: ['latin'],
+    variable: '--font-sans',
+    display: 'swap',
+});
 
 export const metadata: Metadata = {
     title: 'Suinergy dApp - Yield Aggregator',
@@ -17,9 +29,13 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
-            <body className={inter.className}>
-                <Providers>{children}</Providers>
+        <html lang="en" className={`${outfit.variable} ${bungee.variable}`}>
+            <body className="font-sans antialiased bg-[#f4f3f0] text-black">
+                <Providers>
+                    <TooltipProvider>
+                        {children}
+                    </TooltipProvider>
+                </Providers>
             </body>
         </html>
     );

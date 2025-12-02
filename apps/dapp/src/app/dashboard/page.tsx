@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useCurrentAccount } from '@mysten/dapp-kit'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +11,7 @@ import { PortfolioChart } from '@/components/charts/portfolio-chart'
 import { useWalletBalance } from '@/hooks/use-wallet-balance'
 import { useUserPositions } from '@/hooks/use-user-positions'
 import { useRewards } from '@/hooks/use-rewards'
+import { WalletLandingScreen } from '@/components/wallet/wallet-landing-screen'
 import {
     TrendingUp,
     Wallet,
@@ -49,10 +51,16 @@ const mockRecentActivity = [
 ]
 
 export default function DashboardPage() {
+    const currentAccount = useCurrentAccount()
     const { data: balance } = useWalletBalance()
     const { data: positions } = useUserPositions()
     const { data: rewards } = useRewards()
     const [portfolioTimePeriod, setPortfolioTimePeriod] = useState<TimePeriod>('30D')
+
+    // Show landing screen if wallet is not connected
+    if (!currentAccount) {
+        return <WalletLandingScreen />
+    }
 
     const totalAllocated = positions?.reduce((sum, pos) => sum + pos.amount, 0) || 0
     const estimatedAPY = positions?.length

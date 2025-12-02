@@ -48,7 +48,7 @@ export function WalletLandingScreen() {
                         </div>
 
                         {/* Features Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                        {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                             <div className="text-center p-4 rounded-lg bg-brand-gradient text-white">
                                 <h3 className="text-sm sm:text-base font-semibold mb-1">High Yields</h3>
                                 <p className="text-xs sm:text-sm text-white/90">
@@ -69,7 +69,7 @@ export function WalletLandingScreen() {
                                     Your assets, your keys, always
                                 </p>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Connect Button */}
                         <Button

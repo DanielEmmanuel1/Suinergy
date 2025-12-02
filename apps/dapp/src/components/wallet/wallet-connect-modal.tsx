@@ -20,74 +20,68 @@ interface WalletConnectModalProps {
 
 // Popular wallets (displayed as boxes)
 const POPULAR_WALLETS = [
-    { 
-        name: 'Phantom', 
-        iconUrl: 'https://phantom.app/img/phantom-icon-purple.svg',
+    {
+        name: 'Phantom',
+        iconUrl: '/phantom.png',
         matchNames: ['phantom']
     },
-    { 
-        name: 'Suiet', 
-        iconUrl: 'https://suiet.app/assets/logo.svg',
-        matchNames: ['suiet']
+    {
+        name: 'Slush',
+        iconUrl: '/slush.png',
+        matchNames: ['slush']
     },
-    { 
-        name: 'Surf Wallet', 
-        iconUrl: 'https://surfwallet.io/logo.svg',
+    {
+        name: 'Surf Wallet',
+        iconUrl: '/surf.png',
         matchNames: ['surf']
     },
 ]
 
 // Other wallets (displayed as compact list)
 const OTHER_WALLETS = [
-    { 
-        name: 'Martian Wallet', 
-        iconUrl: 'https://martianwallet.xyz/logo.svg',
-        matchNames: ['martian']
+    {
+        name: 'Suiet',
+        iconUrl: '/suiet.jpg',
+        matchNames: ['suiet']
     },
-    { 
-        name: 'Nightly', 
-        iconUrl: 'https://nightly.app/logo.svg',
-        matchNames: ['nightly']
-    },
-    { 
-        name: 'OKX Wallet', 
-        iconUrl: 'https://www.okx.com/favicon.ico',
+    {
+        name: 'OKX Wallet',
+        iconUrl: '/okx.png',
         matchNames: ['okx', 'okex']
     },
-    { 
-        name: 'Bitget Wallet', 
-        iconUrl: 'https://web3.bitget.com/favicon.ico',
-        matchNames: ['bitget']
+    {
+        name: 'Martian Wallet',
+        iconUrl: '/martian.png',
+        matchNames: ['martian']
     },
-    { 
-        name: 'Backpack', 
-        iconUrl: 'https://www.backpack.app/favicon.ico',
+    {
+        name: 'Nightly',
+        iconUrl: '/nightly.png',
+        matchNames: ['nightly']
+    },
+    {
+        name: 'Bitget Wallet',
+        iconUrl: '/bitget.png',
+        matchNames: ['bitget', 'bitkeep']
+    },
+    {
+        name: 'Backpack',
+        iconUrl: '/backpack.png',
         matchNames: ['backpack']
     },
-    { 
-        name: 'Desig', 
-        iconUrl: 'https://desig.io/logo.svg',
+    {
+        name: 'Desig',
+        iconUrl: '/desig.png',
         matchNames: ['desig']
-    },
-    { 
-        name: 'Slush', 
-        iconUrl: 'https://slush.finance/logo.svg',
-        matchNames: ['slush']
     },
 ]
 
 const WALLET_CONFIG = [...POPULAR_WALLETS, ...OTHER_WALLETS]
 
-const getWalletConfig = (walletName: string) => {
-    const name = walletName.toLowerCase()
-    return WALLET_CONFIG.find((config) => 
-        config.matchNames.some((match) => name.includes(match))
-    ) || { name: walletName, iconUrl: null, matchNames: [] }
-}
-
 export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalProps) {
     const { mutate: connect, isPending } = useConnectWallet()
     const wallets = useWallets()
+    console.log('Available wallets:', wallets.map(w => w.name))
     const [connectingWallet, setConnectingWallet] = useState<string | null>(null)
 
     const handleConnect = (walletName: string) => {
@@ -111,7 +105,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
 
     // Get all wallets - detected ones first, then common ones that aren't detected
     const detectedWalletNames = new Set(wallets.map((w) => w.name.toLowerCase()))
-    
+
     const processWallets = (walletConfigs: typeof POPULAR_WALLETS) => {
         const processed: Array<{
             name: string
@@ -119,26 +113,28 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
             detected: boolean
             wallet: any
         }> = []
-        
+
         // Add detected wallets first
         wallets.forEach((w) => {
-            const config = walletConfigs.find((c) => 
+            const config = walletConfigs.find((c) =>
                 c.matchNames.some((match) => w.name.toLowerCase().includes(match))
             )
             if (config) {
                 processed.push({
-                    name: w.name,
-                    iconUrl: w.icon || config.iconUrl,
+                    name: config.name, // Use config name to avoid duplicates
+                    iconUrl: config.iconUrl || w.icon,
                     detected: true,
                     wallet: w,
                 })
             }
         })
-        
+
         // Add non-detected wallets
         walletConfigs.forEach((config) => {
-            if (!detectedWalletNames.has(config.name.toLowerCase()) && 
-                !processed.some((p) => p.name.toLowerCase() === config.name.toLowerCase())) {
+            // Check if this config was already added (by name)
+            const alreadyProcessed = processed.some((p) => p.name === config.name)
+
+            if (!alreadyProcessed && !detectedWalletNames.has(config.name.toLowerCase())) {
                 processed.push({
                     name: config.name,
                     iconUrl: config.iconUrl,
@@ -147,18 +143,21 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                 })
             }
         })
-        
+
         return processed
     }
-    
+
     const popularWallets = processWallets(POPULAR_WALLETS)
     const otherWallets = processWallets(OTHER_WALLETS)
-    
+
     // Add any detected wallets that don't match our config
     wallets.forEach((w) => {
         const isInPopular = popularWallets.some((pw) => pw.name === w.name)
         const isInOther = otherWallets.some((ow) => ow.name === w.name)
-        if (!isInPopular && !isInOther) {
+        // Also check if it was merged into a config name (e.g. Martian Sui Wallet -> Martian Wallet)
+        const isConfigured = [...popularWallets, ...otherWallets].some(p => p.wallet && p.wallet.name === w.name)
+
+        if (!isInPopular && !isInOther && !isConfigured) {
             otherWallets.push({
                 name: w.name,
                 iconUrl: w.icon || null,
@@ -203,8 +202,8 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                                 "h-auto flex flex-col items-center justify-center gap-1 sm:gap-2 p-3 sm:p-4 md:p-6",
                                                 "hover:bg-[#f4f3f0] transition-all duration-200",
                                                 "border-2 rounded-lg bg-white",
-                                                wallet.detected 
-                                                    ? "border-black/10 hover:border-[#1055C9] cursor-pointer" 
+                                                wallet.detected
+                                                    ? "border-black/10 hover:border-[#1055C9] cursor-pointer"
                                                     : "border-black/5 opacity-50 cursor-not-allowed",
                                                 isConnecting && "border-[#1055C9]"
                                             )}
@@ -213,8 +212,8 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                         >
                                             {wallet.iconUrl ? (
                                                 <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-1 flex items-center justify-center">
-                                                    <img 
-                                                        src={wallet.iconUrl} 
+                                                    <img
+                                                        src={wallet.iconUrl}
                                                         alt={wallet.name}
                                                         className="w-full h-full object-contain"
                                                         onError={(e) => {
@@ -269,8 +268,8 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                                 "h-auto flex flex-row items-center justify-start gap-2 sm:gap-3 p-2 sm:p-3",
                                                 "hover:bg-[#f4f3f0] transition-all duration-200",
                                                 "border border-black/10 rounded-lg bg-white",
-                                                wallet.detected 
-                                                    ? "hover:border-[#1055C9] cursor-pointer" 
+                                                wallet.detected
+                                                    ? "hover:border-[#1055C9] cursor-pointer"
                                                     : "opacity-50 cursor-not-allowed",
                                                 isConnecting && "border-[#1055C9]"
                                             )}
@@ -279,8 +278,8 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                         >
                                             {wallet.iconUrl ? (
                                                 <div className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0 flex items-center justify-center">
-                                                    <img 
-                                                        src={wallet.iconUrl} 
+                                                    <img
+                                                        src={wallet.iconUrl}
                                                         alt={wallet.name}
                                                         className="w-full h-full object-contain"
                                                         onError={(e) => {
@@ -338,4 +337,3 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
         </Dialog>
     )
 }
-

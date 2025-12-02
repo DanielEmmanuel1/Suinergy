@@ -39,32 +39,35 @@ export function DepositModal() {
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label htmlFor="amount">Amount</Label>
+                            <Label htmlFor="amount" className="text-sm sm:text-base">Amount</Label>
                             <Input
                                 id="amount"
                                 type="number"
                                 placeholder="0.00"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
+                                className="text-sm sm:text-base"
                             />
                         </div>
-                        <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center justify-between text-xs sm:text-sm">
                             <span className="text-muted-foreground">Estimated APY</span>
                             <span className="font-semibold text-transparent bg-clip-text bg-brand-gradient">12.5%</span>
                         </div>
                     </div>
-                    <DialogFooter className="flex-col sm:flex-row gap-2">
+                    <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
                         <Button
                             variant="outline"
                             onClick={() => {
                                 setShowSimulation(true)
                             }}
+                            className="w-full sm:w-auto order-2 sm:order-1"
                         >
                             Simulate
                         </Button>
                         <Button
                             onClick={handleDeposit}
                             disabled={!amount || parseFloat(amount) <= 0}
+                            className="w-full sm:w-auto order-1 sm:order-2 bg-brand-gradient"
                         >
                             Deposit
                         </Button>

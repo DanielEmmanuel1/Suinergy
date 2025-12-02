@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { ArrowLeft, TrendingUp, DollarSign, Activity, Info, Clock, AlertCircle, ExternalLink, Settings } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store/use-app-store'
 import { DepositModal } from '@/components/modals/deposit-modal'
 import { TransactionSettingsModal, TransactionSettings } from '@/components/modals/transaction-settings-modal'
@@ -246,14 +247,14 @@ export default function StrategyDetailPage() {
 
     return (
         <MainLayout>
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
                 {/* Breadcrumb Navigation */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <button onClick={() => router.push('/strategies')} className="hover:text-black transition-colors">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground overflow-x-auto">
+                    <button onClick={() => router.push('/strategies')} className="hover:text-black transition-colors whitespace-nowrap">
                         Strategies
                     </button>
                     <span>/</span>
-                    <span className="text-black">{strategy.name}</span>
+                    <span className="text-black truncate">{strategy.name}</span>
                 </div>
 
                 {/* Header */}
@@ -293,63 +294,66 @@ export default function StrategyDetailPage() {
 
                 {/* Main Content Tabs */}
                 <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="bg-white border-black/10">
-                        <TabsTrigger value="overview">Vault Overview</TabsTrigger>
-                        <TabsTrigger value="position">My Position</TabsTrigger>
+                    <TabsList className="bg-white border-black/10 w-full sm:w-auto">
+                        <TabsTrigger value="overview" className="flex-1 sm:flex-none text-xs sm:text-sm">Vault Overview</TabsTrigger>
+                        <TabsTrigger value="position" className="flex-1 sm:flex-none text-xs sm:text-sm">My Position</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="overview" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
-                        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
+                    <TabsContent value="overview" className="space-y-3 sm:space-y-4 md:space-y-6 mt-3 sm:mt-4 md:mt-6">
+                        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                             {/* Left Column - Metrics and Charts */}
-                            <div className="lg:col-span-2 space-y-6">
+                            <div className="w-full lg:col-span-2 space-y-3 sm:space-y-4 md:space-y-6">
                                 {/* Key Metrics */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 max-w-full">
                                     <Card className="border-black/10">
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-xs text-muted-foreground">Total Supplied</CardTitle>
+                                        <CardHeader className="pb-0.5 sm:pb-1 md:pb-2 px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-6">
+                                            <CardTitle className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground leading-tight">Total Supplied</CardTitle>
                                         </CardHeader>
-                                        <CardContent>
-                                            <div className="text-2xl font-bold text-black">{formatCurrency(strategy.tvl)}</div>
+                                        <CardContent className="px-2 sm:px-3 md:px-6 pb-2 sm:pb-3 md:pb-6 pt-1 sm:pt-2">
+                                            <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-black leading-tight">{formatCurrency(strategy.tvl)}</div>
                                         </CardContent>
                                     </Card>
                                     <Card className="border-black/10">
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-xs text-muted-foreground">Total Borrowed</CardTitle>
+                                        <CardHeader className="pb-0.5 sm:pb-1 md:pb-2 px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-6">
+                                            <CardTitle className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground leading-tight">Total Borrowed</CardTitle>
                                         </CardHeader>
-                                        <CardContent>
-                                            <div className="text-2xl font-bold text-black">{formatCurrency(totalBorrowed)}</div>
+                                        <CardContent className="px-2 sm:px-3 md:px-6 pb-2 sm:pb-3 md:pb-6 pt-1 sm:pt-2">
+                                            <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-black leading-tight">{formatCurrency(totalBorrowed)}</div>
                                         </CardContent>
                                     </Card>
                                     <Card className="border-black/10">
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-xs text-muted-foreground">Utilization</CardTitle>
+                                        <CardHeader className="pb-0.5 sm:pb-1 md:pb-2 px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-6">
+                                            <CardTitle className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground leading-tight">Utilization</CardTitle>
                                         </CardHeader>
-                                        <CardContent>
-                                            <div className="text-2xl font-bold text-black">{utilization.toFixed(2)}%</div>
+                                        <CardContent className="px-2 sm:px-3 md:px-6 pb-2 sm:pb-3 md:pb-6 pt-1 sm:pt-2">
+                                            <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-black leading-tight">{utilization.toFixed(2)}%</div>
                                         </CardContent>
                                     </Card>
                                     <Card className="bg-brand-gradient border-transparent">
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-xs text-white/80">Supply APY</CardTitle>
+                                        <CardHeader className="pb-0.5 sm:pb-1 md:pb-2 px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-6">
+                                            <CardTitle className="text-[9px] sm:text-[10px] md:text-xs text-white/80 leading-tight">Supply APY</CardTitle>
                                         </CardHeader>
-                                        <CardContent>
-                                            <div className="text-2xl font-bold text-white">{strategy.apy}%</div>
-                                            <div className="text-xs text-white/70 mt-1">90D Avg: {strategy.apy.toFixed(2)}%</div>
+                                        <CardContent className="px-2 sm:px-3 md:px-6 pb-2 sm:pb-3 md:pb-6 pt-1 sm:pt-2">
+                                            <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-white leading-tight">{strategy.apy}%</div>
+                                            <div className="text-[9px] sm:text-[10px] md:text-xs text-white/70 mt-0.5 sm:mt-1 leading-tight">90D Avg: {strategy.apy.toFixed(2)}%</div>
                                         </CardContent>
                                     </Card>
                                 </div>
 
                                 {/* Supply APY Chart */}
-                                <Card className="border-black/10">
-                                    <CardHeader>
-                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                            <CardTitle className="text-base sm:text-lg">Supply APY / Total Supply</CardTitle>
-                                            <div className="flex gap-2 flex-wrap">
+                                <Card className="border-black/10 w-full max-w-full">
+                                    <CardHeader className="px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-6 pb-2 sm:pb-3 md:pb-4">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2 md:gap-3">
+                                            <CardTitle className="text-xs sm:text-sm md:text-base lg:text-lg leading-tight">Supply APY / Total Supply</CardTitle>
+                                            <div className="flex gap-1 sm:gap-1.5 md:gap-2 flex-wrap">
                                                 <Button 
                                                     variant={apyTimePeriod === '7D' ? 'default' : 'outline'} 
                                                     size="sm"
                                                     onClick={() => setApyTimePeriod('7D')}
-                                                    className={apyTimePeriod === '7D' ? 'bg-brand-gradient' : ''}
+                                                    className={cn(
+                                                        "text-[10px] sm:text-xs px-1.5 sm:px-2 md:px-3 h-6 sm:h-7 md:h-8",
+                                                        apyTimePeriod === '7D' ? 'bg-brand-gradient' : ''
+                                                    )}
                                                 >
                                                     7D
                                                 </Button>
@@ -357,7 +361,10 @@ export default function StrategyDetailPage() {
                                                     variant={apyTimePeriod === '30D' ? 'default' : 'outline'} 
                                                     size="sm"
                                                     onClick={() => setApyTimePeriod('30D')}
-                                                    className={apyTimePeriod === '30D' ? 'bg-brand-gradient' : ''}
+                                                    className={cn(
+                                                        "text-[10px] sm:text-xs px-1.5 sm:px-2 md:px-3 h-6 sm:h-7 md:h-8",
+                                                        apyTimePeriod === '30D' ? 'bg-brand-gradient' : ''
+                                                    )}
                                                 >
                                                     30D
                                                 </Button>
@@ -365,40 +372,46 @@ export default function StrategyDetailPage() {
                                                     variant={apyTimePeriod === '90D' ? 'default' : 'outline'} 
                                                     size="sm"
                                                     onClick={() => setApyTimePeriod('90D')}
-                                                    className={apyTimePeriod === '90D' ? 'bg-brand-gradient' : ''}
+                                                    className={cn(
+                                                        "text-[10px] sm:text-xs px-1.5 sm:px-2 md:px-3 h-6 sm:h-7 md:h-8",
+                                                        apyTimePeriod === '90D' ? 'bg-brand-gradient' : ''
+                                                    )}
                                                 >
                                                     90D
                                                 </Button>
                                             </div>
                                         </div>
                                     </CardHeader>
-                                    <CardContent>
-                                        <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
-                                            <LineChart data={apyChartData}>
+                                    <CardContent className="px-2 sm:px-3 md:px-6 pb-2 sm:pb-3 md:pb-6">
+                                        <ResponsiveContainer width="100%" height={150} className="sm:h-[180px] md:h-[220px] lg:h-[250px] xl:h-[300px]">
+                                            <LineChart data={apyChartData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
                                                 <XAxis 
                                                     dataKey="date" 
                                                     stroke="#000000"
-                                                    style={{ fontSize: '12px' }}
+                                                    style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
+                                                    interval="preserveStartEnd"
                                                 />
                                                 <YAxis 
                                                     yAxisId="left"
                                                     stroke="#000000"
-                                                    style={{ fontSize: '12px' }}
+                                                    style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
                                                     tickFormatter={(value) => `${value}%`}
+                                                    width={40}
                                                 />
                                                 <YAxis 
                                                     yAxisId="right"
                                                     orientation="right"
                                                     stroke="#000000"
-                                                    style={{ fontSize: '12px' }}
+                                                    style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
                                                     tickFormatter={(value) => `$${(value / 1000000).toFixed(1)}M`}
+                                                    width={50}
                                                 />
                                                 <Tooltip
                                                     contentStyle={{
@@ -430,21 +443,24 @@ export default function StrategyDetailPage() {
                                 </Card>
 
                                 {/* Interest Generated Chart */}
-                                <Card className="border-black/10">
-                                    <CardHeader>
-                                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                                            <div className="flex-1">
-                                                <CardTitle className="text-base sm:text-lg">Interest Generated / Vault Share Price</CardTitle>
-                                                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                                <Card className="border-black/10 w-full max-w-full">
+                                    <CardHeader className="px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-6 pb-2 sm:pb-3 md:pb-4">
+                                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-2 md:gap-3">
+                                            <div className="flex-1 min-w-0">
+                                                <CardTitle className="text-xs sm:text-sm md:text-base lg:text-lg leading-tight">Interest Generated / Vault Share Price</CardTitle>
+                                                <p className="text-[9px] sm:text-[10px] md:text-xs lg:text-sm text-muted-foreground mt-0.5 sm:mt-1 leading-tight">
                                                     Total interest generated across all users in this vault.
                                                 </p>
                                             </div>
-                                            <div className="flex gap-2 flex-wrap">
+                                            <div className="flex gap-1 sm:gap-1.5 md:gap-2 flex-wrap flex-shrink-0">
                                                 <Button 
                                                     variant={interestTimePeriod === '7D' ? 'default' : 'outline'} 
                                                     size="sm"
                                                     onClick={() => setInterestTimePeriod('7D')}
-                                                    className={interestTimePeriod === '7D' ? 'bg-brand-gradient' : ''}
+                                                    className={cn(
+                                                        "text-[10px] sm:text-xs px-1.5 sm:px-2 md:px-3 h-6 sm:h-7 md:h-8",
+                                                        interestTimePeriod === '7D' ? 'bg-brand-gradient' : ''
+                                                    )}
                                                 >
                                                     7D
                                                 </Button>
@@ -452,7 +468,10 @@ export default function StrategyDetailPage() {
                                                     variant={interestTimePeriod === '30D' ? 'default' : 'outline'} 
                                                     size="sm"
                                                     onClick={() => setInterestTimePeriod('30D')}
-                                                    className={interestTimePeriod === '30D' ? 'bg-brand-gradient' : ''}
+                                                    className={cn(
+                                                        "text-[10px] sm:text-xs px-1.5 sm:px-2 md:px-3 h-6 sm:h-7 md:h-8",
+                                                        interestTimePeriod === '30D' ? 'bg-brand-gradient' : ''
+                                                    )}
                                                 >
                                                     30D
                                                 </Button>
@@ -460,21 +479,24 @@ export default function StrategyDetailPage() {
                                                     variant={interestTimePeriod === '90D' ? 'default' : 'outline'} 
                                                     size="sm"
                                                     onClick={() => setInterestTimePeriod('90D')}
-                                                    className={interestTimePeriod === '90D' ? 'bg-brand-gradient' : ''}
+                                                    className={cn(
+                                                        "text-[10px] sm:text-xs px-1.5 sm:px-2 md:px-3 h-6 sm:h-7 md:h-8",
+                                                        interestTimePeriod === '90D' ? 'bg-brand-gradient' : ''
+                                                    )}
                                                 >
                                                     90D
                                                 </Button>
                                             </div>
                                         </div>
                                     </CardHeader>
-                                    <CardContent>
-                                        <div className="mb-4">
-                                            <div className="text-3xl font-bold text-transparent bg-clip-text bg-brand-gradient">
+                                    <CardContent className="px-2 sm:px-3 md:px-6 pb-2 sm:pb-3 md:pb-6">
+                                        <div className="mb-2 sm:mb-3 md:mb-4">
+                                            <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-transparent bg-clip-text bg-brand-gradient leading-tight">
                                                 +{formatCurrency(strategy.totalInterestGenerated)}
                                             </div>
                                         </div>
-                                        <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
-                                            <AreaChart data={interestChartData}>
+                                        <ResponsiveContainer width="100%" height={150} className="sm:h-[180px] md:h-[220px] lg:h-[250px] xl:h-[300px]">
+                                            <AreaChart data={interestChartData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
                                                 <defs>
                                                     <linearGradient id="interestGradient" x1="0" y1="0" x2="0" y2="1">
                                                         <stop offset="0%" stopColor="#1565c0" stopOpacity={0.8} />
@@ -489,16 +511,18 @@ export default function StrategyDetailPage() {
                                                 <XAxis 
                                                     dataKey="date" 
                                                     stroke="#000000"
-                                                    style={{ fontSize: '12px' }}
+                                                    style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
+                                                    interval="preserveStartEnd"
                                                 />
                                                 <YAxis 
                                                     stroke="#000000"
-                                                    style={{ fontSize: '12px' }}
+                                                    style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
                                                     tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
+                                                    width={50}
                                                 />
                                                 <Tooltip
                                                     contentStyle={{
@@ -517,72 +541,80 @@ export default function StrategyDetailPage() {
                                                 />
                                             </AreaChart>
                                         </ResponsiveContainer>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-4">
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 mt-2 sm:mt-3 md:mt-4">
                                             <div>
-                                                <div className="text-xs text-muted-foreground mb-1">1D Growth</div>
-                                                <div className="text-sm font-semibold text-black">+{formatCurrency(4270)}</div>
+                                                <div className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mb-0.5 sm:mb-1 leading-tight">1D Growth</div>
+                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black leading-tight">+{formatCurrency(4270)}</div>
                                             </div>
                                             <div>
-                                                <div className="text-xs text-muted-foreground mb-1">7D Growth</div>
-                                                <div className="text-sm font-semibold text-black">+{formatCurrency(162410)}</div>
+                                                <div className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mb-0.5 sm:mb-1 leading-tight">7D Growth</div>
+                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black leading-tight">+{formatCurrency(162410)}</div>
                                             </div>
                                             <div>
-                                                <div className="text-xs text-muted-foreground mb-1">30D Growth</div>
-                                                <div className="text-sm font-semibold text-black">+{formatCurrency(1740000)}</div>
+                                                <div className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mb-0.5 sm:mb-1 leading-tight">30D Growth</div>
+                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black leading-tight">+{formatCurrency(1740000)}</div>
                                             </div>
                                             <div>
-                                                <div className="text-xs text-muted-foreground mb-1">180D Growth</div>
-                                                <div className="text-sm font-semibold text-black">+{formatCurrency(3320000)}</div>
+                                                <div className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mb-0.5 sm:mb-1 leading-tight">180D Growth</div>
+                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black leading-tight">+{formatCurrency(3320000)}</div>
                                             </div>
                                         </div>
                                     </CardContent>
                                 </Card>
 
                                 {/* Allocation Breakdown */}
-                                <Card className="border-black/10">
-                                    <CardHeader>
-                                        <CardTitle>Allocation Breakdown</CardTitle>
+                                <Card className="border-black/10 w-full max-w-full">
+                                    <CardHeader className="px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-6 pb-2 sm:pb-3 md:pb-4">
+                                        <CardTitle className="text-xs sm:text-sm md:text-base lg:text-lg leading-tight">Allocation Breakdown</CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="overflow-x-auto -mx-4 sm:mx-0">
-                                            <table className="w-full min-w-[600px] sm:min-w-0">
+                                        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                                            <table className="w-full" style={{ minWidth: '500px' }}>
                                                 <thead className="bg-[#f4f3f0] border-b border-black/10">
                                                     <tr>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold text-black">Market</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold text-black">Collateral</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold text-black">Allocation %</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold text-black">Supplied</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold text-black">Utilization</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold text-black">Supply APY</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold text-black"></th>
+                                                        <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold text-black">Market</th>
+                                                        <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold text-black hidden sm:table-cell">Collateral</th>
+                                                        <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold text-black">Allocation %</th>
+                                                        <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold text-black hidden md:table-cell">Supplied</th>
+                                                        <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold text-black hidden lg:table-cell">Utilization</th>
+                                                        <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold text-black">Supply APY</th>
+                                                        <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold text-black hidden sm:table-cell"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-black/10">
                                                     {strategy.platforms.map((platform: any) => (
                                                         <tr key={platform.id} className="hover:bg-[#f4f3f0]/50 transition-colors">
-                                                            <td className="px-4 py-3">
-                                                                <div className="font-medium text-black">{platform.name}</div>
+                                                            <td className="px-3 sm:px-4 py-2 sm:py-3">
+                                                                <div className="font-medium text-black text-xs sm:text-sm">
+                                                                    <div>{platform.name}</div>
+                                                                    <div className="sm:hidden mt-1">
+                                                                        <div className="w-6 h-6 rounded-lg bg-brand-gradient flex items-center justify-center text-white font-bold text-xs inline-flex mr-2">
+                                                                            {platform.name.charAt(0)}
+                                                                        </div>
+                                                                        <span className="text-xs text-muted-foreground">{formatCurrency(platform.supplied)}</span>
+                                                                    </div>
+                                                                </div>
                                                             </td>
-                                                            <td className="px-4 py-3">
+                                                            <td className="px-3 sm:px-4 py-2 sm:py-3 hidden sm:table-cell">
                                                                 <div className="w-8 h-8 rounded-lg bg-brand-gradient flex items-center justify-center text-white font-bold text-xs">
                                                                     {platform.name.charAt(0)}
                                                                 </div>
                                                             </td>
-                                                            <td className="px-4 py-3">
-                                                                <div className="font-semibold text-black">{platform.allocation}%</div>
+                                                            <td className="px-3 sm:px-4 py-2 sm:py-3">
+                                                                <div className="font-semibold text-black text-xs sm:text-sm">{platform.allocation}%</div>
                                                             </td>
-                                                            <td className="px-4 py-3">
-                                                                <div className="text-black">{formatCurrency(platform.supplied)}</div>
+                                                            <td className="px-3 sm:px-4 py-2 sm:py-3 hidden md:table-cell">
+                                                                <div className="text-black text-xs sm:text-sm">{formatCurrency(platform.supplied)}</div>
                                                             </td>
-                                                            <td className="px-4 py-3">
-                                                                <div className="text-black">{platform.utilization.toFixed(2)}%</div>
+                                                            <td className="px-3 sm:px-4 py-2 sm:py-3 hidden lg:table-cell">
+                                                                <div className="text-black text-xs sm:text-sm">{platform.utilization.toFixed(2)}%</div>
                                                             </td>
-                                                            <td className="px-4 py-3">
-                                                                <div className="font-semibold text-transparent bg-clip-text bg-brand-gradient">
+                                                            <td className="px-3 sm:px-4 py-2 sm:py-3">
+                                                                <div className="font-semibold text-transparent bg-clip-text bg-brand-gradient text-xs sm:text-sm">
                                                                     {platform.supplyApy}%
                                                                 </div>
                                                             </td>
-                                                            <td className="px-4 py-3">
+                                                            <td className="px-3 sm:px-4 py-2 sm:py-3 hidden sm:table-cell">
                                                                 <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-black cursor-pointer" />
                                                             </td>
                                                         </tr>
@@ -595,12 +627,12 @@ export default function StrategyDetailPage() {
                             </div>
 
                             {/* Right Column - Deposit/Withdraw */}
-                            <div className="space-y-6">
-                                <Card className="border-black/10">
-                                    <CardHeader>
-                                        <CardTitle>You Deposit</CardTitle>
+                            <div className="w-full lg:w-auto space-y-3 sm:space-y-4 md:space-y-6 lg:sticky lg:top-6 lg:self-start">
+                                <Card className="border-black/10 w-full max-w-full">
+                                    <CardHeader className="px-3 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
+                                        <CardTitle className="text-sm sm:text-base md:text-lg">You Deposit</CardTitle>
                                     </CardHeader>
-                                    <CardContent className="space-y-4">
+                                    <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-4 sm:pb-6">
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-sm text-muted-foreground">Amount</span>
@@ -641,10 +673,10 @@ export default function StrategyDetailPage() {
 
                                 {/* Vault Info */}
                                 <Card className="border-black/10">
-                                    <CardHeader>
-                                        <CardTitle>Vault Info</CardTitle>
+                                    <CardHeader className="px-3 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
+                                        <CardTitle className="text-sm sm:text-base md:text-lg">Vault Info</CardTitle>
                                     </CardHeader>
-                                    <CardContent className="space-y-3 text-sm">
+                                    <CardContent className="space-y-2 sm:space-y-3 text-xs sm:text-sm px-3 sm:px-6 pb-4 sm:pb-6">
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Token</span>
                                             <span className="font-medium text-black">{strategy.asset}</span>
@@ -680,28 +712,28 @@ export default function StrategyDetailPage() {
                         </div>
                     </TabsContent>
 
-                    <TabsContent value="position" className="space-y-6 mt-6">
+                    <TabsContent value="position" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
                         {userPosition ? (
-                            <div className="space-y-6">
+                            <div className="space-y-4 sm:space-y-6">
                                 <Card className="border-black/10">
                                     <CardHeader>
                                         <CardTitle>Your Position</CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                                             <div>
-                                                <div className="text-sm text-muted-foreground mb-1">Deposited</div>
-                                                <div className="text-2xl font-bold text-black">{formatCurrency(userPosition.amount)}</div>
+                                                <div className="text-xs sm:text-sm text-muted-foreground mb-1">Deposited</div>
+                                                <div className="text-xl sm:text-2xl font-bold text-black">{formatCurrency(userPosition.amount)}</div>
                                             </div>
                                             <div>
-                                                <div className="text-sm text-muted-foreground mb-1">Current APY</div>
-                                                <div className="text-2xl font-bold text-transparent bg-clip-text bg-brand-gradient">
+                                                <div className="text-xs sm:text-sm text-muted-foreground mb-1">Current APY</div>
+                                                <div className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-brand-gradient">
                                                     {userPosition.apy}%
                                                 </div>
                                             </div>
                                             <div>
-                                                <div className="text-sm text-muted-foreground mb-1">Est. Annual Earnings</div>
-                                                <div className="text-2xl font-bold text-black">
+                                                <div className="text-xs sm:text-sm text-muted-foreground mb-1">Est. Annual Earnings</div>
+                                                <div className="text-xl sm:text-2xl font-bold text-black">
                                                     {formatCurrency((userPosition.amount * userPosition.apy) / 100)}
                                                 </div>
                                             </div>

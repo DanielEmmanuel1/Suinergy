@@ -61,8 +61,10 @@ export function MainLayout({ children }: MainLayoutProps) {
                 </header>
 
                 {/* Content Area */}
-                <div className="flex-1 p-4 sm:p-6">
-                    {children}
+                <div className="flex-1 overflow-x-hidden">
+                    <div className="p-4 sm:p-6">
+                        {children}
+                    </div>
                 </div>
             </main>
         </div>

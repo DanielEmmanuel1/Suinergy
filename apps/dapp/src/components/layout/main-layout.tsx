@@ -4,8 +4,10 @@ import { ReactNode, useEffect, useState } from 'react'
 import Lenis from 'lenis'
 import { Sidebar } from './sidebar'
 import { WalletButton } from '../wallet/wallet-button'
-import { Menu } from 'lucide-react'
+import { Menu, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAdapterRegistry } from '@/hooks/use-adapter-registry'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface MainLayoutProps {
     children: ReactNode
@@ -13,6 +15,8 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const { data: registry } = useAdapterRegistry()
+    const hasMockAdapters = registry?.hasAnyMockAdapters ?? false
 
     useEffect(() => {
         const lenis = new Lenis({
@@ -44,7 +48,29 @@ export function MainLayout({ children }: MainLayoutProps) {
             <main className="flex-1 flex flex-col min-h-screen w-full lg:w-auto">
                 {/* Top Bar */}
                 <header className="sticky top-0 z-30 bg-white border-b border-black/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-                    <h1 className="text-lg sm:text-xl font-semibold text-black font-heading">Suinergy dApp</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-lg sm:text-xl font-semibold text-black font-heading">Suinergy dApp</h1>
+                        <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 border border-orange-300 rounded">
+                                TESTNET
+                            </span>
+                            {hasMockAdapters && (
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-700 border border-yellow-300 rounded flex items-center gap-1">
+                                                <AlertTriangle className="w-3 h-3" />
+                                                MOCK
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Some strategies are using mock adapters. Real Testnet adapters will be enabled when available.</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            )}
+                        </div>
+                    </div>
                     <div className="flex items-center gap-2">
                         <Button
                             variant="outline"

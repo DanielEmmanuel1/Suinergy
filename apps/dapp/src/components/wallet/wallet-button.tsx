@@ -16,7 +16,7 @@ import { WalletConnectModal } from './wallet-connect-modal'
 
 export function WalletButton() {
     const currentAccount = useCurrentAccount()
-    const { disconnect } = useDisconnectWallet()
+    const { mutate: disconnect } = useDisconnectWallet()
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false)
 
     if (!currentAccount) {

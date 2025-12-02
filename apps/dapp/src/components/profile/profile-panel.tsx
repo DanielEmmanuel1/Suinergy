@@ -7,26 +7,56 @@ import { Badge } from '@/components/ui/badge'
 import { TabbedContainer } from '@/components/ui/tabbed-container'
 import { TransactionHistory, Transaction } from '@/components/transactions/transaction-history'
 import { useCurrentAccount } from '@mysten/dapp-kit'
-
-// Mock data - will be replaced with real data hooks
-const mockProfile = {
-    totalDeposits: 15000,
-    totalWithdrawals: 5000,
-    netPosition: 10000,
-    totalEarned: 1250,
-    activeStrategies: 3,
-    totalAllocations: [
-        { strategy: 'USDC Liquidity', amount: 5000, apy: 12.5 },
-        { strategy: 'SUI Staking', amount: 10000, apy: 8.2 },
-        { strategy: 'Leveraged Yield', amount: 2000, apy: 18.5 },
-    ],
-}
+import { useTransactions } from '@/hooks/use-transactions'
+import { useUserPositions } from '@/hooks/use-user-positions'
 
 export function ProfilePanel() {
     const account = useCurrentAccount()
+    const { data: transactions = [] } = useTransactions()
+    const { data: positions = [] } = useUserPositions()
 
-    // Mock all transactions across all strategies
-    const allTransactions: Transaction[] = useMemo(() => [
+    // Calculate totals from real positions
+    const totalDeposits = useMemo(() => {
+        return positions.reduce((sum, pos) => sum + pos.amount, 0)
+    }, [positions])
+
+    const totalWithdrawals = useMemo(() => {
+        return transactions
+            .filter((tx) => tx.type === 'withdrawal')
+            .reduce((sum, tx) => sum + tx.amount, 0)
+    }, [transactions])
+
+    const netPosition = totalDeposits - totalWithdrawals
+
+    const totalEarned = useMemo(() => {
+        return transactions
+            .filter((tx) => tx.type === 'earnings' || tx.type === 'claim')
+            .reduce((sum, tx) => sum + tx.amount, 0)
+    }, [transactions])
+
+    const totalAllocations = useMemo(() => {
+        return positions.map((pos) => ({
+            strategy: pos.strategyName,
+            amount: pos.amount,
+            apy: pos.apy,
+        }))
+    }, [positions])
+
+    // Use real transactions instead of mock
+    const allTransactions: Transaction[] = transactions
+
+    // Mock profile data structure for compatibility (using real data where available)
+    const mockProfile = {
+        totalDeposits,
+        totalWithdrawals,
+        netPosition,
+        totalEarned,
+        activeStrategies: positions.length,
+        totalAllocations,
+    }
+
+    // Mock all transactions across all strategies (fallback if no real data)
+    const mockTransactions: Transaction[] = useMemo(() => [
         {
             id: '1',
             type: 'deposit',
@@ -151,7 +181,7 @@ export function ProfilePanel() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-black">
-                                {formatCurrency(mockProfile.totalDeposits)}
+                                {formatCurrency(totalDeposits)}
                             </div>
                         </CardContent>
                     </Card>
@@ -162,7 +192,7 @@ export function ProfilePanel() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-black">
-                                {formatCurrency(mockProfile.totalWithdrawals)}
+                                {formatCurrency(totalWithdrawals)}
                             </div>
                         </CardContent>
                     </Card>
@@ -173,7 +203,7 @@ export function ProfilePanel() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-white">
-                                {formatCurrency(mockProfile.netPosition)}
+                                {formatCurrency(netPosition)}
                             </div>
                         </CardContent>
                     </Card>
@@ -184,7 +214,7 @@ export function ProfilePanel() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-transparent bg-clip-text bg-brand-gradient">
-                                {formatCurrency(mockProfile.totalEarned)}
+                                {formatCurrency(totalEarned)}
                             </div>
                         </CardContent>
                     </Card>
@@ -200,31 +230,41 @@ export function ProfilePanel() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {mockProfile.totalAllocations.map((allocation, index) => (
-                                <div
-                                    key={index}
-                                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl bg-[#f4f3f0] border border-black/10"
-                                >
-                                    <div className="flex-1 min-w-0">
-                                        <div className="font-semibold text-black break-words">{allocation.strategy}</div>
-                                        <div className="text-sm text-muted-foreground">
-                                            {formatCurrency(allocation.amount)}
+                            {totalAllocations.length > 0 ? (
+                                totalAllocations.map((allocation, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl bg-[#f4f3f0] border border-black/10"
+                                    >
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-semibold text-black break-words">{allocation.strategy}</div>
+                                            <div className="text-sm text-muted-foreground">
+                                                {formatCurrency(allocation.amount)}
+                                            </div>
+                                        </div>
+                                        <div className="text-left sm:text-right flex-shrink-0">
+                                            <div className="font-semibold text-transparent bg-clip-text bg-brand-gradient">{allocation.apy}% APY</div>
+                                            <Badge variant="default" className="mt-1">
+                                                Active
+                                            </Badge>
                                         </div>
                                     </div>
-                                    <div className="text-left sm:text-right flex-shrink-0">
-                                        <div className="font-semibold text-transparent bg-clip-text bg-brand-gradient">{allocation.apy}% APY</div>
-                                        <Badge variant="default" className="mt-1">
-                                            Active
-                                        </Badge>
-                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    <p>No active positions</p>
+                                    <p className="text-sm mt-2">Deposit into a strategy to see your allocations here</p>
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Transaction History */}
-                <TransactionHistory transactions={allTransactions} showStrategy={true} />
+                <TransactionHistory 
+                    transactions={allTransactions.length > 0 ? allTransactions : mockTransactions} 
+                    showStrategy={true} 
+                />
             </TabbedContainer>
         </div>
     )

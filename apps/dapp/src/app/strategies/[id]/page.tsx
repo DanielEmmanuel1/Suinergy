@@ -16,6 +16,7 @@ import { DepositModal } from '@/components/modals/deposit-modal'
 import { TransactionSettingsModal, TransactionSettings } from '@/components/modals/transaction-settings-modal'
 import { TransactionHistory, Transaction } from '@/components/transactions/transaction-history'
 import { useUserPositions } from '@/hooks/use-user-positions'
+import { useTransactions } from '@/hooks/use-transactions'
 import { useCurrentAccount } from '@mysten/dapp-kit'
 
 // Mock strategy data - will be replaced with real data hooks
@@ -174,8 +175,11 @@ export default function StrategyDetailPage() {
         deadline: 20,
     })
 
-    // Mock transaction history for this strategy
-    const strategyTransactions: Transaction[] = useMemo(() => [
+    // Get real transactions for this strategy
+    const { data: strategyTransactionsData = [] } = useTransactions(strategyId)
+
+    // Mock transaction history for this strategy (fallback if no real data)
+    const mockStrategyTransactions: Transaction[] = useMemo(() => [
         {
             id: '1',
             type: 'deposit',
@@ -782,7 +786,14 @@ export default function StrategyDetailPage() {
                                 </Card>
 
                                 {/* Transaction History */}
-                                <TransactionHistory transactions={strategyTransactions} showStrategy={false} />
+                                <TransactionHistory 
+                                    transactions={
+                                        strategyTransactionsData.length > 0 
+                                            ? strategyTransactionsData 
+                                            : mockStrategyTransactions
+                                    } 
+                                    showStrategy={false} 
+                                />
                             </div>
                         ) : (
                             <Card className="border-black/10">

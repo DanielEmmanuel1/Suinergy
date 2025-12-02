@@ -10,7 +10,15 @@ const app: express.Application = express();
 // Security middleware
 app.use(helmet());
 app.use(cors({
-    origin: config.corsOrigin,
+    origin: (origin, callback) => {
+        const allowedOrigins = config.corsOrigin.split(',').map(o => o.trim());
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 }));
 
@@ -30,7 +38,14 @@ app.get('/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API routes will be mounted here
+// API routes
+import adapterRegistryRoutes from './routes/adapter-registry.routes'
+import positionsRoutes from './routes/positions.routes'
+import transactionsRoutes from './routes/transactions.routes'
+
+app.use('/api/adapter-registry', adapterRegistryRoutes)
+app.use('/api/positions', positionsRoutes)
+app.use('/api/transactions', transactionsRoutes)
 // app.use('/api/v1/strategies', strategyRoutes);
 // app.use('/api/v1/deposits', depositRoutes);
 // app.use('/api/v1/analytics', analyticsRoutes);

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { TabbedContainer } from '@/components/ui/tabbed-container'
 import { PortfolioChart } from '@/components/charts/portfolio-chart'
-import { useWalletBalance } from '@/hooks/use-wallet-balance'
+// Removed useWalletBalance - now using protocol deposits from positions
 import { useUserPositions } from '@/hooks/use-user-positions'
 import { useRewards } from '@/hooks/use-rewards'
 import { WalletLandingScreen } from '@/components/wallet/wallet-landing-screen'
@@ -52,7 +52,6 @@ const mockRecentActivity = [
 
 export default function DashboardPage() {
     const currentAccount = useCurrentAccount()
-    const { data: balance } = useWalletBalance()
     const { data: positions } = useUserPositions()
     const { data: rewards } = useRewards()
     const [portfolioTimePeriod, setPortfolioTimePeriod] = useState<TimePeriod>('30D')
@@ -109,14 +108,15 @@ export default function DashboardPage() {
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-sm text-white/80 flex items-center gap-2">
                                     <Wallet className="w-4 h-4" />
-                                    Wallet Balance
+                                    Protocol Balance
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-white">
-                                    {balance
-                                        ? `${(Number(balance.totalBalance) / 1e9).toFixed(2)} SUI`
-                                        : '0.00 SUI'}
+                                    ${totalAllocated.toLocaleString()}
+                                </div>
+                                <div className="text-xs text-white/70 mt-1">
+                                    Deposited in {activeStrategies} {activeStrategies === 1 ? 'strategy' : 'strategies'}
                                 </div>
                             </CardContent>
                         </Card>

@@ -30,7 +30,7 @@ import Link from 'next/link'
 type TimePeriod = '7D' | '30D' | '90D'
 
 // Mock portfolio performance data - 90 days
-const mockPortfolioData90 = Array.from({ length: 90 }, (_, i) => {
+const getMockPortfolioData = () => Array.from({ length: 90 }, (_, i) => {
     const date = new Date()
     date.setDate(date.getDate() - (89 - i))
     const baseValue = 10000
@@ -57,6 +57,15 @@ export default function DashboardPage() {
     const { data: rewards } = useRewards()
     const [portfolioTimePeriod, setPortfolioTimePeriod] = useState<TimePeriod>('30D')
 
+    // Generate mock data once
+    const fullPortfolioData = useMemo(() => getMockPortfolioData(), [])
+
+    // Filter portfolio data based on time period
+    const portfolioData = useMemo(() => {
+        const days = portfolioTimePeriod === '7D' ? 7 : portfolioTimePeriod === '30D' ? 30 : 90
+        return fullPortfolioData.slice(-days)
+    }, [portfolioTimePeriod, fullPortfolioData])
+
     // Show landing screen if wallet is not connected
     if (!currentAccount) {
         return <WalletLandingScreen />
@@ -66,7 +75,7 @@ export default function DashboardPage() {
     const estimatedAPY = positions?.length
         ? positions.reduce((sum, pos) => sum + pos.apy * pos.amount, 0) / totalAllocated || 0
         : 0
-    
+
     // Calculate total earned (mock for now)
     const totalEarned = positions?.reduce((sum, pos) => {
         // Estimate earnings as 1% of allocation (simplified)
@@ -77,10 +86,6 @@ export default function DashboardPage() {
     const estimatedMonthlyEarnings = (totalAllocated * estimatedAPY) / 100 / 12
 
     // Filter portfolio data based on time period
-    const portfolioData = useMemo(() => {
-        const days = portfolioTimePeriod === '7D' ? 7 : portfolioTimePeriod === '30D' ? 30 : 90
-        return mockPortfolioData90.slice(-days)
-    }, [portfolioTimePeriod])
 
     return (
         <MainLayout>
@@ -183,24 +188,24 @@ export default function DashboardPage() {
                                         <span className="text-muted-foreground">Portfolio Value</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <Button 
-                                            variant={portfolioTimePeriod === '7D' ? 'default' : 'outline'} 
+                                        <Button
+                                            variant={portfolioTimePeriod === '7D' ? 'default' : 'outline'}
                                             size="sm"
                                             onClick={() => setPortfolioTimePeriod('7D')}
                                             className={portfolioTimePeriod === '7D' ? 'bg-brand-gradient' : ''}
                                         >
                                             7D
                                         </Button>
-                                        <Button 
-                                            variant={portfolioTimePeriod === '30D' ? 'default' : 'outline'} 
+                                        <Button
+                                            variant={portfolioTimePeriod === '30D' ? 'default' : 'outline'}
                                             size="sm"
                                             onClick={() => setPortfolioTimePeriod('30D')}
                                             className={portfolioTimePeriod === '30D' ? 'bg-brand-gradient' : ''}
                                         >
                                             30D
                                         </Button>
-                                        <Button 
-                                            variant={portfolioTimePeriod === '90D' ? 'default' : 'outline'} 
+                                        <Button
+                                            variant={portfolioTimePeriod === '90D' ? 'default' : 'outline'}
                                             size="sm"
                                             onClick={() => setPortfolioTimePeriod('90D')}
                                             className={portfolioTimePeriod === '90D' ? 'bg-brand-gradient' : ''}
@@ -294,13 +299,12 @@ export default function DashboardPage() {
                                     {mockRecentActivity.map((activity, index) => (
                                         <div key={index}>
                                             <div className="flex items-start gap-3">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                                    activity.type === 'deposit' 
-                                                        ? 'bg-green-100 text-green-600'
-                                                        : activity.type === 'withdrawal'
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.type === 'deposit'
+                                                    ? 'bg-green-100 text-green-600'
+                                                    : activity.type === 'withdrawal'
                                                         ? 'bg-red-100 text-red-600'
                                                         : 'bg-brand-gradient text-white'
-                                                }`}>
+                                                    }`}>
                                                     {activity.type === 'deposit' ? (
                                                         <ArrowDownRight className="w-4 h-4" />
                                                     ) : activity.type === 'withdrawal' ? (
@@ -320,9 +324,8 @@ export default function DashboardPage() {
                                                             </div>
                                                         </div>
                                                         <div className="text-right">
-                                                            <div className={`font-semibold ${
-                                                                activity.type === 'withdrawal' ? 'text-red-600' : 'text-green-600'
-                                                            }`}>
+                                                            <div className={`font-semibold ${activity.type === 'withdrawal' ? 'text-red-600' : 'text-green-600'
+                                                                }`}>
                                                                 {activity.type === 'withdrawal' ? '-' : '+'}${activity.amount.toLocaleString()}
                                                             </div>
                                                             <div className="text-xs text-muted-foreground">

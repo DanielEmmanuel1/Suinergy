@@ -84,13 +84,12 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
     console.log('Available wallets:', wallets.map(w => w.name))
     const [connectingWallet, setConnectingWallet] = useState<string | null>(null)
 
-    const handleConnect = (walletName: string) => {
-        const wallet = wallets.find((w) => w.name === walletName)
-        if (!wallet) return
+    const handleConnect = (walletObj: any) => {
+        if (!walletObj) return
 
-        setConnectingWallet(walletName)
+        setConnectingWallet(walletObj.name)
         connect(
-            { wallet },
+            { wallet: walletObj },
             {
                 onSuccess: () => {
                     onOpenChange(false)
@@ -204,10 +203,10 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                                 "border-2 rounded-lg bg-white",
                                                 wallet.detected
                                                     ? "border-black/10 hover:border-[#1055C9] cursor-pointer"
-                                                    : "border-black/5 opacity-50 cursor-not-allowed",
+                                                    : "border-black/5 cursor-not-allowed",
                                                 isConnecting && "border-[#1055C9]"
                                             )}
-                                            onClick={() => wallet.detected && !isPending && handleConnect(wallet.name)}
+                                            onClick={() => wallet.detected && !isPending && handleConnect(wallet.wallet)}
                                             disabled={isDisabled}
                                         >
                                             {wallet.iconUrl ? (
@@ -270,10 +269,10 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                                 "border border-black/10 rounded-lg bg-white",
                                                 wallet.detected
                                                     ? "hover:border-[#1055C9] cursor-pointer"
-                                                    : "opacity-50 cursor-not-allowed",
+                                                    : "cursor-not-allowed",
                                                 isConnecting && "border-[#1055C9]"
                                             )}
-                                            onClick={() => wallet.detected && !isPending && handleConnect(wallet.name)}
+                                            onClick={() => wallet.detected && !isPending && handleConnect(wallet.wallet)}
                                             disabled={isDisabled}
                                         >
                                             {wallet.iconUrl ? (

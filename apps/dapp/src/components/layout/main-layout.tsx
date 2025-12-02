@@ -62,7 +62,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
                 {/* Content Area */}
                 <div className="flex-1 overflow-x-hidden">
-                    <div className="p-4 sm:p-6">
+                    <div className="p-4 sm:p-6 xl:max-w-[1800px] xl:mx-auto xl:w-full">
                         {children}
                     </div>
                 </div>

@@ -164,7 +164,8 @@ export default function StrategyDetailPage() {
     const account = useCurrentAccount()
     const userPosition = positions?.find(p => p.strategyId === strategyId)
 
-    const [timePeriod, setTimePeriod] = useState<TimePeriod>('90D')
+    const [apyTimePeriod, setApyTimePeriod] = useState<TimePeriod>('90D')
+    const [interestTimePeriod, setInterestTimePeriod] = useState<TimePeriod>('90D')
     const [transactionSettingsOpen, setTransactionSettingsOpen] = useState(false)
     const [transactionSettings, setTransactionSettings] = useState<TransactionSettings>({
         slippage: 0.5,
@@ -234,14 +235,14 @@ export default function StrategyDetailPage() {
     }
 
     const apyChartData = useMemo(() => {
-        const days = timePeriod === '7D' ? 7 : timePeriod === '30D' ? 30 : 90
+        const days = apyTimePeriod === '7D' ? 7 : apyTimePeriod === '30D' ? 30 : 90
         return getFilteredData(strategy.performanceHistory, days)
-    }, [timePeriod, strategy.performanceHistory])
+    }, [apyTimePeriod, strategy.performanceHistory])
 
     const interestChartData = useMemo(() => {
-        const days = timePeriod === '7D' ? 7 : timePeriod === '30D' ? 30 : 90
+        const days = interestTimePeriod === '7D' ? 7 : interestTimePeriod === '30D' ? 30 : 90
         return getFilteredData(strategy.interestGenerated, days)
-    }, [timePeriod, strategy.interestGenerated])
+    }, [interestTimePeriod, strategy.interestGenerated])
 
     return (
         <MainLayout>
@@ -345,26 +346,26 @@ export default function StrategyDetailPage() {
                                             <CardTitle className="text-base sm:text-lg">Supply APY / Total Supply</CardTitle>
                                             <div className="flex gap-2 flex-wrap">
                                                 <Button 
-                                                    variant={timePeriod === '7D' ? 'default' : 'outline'} 
+                                                    variant={apyTimePeriod === '7D' ? 'default' : 'outline'} 
                                                     size="sm"
-                                                    onClick={() => setTimePeriod('7D')}
-                                                    className={timePeriod === '7D' ? 'bg-brand-gradient' : ''}
+                                                    onClick={() => setApyTimePeriod('7D')}
+                                                    className={apyTimePeriod === '7D' ? 'bg-brand-gradient' : ''}
                                                 >
                                                     7D
                                                 </Button>
                                                 <Button 
-                                                    variant={timePeriod === '30D' ? 'default' : 'outline'} 
+                                                    variant={apyTimePeriod === '30D' ? 'default' : 'outline'} 
                                                     size="sm"
-                                                    onClick={() => setTimePeriod('30D')}
-                                                    className={timePeriod === '30D' ? 'bg-brand-gradient' : ''}
+                                                    onClick={() => setApyTimePeriod('30D')}
+                                                    className={apyTimePeriod === '30D' ? 'bg-brand-gradient' : ''}
                                                 >
                                                     30D
                                                 </Button>
                                                 <Button 
-                                                    variant={timePeriod === '90D' ? 'default' : 'outline'} 
+                                                    variant={apyTimePeriod === '90D' ? 'default' : 'outline'} 
                                                     size="sm"
-                                                    onClick={() => setTimePeriod('90D')}
-                                                    className={timePeriod === '90D' ? 'bg-brand-gradient' : ''}
+                                                    onClick={() => setApyTimePeriod('90D')}
+                                                    className={apyTimePeriod === '90D' ? 'bg-brand-gradient' : ''}
                                                 >
                                                     90D
                                                 </Button>
@@ -440,26 +441,26 @@ export default function StrategyDetailPage() {
                                             </div>
                                             <div className="flex gap-2 flex-wrap">
                                                 <Button 
-                                                    variant={timePeriod === '7D' ? 'default' : 'outline'} 
+                                                    variant={interestTimePeriod === '7D' ? 'default' : 'outline'} 
                                                     size="sm"
-                                                    onClick={() => setTimePeriod('7D')}
-                                                    className={timePeriod === '7D' ? 'bg-brand-gradient' : ''}
+                                                    onClick={() => setInterestTimePeriod('7D')}
+                                                    className={interestTimePeriod === '7D' ? 'bg-brand-gradient' : ''}
                                                 >
                                                     7D
                                                 </Button>
                                                 <Button 
-                                                    variant={timePeriod === '30D' ? 'default' : 'outline'} 
+                                                    variant={interestTimePeriod === '30D' ? 'default' : 'outline'} 
                                                     size="sm"
-                                                    onClick={() => setTimePeriod('30D')}
-                                                    className={timePeriod === '30D' ? 'bg-brand-gradient' : ''}
+                                                    onClick={() => setInterestTimePeriod('30D')}
+                                                    className={interestTimePeriod === '30D' ? 'bg-brand-gradient' : ''}
                                                 >
                                                     30D
                                                 </Button>
                                                 <Button 
-                                                    variant={timePeriod === '90D' ? 'default' : 'outline'} 
+                                                    variant={interestTimePeriod === '90D' ? 'default' : 'outline'} 
                                                     size="sm"
-                                                    onClick={() => setTimePeriod('90D')}
-                                                    className={timePeriod === '90D' ? 'bg-brand-gradient' : ''}
+                                                    onClick={() => setInterestTimePeriod('90D')}
+                                                    className={interestTimePeriod === '90D' ? 'bg-brand-gradient' : ''}
                                                 >
                                                     90D
                                                 </Button>

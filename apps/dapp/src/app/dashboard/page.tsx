@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useMemo } from 'react'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -21,12 +22,15 @@ import {
     Award,
     PieChart,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
-// Mock portfolio performance data
-const mockPortfolioData = Array.from({ length: 30 }, (_, i) => {
+type TimePeriod = '7D' | '30D' | '90D'
+
+// Mock portfolio performance data - 90 days
+const mockPortfolioData90 = Array.from({ length: 90 }, (_, i) => {
     const date = new Date()
-    date.setDate(date.getDate() - (29 - i))
+    date.setDate(date.getDate() - (89 - i))
     const baseValue = 10000
     const growth = Math.random() * 50 + 10
     return {
@@ -48,6 +52,7 @@ export default function DashboardPage() {
     const { data: balance } = useWalletBalance()
     const { data: positions } = useUserPositions()
     const { data: rewards } = useRewards()
+    const [portfolioTimePeriod, setPortfolioTimePeriod] = useState<TimePeriod>('30D')
 
     const totalAllocated = positions?.reduce((sum, pos) => sum + pos.amount, 0) || 0
     const estimatedAPY = positions?.length
@@ -62,6 +67,12 @@ export default function DashboardPage() {
 
     const activeStrategies = positions?.length || 0
     const estimatedMonthlyEarnings = (totalAllocated * estimatedAPY) / 100 / 12
+
+    // Filter portfolio data based on time period
+    const portfolioData = useMemo(() => {
+        const days = portfolioTimePeriod === '7D' ? 7 : portfolioTimePeriod === '30D' ? 30 : 90
+        return mockPortfolioData90.slice(-days)
+    }, [portfolioTimePeriod])
 
     return (
         <MainLayout>
@@ -153,22 +164,48 @@ export default function DashboardPage() {
                     {/* Portfolio Performance Chart */}
                     <Card className="mb-6 border-black/10">
                         <CardHeader>
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                 <CardTitle className="flex items-center gap-2">
                                     <Activity className="w-5 h-5" />
                                     Portfolio Performance
                                 </CardTitle>
-                                <div className="flex items-center gap-4 text-sm">
-                                    <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <div className="flex items-center gap-2 text-sm">
                                         <div className="w-3 h-3 rounded-full bg-brand-gradient"></div>
                                         <span className="text-muted-foreground">Portfolio Value</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button 
+                                            variant={portfolioTimePeriod === '7D' ? 'default' : 'outline'} 
+                                            size="sm"
+                                            onClick={() => setPortfolioTimePeriod('7D')}
+                                            className={portfolioTimePeriod === '7D' ? 'bg-brand-gradient' : ''}
+                                        >
+                                            7D
+                                        </Button>
+                                        <Button 
+                                            variant={portfolioTimePeriod === '30D' ? 'default' : 'outline'} 
+                                            size="sm"
+                                            onClick={() => setPortfolioTimePeriod('30D')}
+                                            className={portfolioTimePeriod === '30D' ? 'bg-brand-gradient' : ''}
+                                        >
+                                            30D
+                                        </Button>
+                                        <Button 
+                                            variant={portfolioTimePeriod === '90D' ? 'default' : 'outline'} 
+                                            size="sm"
+                                            onClick={() => setPortfolioTimePeriod('90D')}
+                                            className={portfolioTimePeriod === '90D' ? 'bg-brand-gradient' : ''}
+                                        >
+                                            90D
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
                         </CardHeader>
                         <CardContent>
                             <div className="w-full h-[200px] sm:h-[250px] md:h-[300px]">
-                                <PortfolioChart data={mockPortfolioData} height={250} />
+                                <PortfolioChart data={portfolioData} height={250} />
                             </div>
                         </CardContent>
                     </Card>

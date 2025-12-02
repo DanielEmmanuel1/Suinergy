@@ -1,15 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
     LayoutDashboard,
     TrendingUp,
     Gift,
     User,
-    Menu,
     X,
     ChevronLeft,
 } from 'lucide-react'
@@ -23,56 +21,141 @@ const navItems = [
     { href: '/profile', label: 'Profile', icon: User },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+    isMobileOpen?: boolean
+    onMobileClose?: () => void
+}
+
+export function Sidebar({ isMobileOpen: externalMobileOpen, onMobileClose: externalOnMobileClose }: SidebarProps = {}) {
     const pathname = usePathname()
     const { sidebarCollapsed, toggleSidebar } = useAppStore()
-    const [isMobileOpen, setIsMobileOpen] = useState(false)
+    const [internalMobileOpen, setInternalMobileOpen] = useState(false)
+    const prevPathnameRef = useRef(pathname)
+    
+    const isMobileOpen = externalMobileOpen !== undefined ? externalMobileOpen : internalMobileOpen
+    
+    const handleMobileClose = () => {
+        if (externalOnMobileClose) {
+            externalOnMobileClose()
+        } else {
+            setInternalMobileOpen(false)
+        }
+    }
+
+    // Close mobile sidebar when route changes (only when pathname actually changes)
+    useEffect(() => {
+        if (prevPathnameRef.current !== pathname) {
+            // Only close if menu is open and pathname changed
+            if (isMobileOpen) {
+                handleMobileClose()
+            }
+            prevPathnameRef.current = pathname
+        }
+    }, [pathname])
+
+    // Prevent body scroll when mobile menu is open
+    useEffect(() => {
+        if (isMobileOpen) {
+            document.body.style.overflow = 'hidden'
+        } else {
+            document.body.style.overflow = ''
+        }
+        return () => {
+            document.body.style.overflow = ''
+        }
+    }, [isMobileOpen])
 
     return (
         <>
-            {/* Mobile Menu Button */}
-            <button
-                onClick={() => setIsMobileOpen(!isMobileOpen)}
-                className="lg:hidden fixed top-3 left-3 sm:top-4 sm:left-4 z-50 p-2 rounded-lg bg-white border border-black/10 shadow-sm"
-                aria-label="Toggle menu"
-            >
-                {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            {/* Mobile Overlay */}
+            {isMobileOpen && (
+                <div
+                    className="lg:hidden fixed inset-0 bg-black/50 z-40"
+                    onClick={handleMobileClose}
+                    aria-hidden="true"
+                />
+            )}
 
-            {/* Sidebar */}
-            <AnimatePresence>
-                {(sidebarCollapsed === false || isMobileOpen) && (
-                    <motion.aside
-                        initial={{ x: -300, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: -300, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className={cn(
-                            "fixed lg:sticky top-0 left-0 z-40 h-screen w-64 bg-white border-r border-black/10 flex flex-col",
-                            isMobileOpen && "lg:translate-x-0",
-                            !isMobileOpen && "lg:translate-x-0 -translate-x-full lg:translate-x-0"
-                        )}
+            {/* Mobile Sidebar - Slides from Bottom, Full Width, Full Height - Completely Hidden When Closed */}
+            <aside className={cn(
+                "lg:hidden fixed bottom-0 left-0 right-0 h-screen z-50 bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-out",
+                isMobileOpen ? "translate-y-0 pointer-events-auto" : "translate-y-full pointer-events-none"
+            )}>
+                {/* Mobile Header with Close Button */}
+                <div className="p-4 sm:p-6 border-b border-black/10 flex items-center justify-between flex-shrink-0">
+                    <Link 
+                        href="/dashboard" 
+                        className="flex items-center gap-2"
+                        onClick={handleMobileClose}
                     >
-                        {/* Logo */}
+                        <div className="w-8 h-8 bg-brand-gradient rounded-lg flex items-center justify-center text-white font-bold">
+                            S
+                        </div>
+                        <span className="font-bold text-xl tracking-tight font-heading">Suinergy</span>
+                    </Link>
+                    <button
+                        onClick={handleMobileClose}
+                        className="p-2 rounded-lg hover:bg-[#f4f3f0] transition-colors"
+                        aria-label="Close menu"
+                    >
+                        <X className="w-6 h-6 text-black" />
+                    </button>
+                </div>
+
+                {/* Mobile Navigation */}
+                <nav className="flex-1 p-4 sm:p-6 space-y-2 overflow-y-auto">
+                    {navItems.map((item) => {
+                        const Icon = item.icon
+                        const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
+                        
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={handleMobileClose}
+                                className={cn(
+                                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                                    isActive
+                                        ? "bg-brand-gradient text-white"
+                                        : "text-black hover:bg-[#f4f3f0]"
+                                )}
+                            >
+                                <Icon className="w-5 h-5" />
+                                <span className="font-medium text-base">{item.label}</span>
+                            </Link>
+                        )
+                    })}
+                </nav>
+            </aside>
+
+            {/* Desktop Sidebar - Completely Hidden on Mobile (No Space Taken), Only Shows on Large Screens */}
+            <aside className={cn(
+                "hidden lg:flex sticky top-0 h-screen bg-white border-r border-black/10 flex-col overflow-hidden transition-all duration-500 ease-in-out",
+                sidebarCollapsed ? "w-16" : "w-64"
+            )} aria-hidden={true}>
+                {!sidebarCollapsed ? (
+                    <>
+                        {/* Desktop Logo */}
                         <div className="p-6 border-b border-black/10">
-                            <div className="flex items-center justify-between">
-                                <Link href="/dashboard" className="flex items-center gap-2">
-                                    <div className="w-8 h-8 bg-brand-gradient rounded-lg flex items-center justify-center text-white font-bold">
+                            <div className="flex items-center justify-between gap-3">
+                                <Link href="/dashboard" className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-brand-gradient rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0">
                                         S
                                     </div>
-                                    <span className="font-bold text-xl tracking-tight font-heading">Suinergy</span>
+                                    <span className="font-bold text-xl tracking-tight font-heading whitespace-nowrap">Suinergy</span>
                                 </Link>
                                 <button
                                     onClick={toggleSidebar}
-                                    className="hidden lg:flex p-1.5 rounded-lg hover:bg-[#f4f3f0] transition-colors"
+                                    className="p-1.5 rounded-lg hover:bg-[#f4f3f0] transition-colors flex-shrink-0"
+                                    aria-label="Collapse sidebar"
                                 >
                                     <ChevronLeft className="w-4 h-4 text-black" />
                                 </button>
                             </div>
                         </div>
 
-                        {/* Navigation */}
-                        <nav className="flex-1 p-4 space-y-2">
+                        {/* Desktop Navigation */}
+                        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                             {navItems.map((item) => {
                                 const Icon = item.icon
                                 const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
@@ -81,82 +164,79 @@ export function Sidebar() {
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        onClick={() => setIsMobileOpen(false)}
                                         className={cn(
-                                            "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
+                                            "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
                                             isActive
                                                 ? "bg-brand-gradient text-white"
                                                 : "text-black hover:bg-[#f4f3f0]"
                                         )}
                                     >
-                                        <Icon className="w-5 h-5" />
-                                        <span className="font-medium">{item.label}</span>
+                                        <Icon className="w-5 h-5 flex-shrink-0" />
+                                        <span className="font-medium whitespace-nowrap">{item.label}</span>
                                     </Link>
                                 )
                             })}
                         </nav>
 
-                        {/* Collapse Button (Desktop) */}
-                        <div className="p-4 border-t border-black/10 hidden lg:block">
+                        {/* Desktop Collapse Button */}
+                        <div className="p-4 border-t border-black/10">
                             <button
                                 onClick={toggleSidebar}
                                 className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-black hover:bg-[#f4f3f0] transition-colors"
                             >
                                 <ChevronLeft className="w-4 h-4" />
-                                <span className="text-sm">Collapse</span>
+                                <span className="text-sm whitespace-nowrap">Collapse</span>
                             </button>
                         </div>
-                    </motion.aside>
-                )}
-            </AnimatePresence>
-
-            {/* Collapsed Sidebar */}
-            {sidebarCollapsed && (
-                <aside className="hidden lg:block sticky top-0 h-screen w-16 bg-white border-r border-black/10 flex flex-col items-center py-4">
-                    <Link href="/dashboard" className="mb-8">
-                        <div className="w-10 h-10 bg-brand-gradient rounded-lg flex items-center justify-center text-white font-bold">
-                            S
+                    </>
+                ) : (
+                    <>
+                        {/* Collapsed Logo */}
+                        <div className="p-4 border-b border-black/10">
+                            <Link href="/dashboard" className="flex justify-center">
+                                <div className="w-10 h-10 bg-brand-gradient rounded-lg flex items-center justify-center text-white font-bold">
+                                    S
+                                </div>
+                            </Link>
                         </div>
-                    </Link>
-                    <nav className="flex-1 space-y-2">
-                        {navItems.map((item) => {
-                            const Icon = item.icon
-                            const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
-                            
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={cn(
-                                        "flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200",
-                                        isActive
-                                            ? "bg-brand-gradient text-white"
-                                            : "text-black hover:bg-[#f4f3f0]"
-                                    )}
-                                    title={item.label}
-                                >
-                                    <Icon className="w-5 h-5" />
-                                </Link>
-                            )
-                        })}
-                    </nav>
-                    <button
-                        onClick={toggleSidebar}
-                        className="p-2 rounded-lg text-black hover:bg-[#f4f3f0] transition-colors"
-                    >
-                        <ChevronLeft className="w-4 h-4 rotate-180" />
-                    </button>
-                </aside>
-            )}
 
-            {/* Mobile Overlay */}
-            {isMobileOpen && (
-                <div
-                    className="lg:hidden fixed inset-0 bg-black/50 z-30"
-                    onClick={() => setIsMobileOpen(false)}
-                />
-            )}
+                        {/* Collapsed Navigation */}
+                        <nav className="flex-1 p-2 space-y-2 overflow-y-auto">
+                            {navItems.map((item) => {
+                                const Icon = item.icon
+                                const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
+                                
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={cn(
+                                            "flex items-center justify-center w-12 h-12 rounded-lg transition-colors",
+                                            isActive
+                                                ? "bg-brand-gradient text-white"
+                                                : "text-black hover:bg-[#f4f3f0]"
+                                        )}
+                                        title={item.label}
+                                    >
+                                        <Icon className="w-5 h-5" />
+                                    </Link>
+                                )
+                            })}
+                        </nav>
+
+                        {/* Collapsed Expand Button */}
+                        <div className="p-4 border-t border-black/10">
+                            <button
+                                onClick={toggleSidebar}
+                                className="w-full flex items-center justify-center p-2 rounded-lg text-black hover:bg-[#f4f3f0] transition-colors"
+                                aria-label="Expand sidebar"
+                            >
+                                <ChevronLeft className="w-4 h-4 rotate-180" />
+                            </button>
+                        </div>
+                    </>
+                )}
+            </aside>
         </>
     )
 }
-

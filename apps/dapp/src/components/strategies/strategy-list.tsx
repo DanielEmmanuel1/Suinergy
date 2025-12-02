@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LayoutGrid, Table2, TrendingUp, TrendingDown, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -63,6 +63,19 @@ const mockStrategies = [
 
 export function StrategyList() {
     const { viewMode, setViewMode } = useAppStore()
+    const [isMobile, setIsMobile] = useState(false)
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768)
+        }
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
+
+    // Force grid view on mobile
+    const effectiveViewMode = isMobile ? 'grid' : viewMode
 
     return (
         <div className="space-y-6">
@@ -81,6 +94,7 @@ export function StrategyList() {
                         </p>
                     </div>
                     <div className="flex items-center gap-2 self-start sm:self-auto">
+                        {/* Table View - Hidden on Small Screens */}
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -88,6 +102,7 @@ export function StrategyList() {
                                         variant={viewMode === 'table' ? 'default' : 'outline'}
                                         size="icon"
                                         onClick={() => setViewMode('table')}
+                                        className="hidden md:flex"
                                     >
                                         <Table2 className="w-4 h-4" />
                                     </Button>
@@ -139,7 +154,8 @@ export function StrategyList() {
                 </Card>
 
                 {/* Strategy Display */}
-                {viewMode === 'table' ? (
+                {/* Always show grid on mobile, respect viewMode on desktop */}
+                {effectiveViewMode === 'table' ? (
                     <StrategyTable strategies={mockStrategies} />
                 ) : (
                     <StrategyGrid strategies={mockStrategies} />

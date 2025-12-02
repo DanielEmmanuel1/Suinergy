@@ -7,6 +7,20 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { useAppStore } from '@/store/use-app-store'
 import { DepositModal } from '../modals/deposit-modal'
+import Link from 'next/link'
+
+interface Platform {
+    id: string
+    name: string
+    logo?: string
+    allocation: number
+    apy: number
+    apyContribution: number
+    yieldType: 'lending' | 'lp' | 'staking' | 'emissions' | 'structured'
+    risk: 'low' | 'medium' | 'high'
+    health: 'excellent' | 'good' | 'fair'
+    color: string
+}
 
 interface Strategy {
     id: string
@@ -22,6 +36,7 @@ interface Strategy {
     risk: 'low' | 'medium' | 'high'
     withdrawalLatency: string
     platformFee: number
+    platforms?: Platform[]
 }
 
 interface StrategyGridProps {
@@ -54,12 +69,12 @@ export function StrategyGrid({ strategies }: StrategyGridProps) {
             {strategies.map((strategy) => (
                 <Card
                     key={strategy.id}
-                    className="hover:shadow-suinergy-medium transition-all duration-200 border-[#000000]/10"
+                    className="hover:shadow-suinergy-medium transition-all duration-200 border-black/10"
                 >
                     <CardHeader>
                         <div className="flex items-start justify-between">
                             <div>
-                                <CardTitle className="text-lg text-[#000000]">{strategy.name}</CardTitle>
+                                <CardTitle className="text-lg text-black">{strategy.name}</CardTitle>
                                 <Badge variant="secondary" className="mt-2">
                                     {strategy.asset}
                                 </Badge>
@@ -82,7 +97,7 @@ export function StrategyGrid({ strategies }: StrategyGridProps) {
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="text-3xl font-bold text-transparent bg-clip-text bg-brand-gradient">{strategy.apy}%</span>
-                                <span className="text-sm text-[#000000]/60">APY</span>
+                                <span className="text-sm text-muted-foreground">APY</span>
                                 {strategy.apyChange > 0 ? (
                                     <span className="text-green-600 flex items-center gap-0.5 text-xs">
                                         <ArrowUpRight className="w-3 h-3" />
@@ -129,17 +144,27 @@ export function StrategyGrid({ strategies }: StrategyGridProps) {
                             </div>
                         </div>
 
-                        {/* Action */}
-                        <Button
-                            className="w-full"
-                            onClick={() => handleDeposit(strategy.id)}
-                        >
-                            Deposit
-                        </Button>
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                            <Button
+                                className="flex-1"
+                                onClick={() => handleDeposit(strategy.id)}
+                            >
+                                Deposit
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="flex-1"
+                                asChild
+                            >
+                                <Link href={`/strategies/${strategy.id}`}>
+                                    View Details
+                                </Link>
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             ))}
-            <DepositModal />
         </div>
     )
 }

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/store/use-app-store'
 import { DepositModal } from '../modals/deposit-modal'
+import Link from 'next/link'
 
 interface Strategy {
     id: string
@@ -108,12 +109,23 @@ export function StrategyTable({ strategies }: StrategyTableProps) {
                                     </Badge>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <Button
-                                        size="sm"
-                                        onClick={() => handleDeposit(strategy.id)}
-                                    >
-                                        Deposit
-                                    </Button>
+                                    <div className="flex items-center gap-2 justify-end">
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleDeposit(strategy.id)}
+                                        >
+                                            Deposit
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            asChild
+                                        >
+                                            <Link href={`/strategies/${strategy.id}`}>
+                                                View Details
+                                            </Link>
+                                        </Button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

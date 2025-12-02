@@ -1,9 +1,11 @@
 'use client'
 
-import { User, Wallet, Clock, TrendingUp } from 'lucide-react'
+import { useMemo } from 'react'
+import { User, TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { TabbedContainer } from '@/components/ui/tabbed-container'
+import { TransactionHistory, Transaction } from '@/components/transactions/transaction-history'
 import { useCurrentAccount } from '@mysten/dapp-kit'
 
 // Mock data - will be replaced with real data hooks
@@ -18,15 +20,80 @@ const mockProfile = {
         { strategy: 'SUI Staking', amount: 10000, apy: 8.2 },
         { strategy: 'Leveraged Yield', amount: 2000, apy: 18.5 },
     ],
-    transactionHistory: [
-        { type: 'deposit', amount: 5000, strategy: 'USDC Liquidity', timestamp: '2h ago', status: 'completed' },
-        { type: 'withdrawal', amount: 2000, strategy: 'SUI Staking', timestamp: '1d ago', status: 'completed' },
-        { type: 'deposit', amount: 10000, strategy: 'SUI Staking', timestamp: '3d ago', status: 'completed' },
-    ],
 }
 
 export function ProfilePanel() {
     const account = useCurrentAccount()
+
+    // Mock all transactions across all strategies
+    const allTransactions: Transaction[] = useMemo(() => [
+        {
+            id: '1',
+            type: 'deposit',
+            amount: 5000,
+            token: 'USDC',
+            strategyId: '1',
+            strategyName: 'USDC Liquidity Pool',
+            txHash: '0x1234567890abcdef',
+            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+            status: 'completed',
+        },
+        {
+            id: '2',
+            type: 'earnings',
+            amount: 125.50,
+            token: 'SUI',
+            strategyId: '2',
+            strategyName: 'SUI Staking',
+            txHash: '0xabcdef1234567890',
+            timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+            status: 'completed',
+        },
+        {
+            id: '3',
+            type: 'withdrawal',
+            amount: 2000,
+            token: 'SUI',
+            strategyId: '2',
+            strategyName: 'SUI Staking',
+            txHash: '0x9876543210fedcba',
+            timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+            status: 'completed',
+        },
+        {
+            id: '4',
+            type: 'deposit',
+            amount: 10000,
+            token: 'SUI',
+            strategyId: '2',
+            strategyName: 'SUI Staking',
+            txHash: '0x5555555555555555',
+            timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+            status: 'completed',
+        },
+        {
+            id: '5',
+            type: 'deposit',
+            amount: 2000,
+            token: 'USDT',
+            strategyId: '3',
+            strategyName: 'Leveraged Yield Farming',
+            txHash: '0x4444444444444444',
+            timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+            status: 'completed',
+        },
+        {
+            id: '6',
+            type: 'earnings',
+            amount: 37.00,
+            token: 'USDC',
+            strategyId: '1',
+            strategyName: 'USDC Liquidity Pool',
+            txHash: '0x3333333333333333',
+            timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+            status: 'completed',
+        },
+    ], [])
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('en-US', {
@@ -157,59 +224,7 @@ export function ProfilePanel() {
                 </Card>
 
                 {/* Transaction History */}
-                <Card className="border-black/10">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Clock className="w-5 h-5" />
-                            Transaction History
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {mockProfile.transactionHistory.map((tx, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center justify-between p-3 rounded-lg bg-[#f4f3f0]"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div
-                                            className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                                tx.type === 'deposit'
-                                                    ? 'bg-brand-gradient'
-                                                    : 'bg-white border border-black/20'
-                                            }`}
-                                        >
-                                            <Wallet
-                                                className={`w-5 h-5 ${
-                                                    tx.type === 'deposit' ? 'text-white' : 'text-black'
-                                                }`}
-                                            />
-                                        </div>
-                                        <div>
-                                            <div className="font-medium text-black capitalize">
-                                                {tx.type} - {tx.strategy}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground">{tx.timestamp}</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div
-                                            className={`font-semibold ${
-                                                tx.type === 'deposit' ? 'text-transparent bg-clip-text bg-brand-gradient' : 'text-black'
-                                            }`}
-                                        >
-                                            {tx.type === 'deposit' ? '+' : '-'}
-                                            {formatCurrency(tx.amount)}
-                                        </div>
-                                        <Badge variant="secondary" className="mt-1 text-xs">
-                                            {tx.status}
-                                        </Badge>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                <TransactionHistory transactions={allTransactions} showStrategy={true} />
             </TabbedContainer>
         </div>
     )

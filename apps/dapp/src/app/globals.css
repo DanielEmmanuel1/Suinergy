@@ -70,3 +70,40 @@
     background-position: 100% 50%;
   }
 }
+
+/* Gradient Borders & Utilities */
+@layer utilities {
+  .gradient-border {
+    position: relative;
+    background: white;
+    background-clip: padding-box;
+    border: solid 2px transparent;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    margin: -2px;
+    border-radius: inherit;
+    background: linear-gradient(to right, #b92b27, #1565c0);
+  }
+
+  .gradient-border-hover {
+    transition: all 0.3s ease;
+  }
+
+  .gradient-border-hover:hover {
+    box-shadow: 0 0 20px rgba(185, 43, 39, 0.3), 0 0 40px rgba(21, 101, 192, 0.2);
+  }
+
+  /* Text gradient utility */
+  .text-brand-gradient {
+    @apply text-transparent bg-clip-text;
+    background-image: linear-gradient(to right, #b92b27, #1565c0);
+  }
+}

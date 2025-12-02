@@ -12,7 +12,7 @@ const TabsList = React.forwardRef<
     <TabsPrimitive.List
         ref={ref}
         className={cn(
-            "inline-flex h-10 items-center justify-center rounded-xl bg-[#f4f3f0] p-1 text-[#000000]",
+            "relative inline-flex h-10 items-center justify-center rounded-xl bg-[#f4f3f0] p-1 text-[#000000]",
             className
         )}
         {...props}
@@ -27,7 +27,7 @@ const TabsTrigger = React.forwardRef<
     <TabsPrimitive.Trigger
         ref={ref}
         className={cn(
-            "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1055C9] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-[#FFFFFF] data-[state=active]:text-[#1055C9] data-[state=active]:shadow-sm",
+            "relative z-10 inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1055C9] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-[#000000]/60 hover:data-[state=inactive]:text-[#000000] data-[state=active]:before:absolute data-[state=active]:before:inset-0 data-[state=active]:before:z-[-1] data-[state=active]:before:rounded-lg data-[state=active]:before:bg-brand-gradient data-[state=active]:before:transition-all data-[state=active]:before:duration-300",
             className
         )}
         {...props}

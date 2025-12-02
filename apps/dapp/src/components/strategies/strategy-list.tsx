@@ -10,6 +10,7 @@ import { TabbedContainer } from '@/components/ui/tabbed-container'
 import { useAppStore } from '@/store/use-app-store'
 import { StrategyTable } from './strategy-table'
 import { StrategyGrid } from './strategy-grid'
+import { DepositModal } from '../modals/deposit-modal'
 
 // Mock data - will be replaced with real data hooks
 const mockStrategies = [
@@ -144,6 +145,7 @@ export function StrategyList() {
                     <StrategyGrid strategies={mockStrategies} />
                 )}
             </TabbedContainer>
+            <DepositModal />
         </div>
     )
 }

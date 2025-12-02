@@ -12,6 +12,8 @@
     "dependencies": {
         "@mysten/dapp-kit": "^0.14.33",
         "@mysten/sui": "^1.14.0",
+        "@mysten/wallet-adapter-all-wallets": "^0.5.15",
+        "@mysten/wallet-adapter-wallet-standard": "^0.8.0",
         "@radix-ui/react-accordion": "^1.1.2",
         "@radix-ui/react-alert-dialog": "^1.0.5",
         "@radix-ui/react-avatar": "^1.0.4",

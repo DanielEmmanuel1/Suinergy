@@ -105,6 +105,12 @@ importers:
       '@mysten/sui':
         specifier: ^1.14.0
         version: 1.45.0(typescript@5.9.3)
+      '@mysten/wallet-adapter-all-wallets':
+        specifier: ^0.5.15
+        version: 0.5.15
+      '@mysten/wallet-adapter-wallet-standard':
+        specifier: ^0.8.0
+        version: 0.8.0
       '@radix-ui/react-accordion':
         specifier: ^1.1.2
         version: 1.2.12(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -651,6 +657,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@mysten/bcs@0.7.3':
+    resolution: {integrity: sha512-fbusBfsyc2MpTACi72H5edWJ670T84va+qn9jSPpb5BzZ+pzUM1Q0ApPrF5OT+mB1o5Ng+mxPQpBCZQkfiV2TA==}
+
   '@mysten/bcs@1.5.0':
     resolution: {integrity: sha512-v39dm5oNfKYMAf2CVI+L0OaJiG9RVXsjqPM4BwTKcHNCZOvr35IIewGtXtWXsI67SQU2TRq8lhQzeibdiC/CNg==}
 
@@ -663,6 +672,11 @@ packages:
       '@tanstack/react-query': ^5.0.0
       react: '*'
 
+  '@mysten/sui.js@0.40.0':
+    resolution: {integrity: sha512-PEGdMe+QgpIdDIpyO4/yb+CK4x3Hki+kYPbQ5n3DVsWyb2ztFwB+5oYdc7qG3QkniO1lnCrlSHqZ5mN+x3RzrQ==}
+    engines: {node: '>=16'}
+    deprecated: This package has been renamed to @mysten/sui, please update to use the renamed package.
+
   '@mysten/sui@1.24.0':
     resolution: {integrity: sha512-lmJJLM7eMrxM6Qpr6cdLr07UBXlxCM7SJjfcDO7NGrqZTx7/3TD2QhhRpDx0fS2tODxrNwQxCoHPApLVPjokIA==}
     engines: {node: '>=18'}
@@ -674,8 +688,27 @@ packages:
   '@mysten/utils@0.2.0':
     resolution: {integrity: sha512-CM6kJcJHX365cK6aXfFRLBiuyXc5WSBHQ43t94jqlCAIRw8umgNcTb5EnEA9n31wPAQgLDGgbG/rCUISCTJ66w==}
 
+  '@mysten/wallet-adapter-all-wallets@0.5.15':
+    resolution: {integrity: sha512-ex+8TxqsOhqwnfbIKwquIfoXuigrvzYCgq4+NhX3+Ll55/KsT+u2B043BPkh8LFiiJwowr+05Yn+ov50rRieLA==}
+    deprecated: Wallet adapters have been deprecated in favor of the Wallet Standard. Please upgrade to the latest Wallet Kit versions.
+
+  '@mysten/wallet-adapter-base@0.9.0':
+    resolution: {integrity: sha512-Obcfd30AC0Tcyvqc9+h0vvjrRB6Td2PNWhxRlTq/hSxDY66M3XqTLgoO8wDBtz+91oga4obAYvM02m7xV7X0Zw==}
+    deprecated: Wallet adapters have been deprecated in favor of the Wallet Standard. Please upgrade to the latest Wallet Kit versions.
+
+  '@mysten/wallet-adapter-unsafe-burner@0.10.0':
+    resolution: {integrity: sha512-FpYFhTYFk10OOzdbx+wgpPmf7ThppCTL/3+icQByYc5FHi1qiARR8OoF/LHnMzxwuePIqYqWDTy9sZLEyzRJjA==}
+    deprecated: Wallet adapters have been deprecated in favor of the Wallet Standard. Please upgrade to the latest Wallet Kit versions.
+
+  '@mysten/wallet-adapter-wallet-standard@0.8.0':
+    resolution: {integrity: sha512-WPQSQTUvQCX2PPuVU8NHEzXg+mMCzIKqMG6llt0tLxc4enTtFHw9Do4i298NyZ00zWWzHdx9MXjBOl1OuybURg==}
+    deprecated: Wallet adapters have been deprecated in favor of the Wallet Standard. Please upgrade to the latest Wallet Kit versions.
+
   '@mysten/wallet-standard@0.13.29':
     resolution: {integrity: sha512-NR9I3HprticwT3HRPQ36VojV5Gjp+S/iJYdib3qLVrSiCOQjoilmYzA53pDu/rFDSrljskgV/0fAj9ynF9nVFg==}
+
+  '@mysten/wallet-standard@0.6.0':
+    resolution: {integrity: sha512-xE/OijN9zIPoTjTWuxlYMHtp7kXPcAR8dDAbxOIH5h7EZCTk+G6p+SzDp8jV5magf50VcYP0cVjS4CQLx1wQuQ==}
 
   '@mysten/zksend@0.12.19':
     resolution: {integrity: sha512-cZPcs1PCi8vuVY6wT2uedPEnsGlNDfwa5RtQyT7cS1TtwJ0+SSc7tlFUA31m3L/hpYxEb0sD8/kDguPlcFUItw==}
@@ -770,6 +803,9 @@ packages:
   '@nolyfill/is-core-module@1.0.39':
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
+
+  '@open-rpc/client-js@1.8.1':
+    resolution: {integrity: sha512-vV+Hetl688nY/oWI9IFY0iKDrWuLdYhf7OIKI6U1DcnJV7r4gAgwRJjEr1QVYszUc0gjkHoQJzqevmXMGLyA0g==}
 
   '@prisma/client@5.22.0':
     resolution: {integrity: sha512-M0SVXfyHnQREBKxCgyo7sffrKttwE6R8PMq330MIUF0pTwjUhLbW84pFDlf06B27XyCR++VtjugEnIHdr07SVA==}
@@ -1341,6 +1377,9 @@ packages:
     resolution: {integrity: sha512-AO1O2fEmfUqWGjEofmPNMQRlwgZ96eB5OFsVJjeH8/RKd1/Yf4zbPnXO+r2TD4aueA6X9JRCJU2GUprI9+m8uQ==}
     deprecated: 'The ''@studio-freight/tempus'' package has been renamed to ''tempus''. Please update your dependencies: npm install tempus and visit the documentation: https://www.npmjs.com/package/tempus'
 
+  '@suchipi/femver@1.0.0':
+    resolution: {integrity: sha512-bprE8+K5V+DPX7q2e2K57ImqNBdfGHDIWaGI5xHxZoxbKOuQZn4wzPiUxOAHnsUr3w3xHrWXwN7gnG/iIuEMIg==}
+
   '@swc/helpers@0.5.2':
     resolution: {integrity: sha512-E4KcWTpoLHqwPHLxidpOqQbcrZVgi0rsmmZXUle1jXmJfuIf/UWpczUJ7MZZ5tlxytgJXyp0w4PGkkeLiuIdZw==}
 
@@ -1622,6 +1661,10 @@ packages:
     resolution: {integrity: sha512-DJDQhjKmSNVLKWItoKThJS+CsJQjR9AOBOirBVT1F9YpRyC9oYHE+ZnSf8y8bxUphtKqdQMPVQ2mHohYdRvDVQ==}
     engines: {node: '>=16'}
 
+  '@wallet-standard/core@1.0.3':
+    resolution: {integrity: sha512-Jb33IIjC1wM1HoKkYD7xQ6d6PZ8EmMZvyc8R7dFgX66n/xkvksVTW04g9yLvQXrLFbcIjHrCxW6TXMhvpsAAzg==}
+    engines: {node: '>=16'}
+
   '@wallet-standard/core@1.1.0':
     resolution: {integrity: sha512-v2W5q/NlX1qkn2q/JOXQT//pOAdrhz7+nOcO2uiH9+a0uvreL+sdWWqkhFmMcX+HEBjaibdOQMUoIfDhOGX4XA==}
     engines: {node: '>=16'}
@@ -1761,6 +1804,9 @@ packages:
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
+  base-x@4.0.1:
+    resolution: {integrity: sha512-uAZ8x6r6S3aUM9rbHGVOIsR15U/ZSc82b3ymnCPsT45Gk1DDvhDPdIgB5MrhirZWt+5K0EEPQH985kNqZgNPFw==}
+
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
@@ -1790,6 +1836,9 @@ packages:
     resolution: {integrity: sha512-tbydkR/CxfMwelN0vwdP/pLkDwyAASZ+VfWm4EOwlB6SWhx1sYnWLqo8N5j0rAzPfzfRaxt0mM/4wPU/Su84RQ==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
+
+  bs58@5.0.0:
+    resolution: {integrity: sha512-r+ihvQJvahgYT50JD05dyJNKlmmSlMoOGwn1lCcEzanPglg7TxYjioQUYehQ9mAR/+hOSd2jRc/Z2y5UxBymvQ==}
 
   buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
@@ -2668,6 +2717,14 @@ packages:
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
+  isomorphic-fetch@3.0.0:
+    resolution: {integrity: sha512-qvUtwJ3j6qwsF3jLxkZ72qCgjMysPzDfeV240JHiGZsANBYd+EEuu35v7dfrJ9Up0Ak07D7GGSkGhCHTqg/5wA==}
+
+  isomorphic-ws@5.0.0:
+    resolution: {integrity: sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==}
+    peerDependencies:
+      ws: '*'
+
   iterator.prototype@1.1.5:
     resolution: {integrity: sha512-H0dkQoCa3b2VEeKQBOxFph+JAbcrQdE7KC0UkqwpLmv2EC4P41QXP+rqo9wYodACiG5/WM5s9oDApTU8utwj9g==}
     engines: {node: '>= 0.4'}
@@ -2891,6 +2948,15 @@ packages:
   node-cron@3.0.3:
     resolution: {integrity: sha512-dOal67//nohNgYWb+nWmg5dkFdIwDm8EpeGYMekPMrngV3637lqnX0lbUcCtgibHTz6SEz7DAIjKvKDFYCnO1A==}
     engines: {node: '>=6.0.0'}
+
+  node-fetch@2.7.0:
+    resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
+    engines: {node: 4.x || >=6.0.0}
+    peerDependencies:
+      encoding: ^0.1.0
+    peerDependenciesMeta:
+      encoding:
+        optional: true
 
   node-gyp-build-optional-packages@5.2.2:
     resolution: {integrity: sha512-s+w+rBWnpTMwSFbaE0UXsRlg7hU4FjekKU4eyAih5T8nJuNZT1nNsskXpxmeqSK9UzkBl6UgRlnKc8hz8IEqOw==}
@@ -3387,6 +3453,9 @@ packages:
     resolution: {integrity: sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==}
     engines: {node: '>=10.0.0'}
 
+  strict-event-emitter-types@2.0.0:
+    resolution: {integrity: sha512-Nk/brWYpD85WlOgzw5h173aci0Teyv8YdIAEtV+N88nDB0dLlazZyJMIsN6eo1/AR61l+p6CJTG1JIyFaoNEEA==}
+
   string.prototype.includes@2.0.1:
     resolution: {integrity: sha512-o7+c9bW6zpAdJHTtujeePODAhkuicdAryFsfVKwA+wGw89wJ4GTY484WTucM9hLtDEOpOvI+aHnzqnC5lHp4Rg==}
     engines: {node: '>= 0.4'}
@@ -3443,6 +3512,10 @@ packages:
     engines: {node: '>=16 || 14 >=14.17'}
     hasBin: true
 
+  superstruct@1.0.4:
+    resolution: {integrity: sha512-7JpaAoX2NGyoFlI9NBh66BQXGONc+uE+MRS5i2iOBKuS4e+ccgMDjATgZldkah+33DakBxDHiss9kvUcGAO8UQ==}
+    engines: {node: '>=14.0.0'}
+
   supports-color@7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
     engines: {node: '>=8'}
@@ -3491,6 +3564,9 @@ packages:
   toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
     engines: {node: '>=0.6'}
+
+  tr46@0.0.3:
+    resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
 
   ts-api-utils@1.4.3:
     resolution: {integrity: sha512-i3eMG77UTMD0hZhgRS562pv83RC6ukSAC2GMNWc+9dieh/+jDM5u5YG+NHX6VNDRHQcHwmsTHctP9LhbC3WxVw==}
@@ -3545,6 +3621,9 @@ packages:
   turbo@1.13.4:
     resolution: {integrity: sha512-1q7+9UJABuBAHrcC4Sxp5lOqYS5mvxRrwa33wpIyM18hlOCpRD/fTJNxZ0vhbMcJmz15o9kkVm743mPn7p6jpQ==}
     hasBin: true
+
+  tweetnacl@1.0.3:
+    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -3656,6 +3735,15 @@ packages:
     resolution: {integrity: sha512-Lcvm7MGST/4fup+ifyKi2hjyIAwcdI4HRgtvTpIUxBRhB+RFtUh8XtDOxUfctVCnhVi+QQj49i91OyvzkJl6cg==}
     engines: {node: '>=10.13.0'}
 
+  webidl-conversions@3.0.1:
+    resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
+
+  whatwg-fetch@3.6.20:
+    resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
+
+  whatwg-url@5.0.0:
+    resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
+
   which-boxed-primitive@1.1.1:
     resolution: {integrity: sha512-TbX3mj8n0odCBFVlY8AxkqcHASw3L60jIuF8jFP78az3C2YhmGvqbHBpAjTRH2/xqYunrJ9g1jSyjCjpoWzIAA==}
     engines: {node: '>= 0.4'}
@@ -3683,6 +3771,18 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+
+  ws@7.5.10:
+    resolution: {integrity: sha512-+dbF1tHwZpXcbOJdVOkzLDxZP1ailvSxM6ZweXTegylPny803bFhA+vqBYw4s31NSAk4S2Qz+AKXK9a4wkdjcQ==}
+    engines: {node: '>=8.3.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: ^5.0.2
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
 
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
@@ -3947,6 +4047,10 @@ snapshots:
   '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.3':
     optional: true
 
+  '@mysten/bcs@0.7.3':
+    dependencies:
+      bs58: 5.0.0
+
   '@mysten/bcs@1.5.0':
     dependencies:
       '@scure/base': 1.2.6
@@ -3980,6 +4084,23 @@ snapshots:
       - immer
       - react-dom
       - typescript
+
+  '@mysten/sui.js@0.40.0':
+    dependencies:
+      '@mysten/bcs': 0.7.3
+      '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+      '@open-rpc/client-js': 1.8.1
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
+      '@suchipi/femver': 1.0.0
+      events: 3.3.0
+      superstruct: 1.0.4
+      tweetnacl: 1.0.3
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
 
   '@mysten/sui@1.24.0(typescript@5.9.3)':
     dependencies:
@@ -4025,6 +4146,45 @@ snapshots:
     dependencies:
       '@scure/base': 1.2.6
 
+  '@mysten/wallet-adapter-all-wallets@0.5.15':
+    dependencies:
+      '@mysten/wallet-adapter-unsafe-burner': 0.10.0
+      '@mysten/wallet-adapter-wallet-standard': 0.8.0
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
+  '@mysten/wallet-adapter-base@0.9.0':
+    dependencies:
+      '@mysten/sui.js': 0.40.0
+      '@mysten/wallet-standard': 0.6.0
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
+  '@mysten/wallet-adapter-unsafe-burner@0.10.0':
+    dependencies:
+      '@mysten/sui.js': 0.40.0
+      '@mysten/wallet-adapter-base': 0.9.0
+      '@mysten/wallet-standard': 0.6.0
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
+  '@mysten/wallet-adapter-wallet-standard@0.8.0':
+    dependencies:
+      '@mysten/sui.js': 0.40.0
+      '@mysten/wallet-adapter-base': 0.9.0
+      '@mysten/wallet-standard': 0.6.0
+      mitt: 3.0.1
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
   '@mysten/wallet-standard@0.13.29(typescript@5.9.3)':
     dependencies:
       '@mysten/sui': 1.24.0(typescript@5.9.3)
@@ -4033,6 +4193,15 @@ snapshots:
       - '@gql.tada/svelte-support'
       - '@gql.tada/vue-support'
       - typescript
+
+  '@mysten/wallet-standard@0.6.0':
+    dependencies:
+      '@mysten/sui.js': 0.40.0
+      '@wallet-standard/core': 1.0.3
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
 
   '@mysten/zksend@0.12.19(typescript@5.9.3)':
     dependencies:
@@ -4109,6 +4278,17 @@ snapshots:
       fastq: 1.19.1
 
   '@nolyfill/is-core-module@1.0.39': {}
+
+  '@open-rpc/client-js@1.8.1':
+    dependencies:
+      isomorphic-fetch: 3.0.0
+      isomorphic-ws: 5.0.0(ws@7.5.10)
+      strict-event-emitter-types: 2.0.0
+      ws: 7.5.10
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
 
   '@prisma/client@5.22.0(prisma@5.22.0)':
     optionalDependencies:
@@ -4691,6 +4871,8 @@ snapshots:
 
   '@studio-freight/tempus@0.0.38': {}
 
+  '@suchipi/femver@1.0.0': {}
+
   '@swc/helpers@0.5.2':
     dependencies:
       tslib: 2.8.1
@@ -4984,6 +5166,13 @@ snapshots:
 
   '@wallet-standard/base@1.1.0': {}
 
+  '@wallet-standard/core@1.0.3':
+    dependencies:
+      '@wallet-standard/app': 1.1.0
+      '@wallet-standard/base': 1.1.0
+      '@wallet-standard/features': 1.1.0
+      '@wallet-standard/wallet': 1.1.0
+
   '@wallet-standard/core@1.1.0':
     dependencies:
       '@wallet-standard/app': 1.1.0
@@ -5147,6 +5336,8 @@ snapshots:
 
   balanced-match@1.0.2: {}
 
+  base-x@4.0.1: {}
+
   base64-js@1.5.1: {}
 
   baseline-browser-mapping@2.8.32: {}
@@ -5190,6 +5381,10 @@ snapshots:
       electron-to-chromium: 1.5.262
       node-releases: 2.0.27
       update-browserslist-db: 1.1.4(browserslist@4.28.0)
+
+  bs58@5.0.0:
+    dependencies:
+      base-x: 4.0.1
 
   buffer@6.0.3:
     dependencies:
@@ -6245,6 +6440,17 @@ snapshots:
 
   isexe@2.0.0: {}
 
+  isomorphic-fetch@3.0.0:
+    dependencies:
+      node-fetch: 2.7.0
+      whatwg-fetch: 3.6.20
+    transitivePeerDependencies:
+      - encoding
+
+  isomorphic-ws@5.0.0(ws@7.5.10):
+    dependencies:
+      ws: 7.5.10
+
   iterator.prototype@1.1.5:
     dependencies:
       define-data-property: 1.1.4
@@ -6440,6 +6646,10 @@ snapshots:
   node-cron@3.0.3:
     dependencies:
       uuid: 8.3.2
+
+  node-fetch@2.7.0:
+    dependencies:
+      whatwg-url: 5.0.0
 
   node-gyp-build-optional-packages@5.2.2:
     dependencies:
@@ -6980,6 +7190,8 @@ snapshots:
 
   streamsearch@1.1.0: {}
 
+  strict-event-emitter-types@2.0.0: {}
+
   string.prototype.includes@2.0.1:
     dependencies:
       call-bind: 1.0.8
@@ -7057,6 +7269,8 @@ snapshots:
       tinyglobby: 0.2.15
       ts-interface-checker: 0.1.13
 
+  superstruct@1.0.4: {}
+
   supports-color@7.2.0:
     dependencies:
       has-flag: 4.0.0
@@ -7124,6 +7338,8 @@ snapshots:
 
   toidentifier@1.0.1: {}
 
+  tr46@0.0.3: {}
+
   ts-api-utils@1.4.3(typescript@5.9.3):
     dependencies:
       typescript: 5.9.3
@@ -7172,6 +7388,8 @@ snapshots:
       turbo-linux-arm64: 1.13.4
       turbo-windows-64: 1.13.4
       turbo-windows-arm64: 1.13.4
+
+  tweetnacl@1.0.3: {}
 
   type-check@0.4.0:
     dependencies:
@@ -7317,6 +7535,15 @@ snapshots:
       glob-to-regexp: 0.4.1
       graceful-fs: 4.2.11
 
+  webidl-conversions@3.0.1: {}
+
+  whatwg-fetch@3.6.20: {}
+
+  whatwg-url@5.0.0:
+    dependencies:
+      tr46: 0.0.3
+      webidl-conversions: 3.0.1
+
   which-boxed-primitive@1.1.1:
     dependencies:
       is-bigint: 1.1.0
@@ -7365,6 +7592,8 @@ snapshots:
   word-wrap@1.2.5: {}
 
   wrappy@1.0.2: {}
+
+  ws@7.5.10: {}
 
   yocto-queue@0.1.0: {}
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCurrentAccount, useDisconnectWallet, useWallets } from '@mysten/dapp-kit'
+import { useCurrentAccount, useDisconnectWallet } from '@mysten/dapp-kit'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -11,19 +11,28 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Wallet } from 'lucide-react'
-import { ConnectButton } from '@mysten/dapp-kit'
+import { useState } from 'react'
+import { WalletConnectModal } from './wallet-connect-modal'
 
 export function WalletButton() {
     const currentAccount = useCurrentAccount()
     const { disconnect } = useDisconnectWallet()
-    const wallets = useWallets()
+    const [isConnectModalOpen, setIsConnectModalOpen] = useState(false)
 
     if (!currentAccount) {
         return (
-            <ConnectButton
-                connectText="Connect Wallet"
-                className="!bg-brand-gradient !text-white hover:!opacity-90 rounded-md"
-            />
+            <>
+                <Button
+                    onClick={() => setIsConnectModalOpen(true)}
+                    className="bg-brand-gradient text-white hover:opacity-90 rounded-md"
+                >
+                    Connect Wallet
+                </Button>
+                <WalletConnectModal
+                    open={isConnectModalOpen}
+                    onOpenChange={setIsConnectModalOpen}
+                />
+            </>
         )
     }
 

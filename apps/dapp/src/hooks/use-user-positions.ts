@@ -131,12 +131,40 @@ export function useUserPositions() {
                             strategyName = 'Sovereign SUI Vault'
                         }
 
-                        // Note: Shares are vault shares, not coin amounts
-                        // To get actual coin amount, we'd need to query the vault:
-                        // amount = (shares * vault.total_assets) / vault.total_shares
-                        // For now, we'll use shares as a placeholder (they represent the position size)
-                        // In production, you should query the vault object to get the actual value
-                        const amount = Number(shares) / Math.pow(10, coinDecimals)
+                        // Calculate actual position value from shares and vault share price
+                        // Formula: amount = (shares * vault.total_assets) / vault.total_shares
+                        let amount = 0
+                        try {
+                            // Query vault to get total_assets and total_shares
+                            const vaultObject = await client.getObject({
+                                id: vaultId,
+                                options: {
+                                    showContent: true,
+                                },
+                            })
+                            
+                            if (vaultObject.data?.content && 'fields' in vaultObject.data.content) {
+                                const vaultFields = vaultObject.data.content.fields as any
+                                const totalAssets = BigInt(vaultFields?.total_assets || 0)
+                                const totalShares = BigInt(vaultFields?.total_shares || 1)
+                                
+                                if (totalShares > 0) {
+                                    // Calculate actual value: (shares * total_assets) / total_shares
+                                    const actualValue = (shares * totalAssets) / totalShares
+                                    amount = Number(actualValue) / Math.pow(10, coinDecimals)
+                                } else {
+                                    // Fallback: if no shares, use shares as value (1:1)
+                                    amount = Number(shares) / Math.pow(10, coinDecimals)
+                                }
+                            } else {
+                                // Fallback: use shares as value if we can't query vault
+                                amount = Number(shares) / Math.pow(10, coinDecimals)
+                            }
+                        } catch (error) {
+                            console.warn(`Could not query vault ${vaultId} for position value, using shares as fallback:`, error)
+                            // Fallback: use shares as value if vault query fails
+                            amount = Number(shares) / Math.pow(10, coinDecimals)
+                        }
 
                         positions.push({
                             strategyId,

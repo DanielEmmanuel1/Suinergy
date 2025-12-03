@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,6 +20,7 @@ import { useTokenBalances } from '@/hooks/use-token-balances'
 import { Transaction as SuiTransaction } from '@mysten/sui/transactions'
 import { TOKENS } from '@/lib/oracle/constants'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ToggleSwitch } from '@/components/ui/toggle-switch'
 
 // Mock strategy data - will be replaced with real data hooks
 const getStrategyData = (id: string) => {
@@ -169,9 +170,13 @@ export default function StrategyDetailPage() {
     const { mutate: signAndExecute } = useSignAndExecuteTransaction()
     const client = useSuiClient()
     
-    // Deposit state
+    // Deposit/Withdraw state
+    const [isWithdrawMode, setIsWithdrawMode] = useState(false) // false = deposit, true = withdraw
     const [depositAmount, setDepositAmount] = useState('')
+    const [withdrawAmount, setWithdrawAmount] = useState('')
     const [isDepositing, setIsDepositing] = useState(false)
+    const [isWithdrawing, setIsWithdrawing] = useState(false)
+    const [pendingPartialDeposit, setPendingPartialDeposit] = useState<{amount: bigint, vaultId: string, configId: string, tokenType: 'SUI' | 'USDC' | 'USDT'} | null>(null)
     
     // Map strategy page IDs to position strategyIds
     // Strategy page '1' = Prime USDC Vault (positions have 'usdc-liquidity' or 'usdc-liquidity-pool')
@@ -202,6 +207,18 @@ export default function StrategyDetailPage() {
                              receiptTokenBalance: userPositions.reduce((sum, p) => sum + p.receiptTokenBalance, 0),
                          } : null
 
+    // Auto-fill withdraw amount when switching to withdraw mode (only on initial switch, not when userPosition changes)
+    const [hasAutoFilled, setHasAutoFilled] = useState(false)
+    useEffect(() => {
+        if (isWithdrawMode && userPosition && !hasAutoFilled) {
+            setWithdrawAmount(userPosition.amount.toFixed(6))
+            setHasAutoFilled(true)
+        } else if (!isWithdrawMode) {
+            setWithdrawAmount('')
+            setHasAutoFilled(false)
+        }
+    }, [isWithdrawMode, userPosition, hasAutoFilled])
+
     const [apyTimePeriod, setApyTimePeriod] = useState<TimePeriod>('90D')
     const [interestTimePeriod, setInterestTimePeriod] = useState<TimePeriod>('90D')
     const [transactionSettingsOpen, setTransactionSettingsOpen] = useState(false)
@@ -227,6 +244,121 @@ export default function StrategyDetailPage() {
             maximumFractionDigits: 6,
         })
     }, [balance, decimals])
+
+    // Handle partial withdrawal deposit back
+    useEffect(() => {
+        if (!pendingPartialDeposit || !account?.address) return
+
+        const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || '0x0'
+        const depositTokenType = pendingPartialDeposit.tokenType
+        const depositDecimals = depositTokenType === 'SUI' ? 9 : 6
+        
+        const executePartialDeposit = async () => {
+            try {
+                console.log('Executing partial deposit back:', {
+                    amount: Number(pendingPartialDeposit.amount) / Math.pow(10, depositDecimals),
+                    vaultId: pendingPartialDeposit.vaultId,
+                    tokenType: depositTokenType
+                })
+
+                // Wait for withdrawal transaction to be processed and coins to be available
+                await new Promise(resolve => setTimeout(resolve, 5000))
+                
+                // Determine coin type based on token type
+                const coinType = depositTokenType === 'SUI'
+                    ? '0x2::sui::SUI'
+                    : depositTokenType === 'USDC'
+                        ? TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
+                        : TOKENS.USDT.coinType || process.env.NEXT_PUBLIC_USDT_COIN_TYPE || ''
+
+                if (!coinType) {
+                    throw new Error(`Coin type not configured for ${depositTokenType}`)
+                }
+                
+                // Get the coin that was withdrawn
+                const coins = await client.getCoins({
+                    owner: account.address,
+                    coinType: coinType,
+                })
+
+                if (coins.data && coins.data.length > 0) {
+                    // Find a coin with sufficient balance
+                    const coinWithBalance = coins.data.find(c => 
+                        BigInt(c.balance) >= pendingPartialDeposit.amount
+                    )
+
+                    if (coinWithBalance) {
+                        console.log('Found coin for partial deposit:', {
+                            coinBalance: Number(coinWithBalance.balance) / Math.pow(10, depositDecimals),
+                            amountToDeposit: Number(pendingPartialDeposit.amount) / Math.pow(10, depositDecimals)
+                        })
+
+                        // Create a new transaction to deposit back
+                        const depositTx = new SuiTransaction()
+                        const coinObject = depositTx.object(coinWithBalance.coinObjectId)
+                        
+                        // Determine deposit function name
+                        const functionName = depositTokenType === 'SUI' ? 'deposit_sui' : 'deposit'
+                        
+                        // If we need to split, do that first
+                        if (BigInt(coinWithBalance.balance) > pendingPartialDeposit.amount) {
+                            const [splitCoin] = depositTx.splitCoins(coinObject, [pendingPartialDeposit.amount])
+                            depositTx.moveCall({
+                                target: `${packageId}::vault_entry::${functionName}`,
+                                typeArguments: depositTokenType === 'SUI' ? [] : [coinType],
+                                arguments: [
+                                    depositTx.object(pendingPartialDeposit.vaultId),
+                                    depositTx.object(pendingPartialDeposit.configId),
+                                    splitCoin,
+                                ],
+                            })
+                        } else {
+                            // Use the whole coin (shouldn't happen if calculation is correct)
+                            console.warn('Using whole coin for partial deposit - this might be incorrect')
+                            depositTx.moveCall({
+                                target: `${packageId}::vault_entry::${functionName}`,
+                                typeArguments: depositTokenType === 'SUI' ? [] : [coinType],
+                                arguments: [
+                                    depositTx.object(pendingPartialDeposit.vaultId),
+                                    depositTx.object(pendingPartialDeposit.configId),
+                                    coinObject,
+                                ],
+                            })
+                        }
+
+                        // Execute the deposit transaction
+                        signAndExecute(
+                            {
+                                transaction: depositTx as any,
+                                chain: 'sui:testnet',
+                            },
+                            {
+                                onSuccess: () => {
+                                    console.log('Partial deposit back successful')
+                                    setPendingPartialDeposit(null)
+                                },
+                                onError: (error) => {
+                                    console.error('Auto-deposit back failed:', error)
+                                    setPendingPartialDeposit(null)
+                                },
+                            }
+                        )
+                    } else {
+                        console.warn('No coin found with sufficient balance for partial deposit')
+                        setPendingPartialDeposit(null)
+                    }
+                } else {
+                    console.warn('No coins found for partial deposit')
+                    setPendingPartialDeposit(null)
+                }
+            } catch (error) {
+                console.error('Error in partial withdrawal deposit back:', error)
+                setPendingPartialDeposit(null)
+            }
+        }
+
+        executePartialDeposit()
+    }, [pendingPartialDeposit, account, client, signAndExecute, decimals])
 
     // Handle deposit
     const handleDeposit = async () => {
@@ -340,6 +472,370 @@ export default function StrategyDetailPage() {
         balance !== undefined &&
         depositAmount &&
         BigInt(Math.floor(parseFloat(depositAmount) * Math.pow(10, decimals))) > balance
+
+    // Calculate position balance for withdraw - query vault directly for accurate value
+    const [actualPositionValue, setActualPositionValue] = useState<number | null>(null)
+    
+    useEffect(() => {
+        const fetchActualPositionValue = async () => {
+            if (!userPosition || !account?.address) {
+                setActualPositionValue(null)
+                return
+            }
+
+            try {
+                const vaultId = 
+                    tokenType === 'USDC' 
+                        ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+                        : tokenType === 'USDT'
+                            ? process.env.NEXT_PUBLIC_USDT_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+                            : process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+
+                // Get position objects to find the matching one
+                const packageIdForQuery = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || ''
+                const positionType = `${packageIdForQuery}::position::UserPosition`
+                
+                let positionObjects = await client.getOwnedObjects({
+                    owner: account.address,
+                    filter: {
+                        StructType: positionType,
+                    },
+                    options: {
+                        showContent: true,
+                        showType: true,
+                    },
+                })
+
+                // Also try old package ID
+                const oldPackageId = '0xb18e10c0d4cd763ae8f2d2972a6397d0d92f1638840a6f868f06d52683bf3d58'
+                if (positionObjects.data.length === 0 && packageIdForQuery !== oldPackageId) {
+                    const oldPositionType = `${oldPackageId}::position::UserPosition`
+                    const oldObjects = await client.getOwnedObjects({
+                        owner: account.address,
+                        filter: {
+                            StructType: oldPositionType,
+                        },
+                        options: {
+                            showContent: true,
+                            showType: true,
+                        },
+                    })
+                    if (oldObjects.data.length > 0) {
+                        positionObjects = oldObjects
+                    }
+                }
+
+                // Find matching position and get shares
+                const matchingPosition = positionObjects.data.find((obj: any) => {
+                    if (obj.data?.content?.dataType === 'moveObject') {
+                        const fields = obj.data.content.fields as any
+                        const positionVaultId = fields.vault_id || ''
+                        return positionVaultId === vaultId
+                    }
+                    return false
+                })
+
+                if (!matchingPosition?.data?.content) {
+                    setActualPositionValue(null)
+                    return
+                }
+
+                const positionFields = matchingPosition.data.content.fields as any
+                const shares = BigInt(positionFields?.shares || userPosition.receiptTokenBalance)
+
+                // Query vault to get actual value
+                const vaultObject = await client.getObject({
+                    id: vaultId,
+                    options: {
+                        showContent: true,
+                    },
+                })
+                
+                if (vaultObject.data?.content && 'fields' in vaultObject.data.content) {
+                    const vaultFields = vaultObject.data.content.fields as any
+                    const totalAssets = BigInt(vaultFields?.total_assets || 0)
+                    const totalShares = BigInt(vaultFields?.total_shares || 1)
+                    
+                    if (totalShares > 0) {
+                        // Calculate actual value: (shares * total_assets) / total_shares
+                        const actualValue = (shares * totalAssets) / totalShares
+                        const amount = Number(actualValue) / Math.pow(10, decimals)
+                        setActualPositionValue(amount)
+                    } else {
+                        // Fallback to userPosition.amount
+                        setActualPositionValue(userPosition.amount)
+                    }
+                } else {
+                    // Fallback to userPosition.amount
+                    setActualPositionValue(userPosition.amount)
+                }
+            } catch (error) {
+                console.warn('Could not fetch actual position value, using fallback:', error)
+                // Fallback to userPosition.amount
+                setActualPositionValue(userPosition.amount)
+            }
+        }
+
+        fetchActualPositionValue()
+    }, [userPosition, account, client, tokenType, decimals])
+
+    // Calculate position balance for withdraw
+    const positionBalance = useMemo(() => {
+        if (!userPosition) return BigInt(0)
+        // Use actual position value if available, otherwise fallback to userPosition.amount
+        const amount = actualPositionValue !== null ? actualPositionValue : userPosition.amount
+        // Convert to smallest unit for calculations
+        return BigInt(Math.floor(amount * Math.pow(10, decimals)))
+    }, [userPosition, actualPositionValue, decimals])
+
+    const positionBalanceFormatted = useMemo(() => {
+        if (!userPosition) return '0.00'
+        // Use actual position value if available, otherwise fallback to userPosition.amount
+        const amount = actualPositionValue !== null ? actualPositionValue : userPosition.amount
+        return amount.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 6,
+        })
+    }, [userPosition, actualPositionValue])
+
+    // Handle withdraw
+    const handleWithdraw = async () => {
+        if (!account?.address || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || !userPosition) {
+            return
+        }
+
+        setIsWithdrawing(true)
+
+        try {
+            const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || '0x0'
+            const vaultId = 
+                tokenType === 'USDC' 
+                    ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+                    : tokenType === 'USDT'
+                        ? process.env.NEXT_PUBLIC_USDT_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+                        : process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+            const configId = process.env.NEXT_PUBLIC_PROTOCOL_CONFIG_ID || '0x0'
+
+            // Get UserPosition objects from the chain - use same fallback logic as use-user-positions
+            const packageIdForQuery = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || ''
+            const positionType = `${packageIdForQuery}::position::UserPosition`
+            
+            let positionObjects = await client.getOwnedObjects({
+                owner: account.address,
+                filter: {
+                    StructType: positionType,
+                },
+                options: {
+                    showContent: true,
+                    showType: true,
+                },
+            })
+
+            // Also try old package ID in case positions were created before upgrade
+            const oldPackageId = '0xb18e10c0d4cd763ae8f2d2972a6397d0d92f1638840a6f868f06d52683bf3d58'
+            if (positionObjects.data.length === 0 && packageIdForQuery !== oldPackageId) {
+                const oldPositionType = `${oldPackageId}::position::UserPosition`
+                const oldObjects = await client.getOwnedObjects({
+                    owner: account.address,
+                    filter: {
+                        StructType: oldPositionType,
+                    },
+                    options: {
+                        showContent: true,
+                        showType: true,
+                    },
+                })
+                if (oldObjects.data.length > 0) {
+                    positionObjects = oldObjects
+                }
+            }
+
+            // Find the position object that matches this vault
+            const matchingPosition = positionObjects.data.find((obj: any) => {
+                if (obj.data?.content?.dataType === 'moveObject') {
+                    const fields = obj.data.content.fields as any
+                    const positionVaultId = fields.vault_id || ''
+                    return positionVaultId === vaultId
+                }
+                return false
+            })
+
+            if (!matchingPosition?.data?.objectId) {
+                throw new Error('Position not found. Please ensure you have a position in this vault.')
+            }
+
+            // Get the actual position shares from the on-chain object
+            const positionFields = matchingPosition.data.content?.fields as any
+            const actualShares = BigInt(positionFields?.shares || userPosition.receiptTokenBalance)
+
+            // Query vault to get actual current position value
+            // Formula: actualValue = (shares * vault.total_assets) / vault.total_shares
+            let actualPositionValue = BigInt(0)
+            try {
+                const vaultObject = await client.getObject({
+                    id: vaultId,
+                    options: {
+                        showContent: true,
+                    },
+                })
+                
+                if (vaultObject.data?.content && 'fields' in vaultObject.data.content) {
+                    const vaultFields = vaultObject.data.content.fields as any
+                    const totalAssets = BigInt(vaultFields?.total_assets || 0)
+                    const totalShares = BigInt(vaultFields?.total_shares || 1)
+                    
+                    if (totalShares > 0) {
+                        // Calculate actual value: (shares * total_assets) / total_shares
+                        actualPositionValue = (actualShares * totalAssets) / totalShares
+                    } else {
+                        // Fallback: if no shares, use shares as value (1:1)
+                        actualPositionValue = actualShares
+                    }
+                } else {
+                    // Fallback: use shares as value if we can't query vault
+                    actualPositionValue = actualShares
+                }
+            } catch (error) {
+                console.warn('Could not query vault for actual value, using shares as fallback:', error)
+                // Fallback: use shares as value
+                actualPositionValue = actualShares
+            }
+
+            const withdrawAmountInSmallestUnit = BigInt(Math.floor(parseFloat(withdrawAmount) * Math.pow(10, decimals)))
+
+            // Check if user wants to withdraw more than available
+            if (withdrawAmountInSmallestUnit > actualPositionValue) {
+                throw new Error(`Insufficient position balance. Your position is worth ${Number(actualPositionValue) / Math.pow(10, decimals)} ${strategy.asset}, but you're trying to withdraw ${withdrawAmount} ${strategy.asset}.`)
+            }
+
+            const tx = new SuiTransaction()
+
+            // Use the position object
+            const positionObject = tx.object(matchingPosition.data.objectId)
+
+            // Calculate if this is a partial withdrawal
+            // The contract will withdraw the FULL position (actualPositionValue), so we need to deposit back the difference
+            const isPartialWithdrawal = withdrawAmountInSmallestUnit < actualPositionValue
+            const amountToKeep = actualPositionValue - withdrawAmountInSmallestUnit
+
+            // Determine withdraw function based on token type
+            if (tokenType === 'SUI') {
+                // Always withdraw the full position (contract requirement)
+                tx.moveCall({
+                    target: `${packageId}::vault_entry::withdraw_sui`,
+                    arguments: [
+                        tx.object(vaultId),
+                        tx.object(configId),
+                        positionObject,
+                    ],
+                })
+            } else {
+                // For USDC/USDT, check if generic withdraw exists
+                // Note: The contract may need a generic withdraw<T> function
+                // For now, we'll try to use withdraw_sui pattern but with type arguments
+                const coinType = tokenType === 'USDC'
+                    ? TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
+                    : TOKENS.USDT.coinType || process.env.NEXT_PUBLIC_USDT_COIN_TYPE || ''
+                
+                if (!coinType) {
+                    throw new Error(`Coin type not configured for ${tokenType}`)
+                }
+
+                // Try generic withdraw - this may need to be implemented in the contract
+                // For now, we'll attempt it and see if the contract supports it
+                try {
+                    tx.moveCall({
+                        target: `${packageId}::vault_entry::withdraw`,
+                        typeArguments: [coinType],
+                        arguments: [
+                            tx.object(vaultId),
+                            tx.object(configId),
+                            positionObject,
+                        ],
+                    })
+                } catch (error) {
+                    // If generic withdraw doesn't exist, throw a helpful error
+                    throw new Error(`Withdraw for ${tokenType} is not yet supported. The contract may need a generic withdraw<T> function.`)
+                }
+            }
+
+            // Only set pendingPartialDeposit AFTER withdrawal succeeds
+            // Calculate the amount to keep for partial withdrawal
+            const partialDepositInfo = isPartialWithdrawal && amountToKeep > 0 
+                ? { amount: amountToKeep, vaultId, configId, tokenType }
+                : null
+
+            signAndExecute(
+                {
+                    transaction: tx as any,
+                    chain: 'sui:testnet',
+                },
+                {
+                    onSuccess: () => {
+                        setIsWithdrawing(false)
+                        setWithdrawAmount('')
+                        // Only set pendingPartialDeposit if this was a partial withdrawal
+                        // This will trigger the useEffect to deposit back the remainder
+                        if (partialDepositInfo) {
+                            console.log('Setting pending partial deposit:', {
+                                amount: Number(partialDepositInfo.amount) / Math.pow(10, decimals),
+                                vaultId: partialDepositInfo.vaultId
+                            })
+                            setPendingPartialDeposit(partialDepositInfo)
+                        }
+                    },
+                    onError: (error) => {
+                        console.error('Withdraw failed', error)
+                        setIsWithdrawing(false)
+                        setPendingPartialDeposit(null)
+                    },
+                }
+            )
+        } catch (error) {
+            console.error('Error preparing withdraw:', error)
+            setIsWithdrawing(false)
+        }
+    }
+
+    // Handle Half and Max buttons for withdraw
+    const handleWithdrawHalf = (e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        // Use actualPositionValue if available, otherwise fallback to userPosition.amount
+        const positionValue = actualPositionValue !== null ? actualPositionValue : (userPosition?.amount || 0)
+        console.log('Half button clicked', { userPosition, actualPositionValue, positionValue })
+        if (!userPosition || positionValue === 0) {
+            console.log('No position or zero amount')
+            return
+        }
+        const halfBalance = positionValue / 2
+        const formattedValue = halfBalance.toString()
+        console.log('Setting withdraw amount to:', formattedValue)
+        setWithdrawAmount(formattedValue)
+        setHasAutoFilled(true) // Prevent auto-fill from overriding
+    }
+
+    const handleWithdrawMax = (e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        // Use actualPositionValue if available, otherwise fallback to userPosition.amount
+        const positionValue = actualPositionValue !== null ? actualPositionValue : (userPosition?.amount || 0)
+        console.log('Max button clicked', { userPosition, actualPositionValue, positionValue })
+        if (!userPosition || positionValue === 0) {
+            console.log('No position or zero amount')
+            return
+        }
+        const formattedValue = positionValue.toString()
+        console.log('Setting withdraw amount to:', formattedValue)
+        setWithdrawAmount(formattedValue)
+        setHasAutoFilled(true) // Prevent auto-fill from overriding
+    }
+
+    const hasInsufficientPositionBalance = useMemo(() => {
+        if (!userPosition || !withdrawAmount) return false
+        const positionValue = actualPositionValue !== null ? actualPositionValue : userPosition.amount
+        return parseFloat(withdrawAmount) > positionValue
+    }, [userPosition, withdrawAmount, actualPositionValue])
 
     // Get real transactions for this strategy
     const { data: strategyTransactionsData = [] } = useTransactions(strategyId)
@@ -800,58 +1296,151 @@ export default function StrategyDetailPage() {
                             <div className="w-full lg:w-auto space-y-3 sm:space-y-4 md:space-y-6 lg:sticky lg:top-6 lg:self-start">
                                 <Card className="border-black/10 w-full max-w-full">
                                     <CardHeader className="px-3 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
-                                        <CardTitle className="text-sm sm:text-base md:text-lg">You Deposit</CardTitle>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="text-sm sm:text-base md:text-lg">
+                                                {isWithdrawMode ? 'You Withdraw' : 'You Deposit'}
+                                            </CardTitle>
+                                            <ToggleSwitch
+                                                leftLabel="Deposit"
+                                                rightLabel="Withdraw"
+                                                value={isWithdrawMode}
+                                                onChange={setIsWithdrawMode}
+                                            />
+                                        </div>
                                     </CardHeader>
                                     <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-4 sm:pb-6">
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-sm text-muted-foreground">Amount</span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    Balance: {account ? balanceFormatted : '0.00'} {strategy.asset}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col sm:flex-row gap-2">
-                                                <input
-                                                    type="number"
-                                                    placeholder="0"
-                                                    value={depositAmount}
-                                                    onChange={(e) => setDepositAmount(e.target.value)}
-                                                    className="flex-1 px-4 py-3 rounded-lg border border-black/10 bg-white text-black text-sm sm:text-base"
-                                                    disabled={!account || isDepositing}
-                                                />
-                                                <div className="flex gap-2">
-                                                    <Button 
-                                                        variant="outline" 
-                                                        size="sm" 
-                                                        className="flex-1 sm:flex-none"
-                                                        onClick={handleHalf}
-                                                        disabled={!account || isDepositing || balance === BigInt(0)}
-                                                    >
-                                                        Half
-                                                    </Button>
-                                                    <Button 
-                                                        variant="outline" 
-                                                        size="sm" 
-                                                        className="flex-1 sm:flex-none"
-                                                        onClick={handleMax}
-                                                        disabled={!account || isDepositing || balance === BigInt(0)}
-                                                    >
-                                                        Max
-                                                    </Button>
+                                        {!isWithdrawMode ? (
+                                            // Deposit Form
+                                            <>
+                                                <div>
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <span className="text-sm text-muted-foreground">Amount</span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Balance: {account ? balanceFormatted : '0.00'} {strategy.asset}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-col sm:flex-row gap-2">
+                                                        <input
+                                                            type="number"
+                                                            step="any"
+                                                            placeholder="0"
+                                                            value={depositAmount}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value
+                                                                // Allow empty, numbers, and decimals
+                                                                if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                                                                    setDepositAmount(val)
+                                                                }
+                                                            }}
+                                                            className="flex-1 px-4 py-3 rounded-lg border border-black/10 bg-white text-black text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                            disabled={!account || isDepositing}
+                                                        />
+                                                        <div className="flex gap-2">
+                                                            <Button 
+                                                                variant="outline" 
+                                                                size="sm" 
+                                                                className="flex-1 sm:flex-none"
+                                                                onClick={handleHalf}
+                                                                disabled={!account || isDepositing || balance === BigInt(0)}
+                                                            >
+                                                                Half
+                                                            </Button>
+                                                            <Button 
+                                                                variant="outline" 
+                                                                size="sm" 
+                                                                className="flex-1 sm:flex-none"
+                                                                onClick={handleMax}
+                                                                disabled={!account || isDepositing || balance === BigInt(0)}
+                                                            >
+                                                                Max
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                    {hasInsufficientBalance && (
+                                                        <p className="text-xs text-red-500 mt-1">Insufficient balance</p>
+                                                    )}
                                                 </div>
-                                            </div>
-                                            {hasInsufficientBalance && (
-                                                <p className="text-xs text-red-500 mt-1">Insufficient balance</p>
-                                            )}
-                                        </div>
-                                        <Button 
-                                            className="w-full bg-brand-gradient flex items-center justify-center gap-2"
-                                            onClick={handleDeposit}
-                                            disabled={!account || !depositAmount || parseFloat(depositAmount) <= 0 || hasInsufficientBalance || isDepositing}
-                                        >
-                                            {isDepositing && <LoadingSpinner size="sm" />}
-                                            {isDepositing ? 'Processing...' : account ? 'Deposit' : 'Connect Wallet'}
-                                        </Button>
+                                                <Button 
+                                                    className="w-full bg-brand-gradient flex items-center justify-center gap-2"
+                                                    onClick={handleDeposit}
+                                                    disabled={!account || !depositAmount || parseFloat(depositAmount) <= 0 || hasInsufficientBalance || isDepositing}
+                                                >
+                                                    {isDepositing && <LoadingSpinner size="sm" />}
+                                                    {isDepositing ? 'Processing...' : account ? 'Deposit' : 'Connect Wallet'}
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            // Withdraw Form
+                                            <>
+                                                <div>
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <span className="text-sm text-muted-foreground">Amount</span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Position: {userPosition ? positionBalanceFormatted : '0.00'} {strategy.asset}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-col sm:flex-row gap-2">
+                                                        <input
+                                                            type="text"
+                                                            inputMode="decimal"
+                                                            placeholder="0"
+                                                            value={withdrawAmount}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value
+                                                                // Allow empty, numbers, and decimals
+                                                                if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                                                                    setWithdrawAmount(val)
+                                                                }
+                                                            }}
+                                                            className="flex-1 px-4 py-3 rounded-lg border border-black/10 bg-white text-black text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                            disabled={!account || isWithdrawing || !userPosition}
+                                                        />
+                                                        <div className="flex gap-2">
+                                                            <Button 
+                                                                variant="outline" 
+                                                                size="sm" 
+                                                                className="flex-1 sm:flex-none"
+                                                                onClick={handleWithdrawHalf}
+                                                                disabled={!account || isWithdrawing || !userPosition || (actualPositionValue !== null ? actualPositionValue === 0 : userPosition.amount === 0)}
+                                                            >
+                                                                Half
+                                                            </Button>
+                                                            <Button 
+                                                                variant="outline" 
+                                                                size="sm" 
+                                                                className="flex-1 sm:flex-none"
+                                                                onClick={handleWithdrawMax}
+                                                                disabled={!account || isWithdrawing || !userPosition || (actualPositionValue !== null ? actualPositionValue === 0 : userPosition.amount === 0)}
+                                                            >
+                                                                Max
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                    {hasInsufficientPositionBalance && (
+                                                        <p className="text-xs text-red-500 mt-1">Insufficient position balance</p>
+                                                    )}
+                                                    {!userPosition && account && (
+                                                        <p className="text-xs text-muted-foreground mt-1">No position found. Deposit first to create a position.</p>
+                                                    )}
+                                                    {userPosition && parseFloat(withdrawAmount) > 0 && (() => {
+                                                        const positionValue = actualPositionValue !== null ? actualPositionValue : userPosition.amount
+                                                        return parseFloat(withdrawAmount) < positionValue
+                                                    })() && (
+                                                        <p className="text-xs text-blue-600 mt-1">
+                                                            Partial withdrawal: {parseFloat(withdrawAmount).toFixed(6)} {strategy.asset} will be withdrawn. The remaining {((actualPositionValue !== null ? actualPositionValue : userPosition.amount) - parseFloat(withdrawAmount)).toFixed(6)} {strategy.asset} will be automatically deposited back.
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <Button 
+                                                    className="w-full bg-brand-gradient flex items-center justify-center gap-2"
+                                                    onClick={handleWithdraw}
+                                                    disabled={!account || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || hasInsufficientPositionBalance || isWithdrawing || !userPosition}
+                                                >
+                                                    {isWithdrawing && <LoadingSpinner size="sm" />}
+                                                    {isWithdrawing ? 'Processing...' : account ? 'Withdraw' : 'Connect Wallet'}
+                                                </Button>
+                                            </>
+                                        )}
                                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                                             <span>Transaction Settings</span>
                                             <button 

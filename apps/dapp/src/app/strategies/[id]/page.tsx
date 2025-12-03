@@ -164,7 +164,35 @@ export default function StrategyDetailPage() {
     const { setDepositModalOpen, setSelectedStrategy } = useAppStore()
     const { data: positions } = useUserPositions()
     const account = useCurrentAccount()
-    const userPosition = positions?.find(p => p.strategyId === strategyId)
+    
+    // Map strategy page IDs to position strategyIds
+    // Strategy page '1' = USDC Liquidity Pool (positions have 'usdc-liquidity' or 'usdc-liquidity-pool')
+    // Strategy page '2' = SUI Staking (positions have 'sui-staking')
+    // Strategy page '3' = Leveraged Yield Farming (not implemented, positions would have 'usdt-liquidity' or similar)
+    const strategyIdMap: Record<string, string[]> = {
+        '1': ['usdc-liquidity', 'usdc-liquidity-pool'], // USDC Liquidity Pool
+        '2': ['sui-staking'], // SUI Staking
+        '3': ['usdt-liquidity', 'leveraged-yield'], // Leveraged Yield Farming (not implemented)
+    }
+    
+    // Find all positions for this strategy
+    const strategyPositionIds = strategyIdMap[strategyId] || []
+    const userPositions = positions?.filter(p => {
+        // Match by strategyId
+        if (strategyPositionIds.includes(p.strategyId)) return true
+        // Match by strategy name (case-insensitive, partial match)
+        const positionNameLower = p.strategyName.toLowerCase()
+        const strategyNameLower = strategy.name.toLowerCase()
+        return positionNameLower.includes(strategyNameLower) || strategyNameLower.includes(positionNameLower)
+    }) || []
+    
+    // For backward compatibility, use first position if only one
+    const userPosition = userPositions.length === 1 ? userPositions[0] : 
+                         userPositions.length > 1 ? {
+                             ...userPositions[0],
+                             amount: userPositions.reduce((sum, p) => sum + p.amount, 0),
+                             receiptTokenBalance: userPositions.reduce((sum, p) => sum + p.receiptTokenBalance, 0),
+                         } : null
 
     const [apyTimePeriod, setApyTimePeriod] = useState<TimePeriod>('90D')
     const [interestTimePeriod, setInterestTimePeriod] = useState<TimePeriod>('90D')
@@ -717,31 +745,65 @@ export default function StrategyDetailPage() {
                     </TabsContent>
 
                     <TabsContent value="position" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
-                        {userPosition ? (
+                        {userPositions.length > 0 ? (
                             <div className="space-y-4 sm:space-y-6">
                                 <Card className="border-black/10">
                                     <CardHeader>
-                                        <CardTitle>Your Position</CardTitle>
+                                        <CardTitle>Your Position{userPositions.length > 1 ? 's' : ''}</CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                                            <div>
-                                                <div className="text-xs sm:text-sm text-muted-foreground mb-1">Deposited</div>
-                                                <div className="text-xl sm:text-2xl font-bold text-black">{formatCurrency(userPosition.amount)}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-xs sm:text-sm text-muted-foreground mb-1">Current APY</div>
-                                                <div className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-brand-gradient">
-                                                    {userPosition.apy}%
+                                        {userPositions.length === 1 ? (
+                                            // Single position - show aggregated view
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                                                <div>
+                                                    <div className="text-xs sm:text-sm text-muted-foreground mb-1">Deposited</div>
+                                                    <div className="text-xl sm:text-2xl font-bold text-black">{formatCurrency(userPosition!.amount)}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs sm:text-sm text-muted-foreground mb-1">Current APY</div>
+                                                    <div className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-brand-gradient">
+                                                        {userPosition!.apy}%
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs sm:text-sm text-muted-foreground mb-1">Est. Annual Earnings</div>
+                                                    <div className="text-xl sm:text-2xl font-bold text-black">
+                                                        {formatCurrency((userPosition!.amount * userPosition!.apy) / 100)}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div>
-                                                <div className="text-xs sm:text-sm text-muted-foreground mb-1">Est. Annual Earnings</div>
-                                                <div className="text-xl sm:text-2xl font-bold text-black">
-                                                    {formatCurrency((userPosition.amount * userPosition.apy) / 100)}
+                                        ) : (
+                                            // Multiple positions - show list
+                                            <div className="space-y-4">
+                                                {userPositions.map((pos, idx) => (
+                                                    <div key={idx} className="p-4 rounded-lg bg-[#f4f3f0] border border-black/10">
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <div>
+                                                                <div className="text-sm text-muted-foreground mb-1">Position #{idx + 1}</div>
+                                                                <div className="text-lg font-semibold text-black">{formatCurrency(pos.amount)}</div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="text-sm text-muted-foreground mb-1">APY</div>
+                                                                <div className="text-lg font-semibold text-transparent bg-clip-text bg-brand-gradient">
+                                                                    {pos.apy}%
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            {pos.receiptTokenBalance.toLocaleString()} receipt tokens
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                <div className="pt-2 border-t border-black/10">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="text-sm text-muted-foreground">Total Deposited</div>
+                                                        <div className="text-lg font-bold text-black">
+                                                            {formatCurrency(userPositions.reduce((sum, p) => sum + p.amount, 0))}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </CardContent>
                                 </Card>
 
@@ -753,12 +815,51 @@ export default function StrategyDetailPage() {
                                     <CardContent>
                                         <div className="space-y-4">
                                             {strategy.platforms.map((platform: any) => {
-                                                const userAllocation = (platform.allocation / 100) * userPosition.amount
+                                                const totalAmount = userPositions.reduce((sum, p) => sum + p.amount, 0)
+                                                const userAllocation = (platform.allocation / 100) * totalAmount
+                                                
+                                                // Platform icons/images mapping
+                                                const platformIcons: Record<string, { icon: string; image?: string }> = {
+                                                    scallop: { icon: '🏦', image: '/images/scallop.webp' },
+                                                    cetus: { icon: '🦎', image: '/images/cetus.avif' },
+                                                    lst: { icon: '⚡', image: '/images/lst.png' },
+                                                    kriya: { icon: '💎', image: '/images/kriya.png' },
+                                                    emissions: { icon: '🔥', image: '/images/emissions.png' },
+                                                }
+                                                
+                                                const platformIcon = platformIcons[platform.id.toLowerCase()] || { icon: '📊' }
+                                                
                                                 return (
                                                     <div key={platform.id} className="space-y-2">
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: platform.color }} />
+                                                                {platformIcon.image ? (
+                                                                    <img
+                                                                        src={platformIcon.image}
+                                                                        alt={platform.name}
+                                                                        className="w-6 h-6 rounded-full object-cover"
+                                                                        onError={(e) => {
+                                                                            // Fallback to colored dot if image fails to load
+                                                                            const target = e.target as HTMLImageElement
+                                                                            target.style.display = 'none'
+                                                                            const parent = target.parentElement
+                                                                            if (parent) {
+                                                                                const fallback = document.createElement('div')
+                                                                                fallback.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs'
+                                                                                fallback.style.backgroundColor = platform.color
+                                                                                fallback.textContent = platformIcon.icon
+                                                                                parent.insertBefore(fallback, target)
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div
+                                                                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs"
+                                                                        style={{ backgroundColor: platform.color }}
+                                                                    >
+                                                                        {platformIcon.icon}
+                                                                    </div>
+                                                                )}
                                                                 <span className="font-medium text-black">{platform.name}</span>
                                                                 <Badge variant="secondary" className="text-xs">
                                                                     {platform.yieldType}

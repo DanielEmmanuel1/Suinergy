@@ -23,9 +23,12 @@ import {
     Activity,
     ArrowUpRight,
     ArrowDownRight,
+    ArrowUpCircle,
+    ArrowDownCircle,
     Clock,
     Award,
     PieChart,
+    Gift,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -93,7 +96,6 @@ export default function DashboardPage() {
     }, 0) ?? 0
     const totalEarnedUsd = totalEarnedSui * suiPrice
 
-    const activeStrategies = positions?.length ?? 0
     const estimatedMonthlyEarningsSui = totalAllocatedSui > 0 && estimatedAPY > 0
         ? (totalAllocatedSui * estimatedAPY) / 100 / 12
         : 0
@@ -131,7 +133,7 @@ export default function DashboardPage() {
                                     ${isNaN(totalAllocatedUsd) || !isFinite(totalAllocatedUsd) ? '0.00' : totalAllocatedUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                                 <div className="text-xs text-white/70 mt-1">
-                                    {isNaN(totalAllocatedSui) || !isFinite(totalAllocatedSui) ? '0' : totalAllocatedSui.toLocaleString(undefined, { maximumFractionDigits: 2 })} SUI in {activeStrategies} {activeStrategies === 1 ? 'strategy' : 'strategies'}
+                                    {isNaN(totalAllocatedSui) || !isFinite(totalAllocatedSui) ? '0' : totalAllocatedSui.toLocaleString(undefined, { maximumFractionDigits: 2 })} SUI
                                 </div>
                             </CardContent>
                         </Card>
@@ -240,8 +242,8 @@ export default function DashboardPage() {
                             <CardContent>
                                 {positions && positions.length > 0 ? (
                                     <div className="space-y-4">
-                                        {positions.slice(0, 3).map((position, index) => (
-                                            <div key={position.strategyId}>
+                                        {positions.map((position, index) => (
+                                            <div key={`${position.strategyId}-${index}`}>
                                                 <div className="flex items-center justify-between mb-2">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-lg bg-brand-gradient flex items-center justify-center text-white font-bold text-sm">
@@ -263,16 +265,9 @@ export default function DashboardPage() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                {index < positions.length - 1 && index < 2 && <Separator className="mt-4" />}
+                                                {index < positions.length - 1 && <Separator className="mt-4" />}
                                             </div>
                                         ))}
-                                        {positions.length > 3 && (
-                                            <div className="pt-2 text-center">
-                                                <Link href="/strategies" className="text-sm text-muted-foreground hover:text-transparent hover:bg-clip-text hover:bg-brand-gradient">
-                                                    +{positions.length - 3} more positions
-                                                </Link>
-                                            </div>
-                                        )}
                                     </div>
                                 ) : (
                                     <div className="text-center py-8">
@@ -310,9 +305,11 @@ export default function DashboardPage() {
                                                                 : 'bg-brand-gradient text-white'
                                                             }`}>
                                                             {activity.type === 'deposit' ? (
-                                                                <ArrowDownRight className="w-4 h-4" />
+                                                                <ArrowDownCircle className="w-4 h-4" />
                                                             ) : activity.type === 'withdrawal' ? (
-                                                                <ArrowUpRight className="w-4 h-4" />
+                                                                <ArrowUpCircle className="w-4 h-4" />
+                                                            ) : activity.type === 'claim' ? (
+                                                                <Gift className="w-4 h-4" />
                                                             ) : (
                                                                 <Coins className="w-4 h-4" />
                                                             )}

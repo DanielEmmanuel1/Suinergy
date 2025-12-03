@@ -10,6 +10,42 @@ import { useCurrentAccount } from '@mysten/dapp-kit'
 import { useTransactions } from '@/hooks/use-transactions'
 import { useUserPositions } from '@/hooks/use-user-positions'
 
+// Import strategy data function (same as in strategy detail page)
+const getStrategyData = (id: string) => {
+    const strategies: Record<string, any> = {
+        '1': {
+            id: '1',
+            name: 'USDC Liquidity Pool',
+            platforms: [
+                { id: 'scallop', name: 'Scallop', allocation: 35, color: '#1565c0' },
+                { id: 'cetus', name: 'Cetus', allocation: 30, color: '#b92b27' },
+                { id: 'lst', name: 'LST Staking', allocation: 25, color: '#8b5cf6' },
+                { id: 'kriya', name: 'Kriya', allocation: 10, color: '#10b981' },
+            ],
+        },
+        '2': {
+            id: '2',
+            name: 'SUI Staking',
+            platforms: [
+                { id: 'lst', name: 'LST Staking', allocation: 60, color: '#8b5cf6' },
+                { id: 'scallop', name: 'Scallop', allocation: 25, color: '#1565c0' },
+                { id: 'cetus', name: 'Cetus', allocation: 15, color: '#b92b27' },
+            ],
+        },
+        '3': {
+            id: '3',
+            name: 'Leveraged Yield Farming',
+            platforms: [
+                { id: 'kriya', name: 'Kriya', allocation: 40, color: '#10b981' },
+                { id: 'cetus', name: 'Cetus', allocation: 35, color: '#b92b27' },
+                { id: 'scallop', name: 'Scallop', allocation: 15, color: '#1565c0' },
+                { id: 'emissions', name: 'Emissions', allocation: 10, color: '#f59e0b' },
+            ],
+        },
+    }
+    return strategies[id] || strategies['1']
+}
+
 export function ProfilePanel() {
     const account = useCurrentAccount()
     const { data: transactions = [] } = useTransactions()
@@ -34,12 +70,19 @@ export function ProfilePanel() {
             .reduce((sum, tx) => sum + tx.amount, 0)
     }, [transactions])
 
+    // Filter out $0 positions and show individual positions (not aggregated)
+    // Each position represents a separate deposit that may be diversified differently
     const totalAllocations = useMemo(() => {
-        return positions.map((pos) => ({
-            strategy: pos.strategyName,
-            amount: pos.amount,
-            apy: pos.apy,
-        }))
+        return positions
+            .filter((pos) => pos.amount > 0) // Filter out $0 positions
+            .map((pos, index) => ({
+                id: `${pos.strategyId}-${index}`, // Unique ID for each position
+                strategy: pos.strategyName,
+                strategyId: pos.strategyId,
+                amount: pos.amount,
+                apy: pos.apy,
+                receiptTokenBalance: pos.receiptTokenBalance,
+            }))
     }, [positions])
 
     // Use real transactions instead of mock
@@ -231,25 +274,65 @@ export function ProfilePanel() {
                     <CardContent>
                         <div className="space-y-4">
                             {totalAllocations.length > 0 ? (
-                                totalAllocations.map((allocation, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl bg-[#f4f3f0] border border-black/10"
-                                    >
-                                        <div className="flex-1 min-w-0">
-                                            <div className="font-semibold text-black break-words">{allocation.strategy}</div>
-                                            <div className="text-sm text-muted-foreground">
-                                                {formatCurrency(allocation.amount)}
+                                totalAllocations.map((allocation) => {
+                                    // Get strategy data to show platform breakdown
+                                    const strategyIdMap: Record<string, string> = {
+                                        'usdc-liquidity': '1',
+                                        'usdc-liquidity-pool': '1',
+                                        'sui-staking': '2',
+                                        'usdt-liquidity': '3',
+                                    }
+                                    const pageId = strategyIdMap[allocation.strategyId] || '1'
+                                    const strategyData = getStrategyData(pageId)
+                                    
+                                    return (
+                                        <div
+                                            key={allocation.id}
+                                            className="p-4 rounded-xl bg-[#f4f3f0] border border-black/10 space-y-3"
+                                        >
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-semibold text-black break-words mb-1">{allocation.strategy}</div>
+                                                    <div className="text-lg font-bold text-black">
+                                                        {formatCurrency(allocation.amount)}
+                                                    </div>
+                                                </div>
+                                                <div className="text-left sm:text-right flex-shrink-0">
+                                                    <div className="font-semibold text-transparent bg-clip-text bg-brand-gradient">{allocation.apy}% APY</div>
+                                                    <Badge variant="default" className="mt-1">
+                                                        Active
+                                                    </Badge>
+                                                </div>
                                             </div>
+                                            
+                                            {/* Platform Breakdown */}
+                                            {strategyData?.platforms && (
+                                                <div className="pt-3 border-t border-black/10">
+                                                    <div className="text-xs text-muted-foreground mb-2">Diversified across:</div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {strategyData.platforms.map((platform: any) => {
+                                                            const platformAmount = (platform.allocation / 100) * allocation.amount
+                                                            return (
+                                                                <div
+                                                                    key={platform.id}
+                                                                    className="flex items-center gap-2 px-2 py-1 rounded-md bg-white border border-black/10"
+                                                                    title={`${platform.name}: ${platform.allocation}% (${formatCurrency(platformAmount)})`}
+                                                                >
+                                                                    <div
+                                                                        className="w-3 h-3 rounded-full flex-shrink-0"
+                                                                        style={{ backgroundColor: platform.color }}
+                                                                    />
+                                                                    <span className="text-xs font-medium text-black">{platform.name}</span>
+                                                                    <span className="text-xs text-muted-foreground">{platform.allocation}%</span>
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="text-left sm:text-right flex-shrink-0">
-                                            <div className="font-semibold text-transparent bg-clip-text bg-brand-gradient">{allocation.apy}% APY</div>
-                                            <Badge variant="default" className="mt-1">
-                                                Active
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                ))
+                                    )
+                                })
                             ) : (
                                 <div className="text-center py-8 text-muted-foreground">
                                     <p>No active positions</p>

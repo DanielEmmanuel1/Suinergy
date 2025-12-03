@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Clock, ArrowUpRight, ArrowDownRight, TrendingUp, ExternalLink } from 'lucide-react'
+import { Clock, ArrowUpRight, ArrowDownRight, TrendingUp, ExternalLink, ArrowDownCircle, ArrowUpCircle, Coins, Gift } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 export interface Transaction {
@@ -35,13 +35,13 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
     const getTypeIcon = (type: Transaction['type']) => {
         switch (type) {
             case 'deposit':
-                return <ArrowDownRight className="w-5 h-5 text-white" />
+                return <ArrowDownCircle className="w-5 h-5 text-white" />
             case 'withdrawal':
-                return <ArrowUpRight className="w-5 h-5 text-black" />
+                return <ArrowUpCircle className="w-5 h-5 text-black" />
             case 'earnings':
-                return <TrendingUp className="w-5 h-5 text-white" />
+                return <Coins className="w-5 h-5 text-white" />
             case 'claim':
-                return <TrendingUp className="w-5 h-5 text-white" />
+                return <Gift className="w-5 h-5 text-white" />
         }
     }
 

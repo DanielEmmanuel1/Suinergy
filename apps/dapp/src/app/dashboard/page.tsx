@@ -11,6 +11,8 @@ import { PortfolioChart } from '@/components/charts/portfolio-chart'
 // Removed useWalletBalance - now using protocol deposits from positions
 import { useUserPositions } from '@/hooks/use-user-positions'
 import { useRewards } from '@/hooks/use-rewards'
+import { useTokenPrice } from '@/hooks/oracle/use-token-price'
+import { useWalletBalancesWithUsd } from '@/hooks/oracle/use-wallet-usd'
 import { WalletLandingScreen } from '@/components/wallet/wallet-landing-screen'
 import {
     TrendingUp,
@@ -54,6 +56,9 @@ export default function DashboardPage() {
     const currentAccount = useCurrentAccount()
     const { data: positions } = useUserPositions()
     const { data: rewards } = useRewards()
+    const { data: suiPriceData } = useTokenPrice('SUI')
+    const { data: walletBalances, totalUsdValue: totalWalletUsd = 0 } = useWalletBalancesWithUsd()
+
     const [portfolioTimePeriod, setPortfolioTimePeriod] = useState<TimePeriod>('30D')
 
     // Generate mock data once
@@ -70,19 +75,24 @@ export default function DashboardPage() {
         return <WalletLandingScreen />
     }
 
-    const totalAllocated = positions?.reduce((sum, pos) => sum + pos.amount, 0) || 0
+    const suiPrice = suiPriceData?.priceUsd || 0
+    const totalAllocatedSui = positions?.reduce((sum, pos) => sum + pos.amount, 0) || 0
+    const totalAllocatedUsd = totalAllocatedSui * suiPrice
+
     const estimatedAPY = positions?.length
-        ? positions.reduce((sum, pos) => sum + pos.apy * pos.amount, 0) / totalAllocated || 0
+        ? positions.reduce((sum, pos) => sum + pos.apy * pos.amount, 0) / totalAllocatedSui || 0
         : 0
 
     // Calculate total earned (mock for now)
-    const totalEarned = positions?.reduce((sum, pos) => {
+    const totalEarnedSui = positions?.reduce((sum, pos) => {
         // Estimate earnings as 1% of allocation (simplified)
         return sum + (pos.amount * 0.01)
     }, 0) || 0
+    const totalEarnedUsd = totalEarnedSui * suiPrice
 
     const activeStrategies = positions?.length || 0
-    const estimatedMonthlyEarnings = (totalAllocated * estimatedAPY) / 100 / 12
+    const estimatedMonthlyEarningsSui = (totalAllocatedSui * estimatedAPY) / 100 / 12
+    const estimatedMonthlyEarningsUsd = estimatedMonthlyEarningsSui * suiPrice
 
     // Filter portfolio data based on time period
 
@@ -113,30 +123,15 @@ export default function DashboardPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-white">
-                                    ${totalAllocated.toLocaleString()}
+                                    ${totalAllocatedUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                                 <div className="text-xs text-white/70 mt-1">
-                                    Deposited in {activeStrategies} {activeStrategies === 1 ? 'strategy' : 'strategies'}
+                                    {totalAllocatedSui.toLocaleString(undefined, { maximumFractionDigits: 2 })} SUI in {activeStrategies} {activeStrategies === 1 ? 'strategy' : 'strategies'}
                                 </div>
                             </CardContent>
                         </Card>
 
-                        <Card className="border-black/10">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                                    <DollarSign className="w-4 h-4" />
-                                    Total Allocated
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold text-black">
-                                    ${totalAllocated.toLocaleString()}
-                                </div>
-                                <div className="text-xs text-muted-foreground mt-1">
-                                    Across {activeStrategies} strategies
-                                </div>
-                            </CardContent>
-                        </Card>
+
 
                         <Card className="border-black/10">
                             <CardHeader className="pb-2">
@@ -150,7 +145,7 @@ export default function DashboardPage() {
                                     {estimatedAPY.toFixed(2)}%
                                 </div>
                                 <div className="text-xs text-muted-foreground mt-1">
-                                    Est. ${estimatedMonthlyEarnings.toFixed(2)}/month
+                                    Est. ${estimatedMonthlyEarningsUsd.toFixed(2)}/month
                                 </div>
                             </CardContent>
                         </Card>
@@ -164,7 +159,7 @@ export default function DashboardPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-black">
-                                    ${totalEarned.toFixed(2)}
+                                    ${totalEarnedUsd.toFixed(2)}
                                 </div>
                                 <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
                                     <ArrowUpRight className="w-3 h-3" />
@@ -255,7 +250,9 @@ export default function DashboardPage() {
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <div className="font-semibold text-black">${position.amount.toLocaleString()}</div>
+                                                        <div className="font-semibold text-black">
+                                                            ${(position.amount * suiPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </div>
                                                         <div className="text-xs text-transparent bg-clip-text bg-brand-gradient">
                                                             {position.apy}% APY
                                                         </div>
@@ -354,18 +351,18 @@ export default function DashboardPage() {
                         <CardContent>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                                 <div className="text-center p-4 rounded-lg bg-[#f4f3f0]">
-                                    <div className="text-2xl font-bold text-black mb-1">${totalEarned.toFixed(2)}</div>
+                                    <div className="text-2xl font-bold text-black mb-1">${totalEarnedUsd.toFixed(2)}</div>
                                     <div className="text-sm text-muted-foreground">Total Earned</div>
                                 </div>
                                 <div className="text-center p-4 rounded-lg bg-[#f4f3f0]">
                                     <div className="text-2xl font-bold text-transparent bg-clip-text bg-brand-gradient mb-1">
-                                        ${estimatedMonthlyEarnings.toFixed(2)}
+                                        ${estimatedMonthlyEarningsUsd.toFixed(2)}
                                     </div>
                                     <div className="text-sm text-muted-foreground">Est. Monthly</div>
                                 </div>
                                 <div className="text-center p-4 rounded-lg bg-[#f4f3f0]">
                                     <div className="text-2xl font-bold text-black mb-1">
-                                        ${(estimatedMonthlyEarnings / 30).toFixed(2)}
+                                        ${(estimatedMonthlyEarningsUsd / 30).toFixed(2)}
                                     </div>
                                     <div className="text-sm text-muted-foreground">Est. Daily</div>
                                 </div>

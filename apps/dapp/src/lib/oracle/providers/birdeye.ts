@@ -19,12 +19,19 @@ export class BirdeyeProvider implements PriceProvider {
         if (!config) return null;
 
         try {
+            // Birdeye now requires authentication - skip if no API key
+            const apiKey = process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
+            if (!apiKey) {
+                console.warn(`Birdeye API key not configured for ${symbol}, skipping...`);
+                return null;
+            }
+
             const response = await axios.get<BirdeyeResponse>(ORACLE_CONSTANTS.BIRDEYE_API_URL, {
                 params: {
                     address: config.birdeyeAddress,
                 },
                 headers: {
-                    'X-API-KEY': process.env.NEXT_PUBLIC_BIRDEYE_API_KEY || '', // Optional if using public endpoints, but good to have
+                    'X-API-KEY': apiKey,
                     'x-chain': 'sui'
                 },
                 timeout: 5000,

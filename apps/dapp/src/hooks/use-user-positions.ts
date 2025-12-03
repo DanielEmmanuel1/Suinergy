@@ -27,8 +27,11 @@ export function useUserPositions() {
                     return []
                 }
 
-                // Query all objects owned by the user
-                const objects = await client.getOwnedObjects({
+                console.log('Querying positions with package ID:', packageId)
+                console.log('Looking for type:', `${packageId}::position::UserPosition`)
+
+                // Query all objects owned by the user with new package ID
+                let objects = await client.getOwnedObjects({
                     owner: account.address,
                     filter: {
                         StructType: `${packageId}::position::UserPosition`,
@@ -39,19 +42,105 @@ export function useUserPositions() {
                     },
                 })
 
+                console.log('Fetched position objects (new package):', objects.data)
+                console.log('Total objects found:', objects.data.length)
+
+                // Also try old package ID in case positions were created before upgrade
+                const oldPackageId = '0xb18e10c0d4cd763ae8f2d2972a6397d0d92f1638840a6f868f06d52683bf3d58'
+                if (objects.data.length === 0 && packageId !== oldPackageId) {
+                    console.log('Trying old package ID as fallback:', oldPackageId)
+                    const oldObjects = await client.getOwnedObjects({
+                        owner: account.address,
+                        filter: {
+                            StructType: `${oldPackageId}::position::UserPosition`,
+                        },
+                        options: {
+                            showContent: true,
+                            showType: true,
+                        },
+                    })
+                    console.log('Fetched position objects (old package):', oldObjects.data)
+                    if (oldObjects.data.length > 0) {
+                        objects = oldObjects
+                    }
+                }
+
+                // If no objects found, try querying all owned objects to see what we have
+                if (objects.data.length === 0) {
+                    console.log('No UserPosition objects found. Querying all owned objects to debug...')
+                    const allObjects = await client.getOwnedObjects({
+                        owner: account.address,
+                        options: {
+                            showType: true,
+                            showContent: true,
+                        },
+                        limit: 50,
+                    })
+                    console.log('All owned objects (first 50):', allObjects.data.map(obj => ({
+                        objectId: obj.data?.objectId,
+                        type: obj.data?.type,
+                        hasContent: !!obj.data?.content,
+                    })))
+                    
+                    // Check if any objects match UserPosition pattern (even with different package ID)
+                    const userPositionLike = allObjects.data.filter(obj => 
+                        obj.data?.type?.includes('UserPosition') || 
+                        obj.data?.type?.includes('position')
+                    )
+                    if (userPositionLike.length > 0) {
+                        console.log('Found objects that might be UserPositions:', userPositionLike.map(obj => ({
+                            objectId: obj.data?.objectId,
+                            type: obj.data?.type,
+                            content: obj.data?.content,
+                        })))
+                    }
+                }
+
                 // Parse the UserPosition objects
                 const positions: UserPosition[] = []
+                
+                // Get vault IDs from environment to map to coin types
+                const suiVaultId = process.env.NEXT_PUBLIC_VAULT_ID || ''
+                const usdcVaultId = process.env.NEXT_PUBLIC_USDC_VAULT_ID || ''
+                const usdtVaultId = process.env.NEXT_PUBLIC_USDT_VAULT_ID || ''
+                
                 for (const obj of objects.data) {
                     if (obj.data?.content?.dataType === 'moveObject') {
                         const fields = obj.data.content.fields as any
-
-                        // Calculate amount from shares (simplified - in production, query vault for exchange rate)
+                        const vaultId = fields.vault_id || ''
                         const shares = BigInt(fields.shares || 0)
-                        const amount = Number(shares) / 1e9 // Convert from MIST to SUI
+
+                        console.log('Parsing position:', { vaultId, shares: shares.toString() })
+
+                        // Determine coin type and strategy from vault ID
+                        let coinDecimals = 9 // Default to SUI
+                        let strategyId = 'sui-staking'
+                        let strategyName = 'SUI Staking'
+
+                        if (vaultId === usdcVaultId) {
+                            coinDecimals = 6 // USDC has 6 decimals
+                            strategyId = 'usdc-liquidity'
+                            strategyName = 'USDC Liquidity Pool'
+                        } else if (vaultId === usdtVaultId) {
+                            coinDecimals = 6 // USDT has 6 decimals
+                            strategyId = 'usdt-liquidity'
+                            strategyName = 'USDT Liquidity Pool'
+                        } else if (vaultId === suiVaultId) {
+                            coinDecimals = 9 // SUI has 9 decimals
+                            strategyId = 'sui-staking'
+                            strategyName = 'SUI Staking'
+                        }
+
+                        // Note: Shares are vault shares, not coin amounts
+                        // To get actual coin amount, we'd need to query the vault:
+                        // amount = (shares * vault.total_assets) / vault.total_shares
+                        // For now, we'll use shares as a placeholder (they represent the position size)
+                        // In production, you should query the vault object to get the actual value
+                        const amount = Number(shares) / Math.pow(10, coinDecimals)
 
                         positions.push({
-                            strategyId: 'sui-staking', // Default strategy
-                            strategyName: 'SUI Staking',
+                            strategyId,
+                            strategyName,
                             amount,
                             apy: 12.5, // Mock APY for now
                             receiptTokenBalance: Number(shares),

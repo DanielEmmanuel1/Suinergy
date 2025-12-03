@@ -3,6 +3,7 @@ import { TokenConfig, TokenSymbol } from './types';
 export const ORACLE_CONSTANTS = {
     BIRDEYE_API_URL: 'https://public-api.birdeye.so/defi/price',
     PYTH_HERMES_URL: 'https://hermes.pyth.network/v2/updates/price/latest',
+    PYTH_REST_URL: 'https://api.pyth.network/v2/price_feeds/latest', // Alternative REST API
     SWITCHBOARD_API_URL: 'https://crossbar.switchboard.xyz', // Example, will verify
     CACHE_DURATION_MS: 30000, // 30 seconds
     STALE_PRICE_THRESHOLD_MS: 60000, // 1 minute

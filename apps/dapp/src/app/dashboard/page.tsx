@@ -13,6 +13,7 @@ import { useUserPositions } from '@/hooks/use-user-positions'
 import { useRewards } from '@/hooks/use-rewards'
 import { useTokenPrice } from '@/hooks/oracle/use-token-price'
 import { useWalletBalancesWithUsd } from '@/hooks/oracle/use-wallet-usd'
+import { useTransactions } from '@/hooks/use-transactions'
 import { WalletLandingScreen } from '@/components/wallet/wallet-landing-screen'
 import {
     TrendingUp,
@@ -58,6 +59,7 @@ export default function DashboardPage() {
     const { data: rewards } = useRewards()
     const { data: suiPriceData } = useTokenPrice('SUI')
     const { data: walletBalances, totalUsdValue: totalWalletUsd = 0 } = useWalletBalancesWithUsd()
+    const { data: transactions } = useTransactions()
 
     const [portfolioTimePeriod, setPortfolioTimePeriod] = useState<TimePeriod>('30D')
 
@@ -75,23 +77,26 @@ export default function DashboardPage() {
         return <WalletLandingScreen />
     }
 
-    const suiPrice = suiPriceData?.priceUsd || 0
-    const totalAllocatedSui = positions?.reduce((sum, pos) => sum + pos.amount, 0) || 0
+    const suiPrice = suiPriceData?.priceUsd ?? 0
+    const totalAllocatedSui = positions?.reduce((sum, pos) => sum + pos.amount, 0) ?? 0
     const totalAllocatedUsd = totalAllocatedSui * suiPrice
 
-    const estimatedAPY = positions?.length
-        ? positions.reduce((sum, pos) => sum + pos.apy * pos.amount, 0) / totalAllocatedSui || 0
+    // Calculate weighted APY - avoid division by zero
+    const estimatedAPY = positions?.length && totalAllocatedSui > 0
+        ? positions.reduce((sum, pos) => sum + pos.apy * pos.amount, 0) / totalAllocatedSui
         : 0
 
     // Calculate total earned (mock for now)
     const totalEarnedSui = positions?.reduce((sum, pos) => {
         // Estimate earnings as 1% of allocation (simplified)
         return sum + (pos.amount * 0.01)
-    }, 0) || 0
+    }, 0) ?? 0
     const totalEarnedUsd = totalEarnedSui * suiPrice
 
-    const activeStrategies = positions?.length || 0
-    const estimatedMonthlyEarningsSui = (totalAllocatedSui * estimatedAPY) / 100 / 12
+    const activeStrategies = positions?.length ?? 0
+    const estimatedMonthlyEarningsSui = totalAllocatedSui > 0 && estimatedAPY > 0
+        ? (totalAllocatedSui * estimatedAPY) / 100 / 12
+        : 0
     const estimatedMonthlyEarningsUsd = estimatedMonthlyEarningsSui * suiPrice
 
     // Filter portfolio data based on time period
@@ -123,10 +128,10 @@ export default function DashboardPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-white">
-                                    ${totalAllocatedUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    ${isNaN(totalAllocatedUsd) || !isFinite(totalAllocatedUsd) ? '0.00' : totalAllocatedUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                                 <div className="text-xs text-white/70 mt-1">
-                                    {totalAllocatedSui.toLocaleString(undefined, { maximumFractionDigits: 2 })} SUI in {activeStrategies} {activeStrategies === 1 ? 'strategy' : 'strategies'}
+                                    {isNaN(totalAllocatedSui) || !isFinite(totalAllocatedSui) ? '0' : totalAllocatedSui.toLocaleString(undefined, { maximumFractionDigits: 2 })} SUI in {activeStrategies} {activeStrategies === 1 ? 'strategy' : 'strategies'}
                                 </div>
                             </CardContent>
                         </Card>
@@ -142,10 +147,10 @@ export default function DashboardPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-transparent bg-clip-text bg-brand-gradient">
-                                    {estimatedAPY.toFixed(2)}%
+                                    {isNaN(estimatedAPY) || !isFinite(estimatedAPY) ? '0.00' : estimatedAPY.toFixed(2)}%
                                 </div>
                                 <div className="text-xs text-muted-foreground mt-1">
-                                    Est. ${estimatedMonthlyEarningsUsd.toFixed(2)}/month
+                                    Est. ${isNaN(estimatedMonthlyEarningsUsd) || !isFinite(estimatedMonthlyEarningsUsd) ? '0.00' : estimatedMonthlyEarningsUsd.toFixed(2)}/month
                                 </div>
                             </CardContent>
                         </Card>
@@ -159,7 +164,7 @@ export default function DashboardPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-black">
-                                    ${totalEarnedUsd.toFixed(2)}
+                                    ${isNaN(totalEarnedUsd) || !isFinite(totalEarnedUsd) ? '0.00' : totalEarnedUsd.toFixed(2)}
                                 </div>
                                 <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
                                     <ArrowUpRight className="w-3 h-3" />
@@ -292,50 +297,58 @@ export default function DashboardPage() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-4">
-                                    {mockRecentActivity.map((activity, index) => (
-                                        <div key={index}>
-                                            <div className="flex items-start gap-3">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.type === 'deposit'
-                                                    ? 'bg-green-100 text-green-600'
-                                                    : activity.type === 'withdrawal'
-                                                        ? 'bg-red-100 text-red-600'
-                                                        : 'bg-brand-gradient text-white'
-                                                    }`}>
-                                                    {activity.type === 'deposit' ? (
-                                                        <ArrowDownRight className="w-4 h-4" />
-                                                    ) : activity.type === 'withdrawal' ? (
-                                                        <ArrowUpRight className="w-4 h-4" />
-                                                    ) : (
-                                                        <Coins className="w-4 h-4" />
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center justify-between">
-                                                        <div>
-                                                            <div className="font-medium text-black capitalize">
-                                                                {activity.type === 'earnings' ? 'Earnings Claimed' : activity.type}
-                                                            </div>
-                                                            <div className="text-sm text-muted-foreground">
-                                                                {activity.strategy}
-                                                            </div>
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        {transactions && transactions.length > 0 ? (
+                                            transactions.slice(0, 5).map((activity, index) => (
+                                                <div key={activity.id}>
+                                                    <div className="flex items-start gap-3">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.type === 'deposit'
+                                                            ? 'bg-green-100 text-green-600'
+                                                            : activity.type === 'withdrawal'
+                                                                ? 'bg-red-100 text-red-600'
+                                                                : 'bg-brand-gradient text-white'
+                                                            }`}>
+                                                            {activity.type === 'deposit' ? (
+                                                                <ArrowDownRight className="w-4 h-4" />
+                                                            ) : activity.type === 'withdrawal' ? (
+                                                                <ArrowUpRight className="w-4 h-4" />
+                                                            ) : (
+                                                                <Coins className="w-4 h-4" />
+                                                            )}
                                                         </div>
-                                                        <div className="text-right">
-                                                            <div className={`font-semibold ${activity.type === 'withdrawal' ? 'text-red-600' : 'text-green-600'
-                                                                }`}>
-                                                                {activity.type === 'withdrawal' ? '-' : '+'}${activity.amount.toLocaleString()}
-                                                            </div>
-                                                            <div className="text-xs text-muted-foreground">
-                                                                {activity.timestamp}
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center justify-between">
+                                                                <div>
+                                                                    <div className="font-medium text-black capitalize">
+                                                                        {activity.type === 'earnings' ? 'Earnings Claimed' : activity.type}
+                                                                    </div>
+                                                                    <div className="text-sm text-muted-foreground">
+                                                                        {activity.strategyName}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <div className={`font-semibold ${activity.type === 'withdrawal' ? 'text-red-600' : 'text-green-600'
+                                                                        }`}>
+                                                                        {activity.type === 'withdrawal' ? '-' : '+'}${activity.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                                                                    </div>
+                                                                    <div className="text-xs text-muted-foreground">
+                                                                        {activity.timestamp.toLocaleDateString()}
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    {index < Math.min(transactions.length, 5) - 1 && <Separator className="mt-4" />}
                                                 </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-8 text-muted-foreground">
+                                                <p>No recent activity</p>
                                             </div>
-                                            {index < mockRecentActivity.length - 1 && <Separator className="mt-4" />}
-                                        </div>
-                                    ))}
-                                </div>
+                                        )}
+                                    </div>
+                                </CardContent>
                             </CardContent>
                         </Card>
                     </div>
@@ -351,18 +364,20 @@ export default function DashboardPage() {
                         <CardContent>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                                 <div className="text-center p-4 rounded-lg bg-[#f4f3f0]">
-                                    <div className="text-2xl font-bold text-black mb-1">${totalEarnedUsd.toFixed(2)}</div>
+                                    <div className="text-2xl font-bold text-black mb-1">
+                                        ${isNaN(totalEarnedUsd) || !isFinite(totalEarnedUsd) ? '0.00' : totalEarnedUsd.toFixed(2)}
+                                    </div>
                                     <div className="text-sm text-muted-foreground">Total Earned</div>
                                 </div>
                                 <div className="text-center p-4 rounded-lg bg-[#f4f3f0]">
                                     <div className="text-2xl font-bold text-transparent bg-clip-text bg-brand-gradient mb-1">
-                                        ${estimatedMonthlyEarningsUsd.toFixed(2)}
+                                        ${isNaN(estimatedMonthlyEarningsUsd) || !isFinite(estimatedMonthlyEarningsUsd) ? '0.00' : estimatedMonthlyEarningsUsd.toFixed(2)}
                                     </div>
                                     <div className="text-sm text-muted-foreground">Est. Monthly</div>
                                 </div>
                                 <div className="text-center p-4 rounded-lg bg-[#f4f3f0]">
                                     <div className="text-2xl font-bold text-black mb-1">
-                                        ${(estimatedMonthlyEarningsUsd / 30).toFixed(2)}
+                                        ${isNaN(estimatedMonthlyEarningsUsd) || !isFinite(estimatedMonthlyEarningsUsd) ? '0.00' : (estimatedMonthlyEarningsUsd / 30).toFixed(2)}
                                     </div>
                                     <div className="text-sm text-muted-foreground">Est. Daily</div>
                                 </div>

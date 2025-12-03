@@ -24,10 +24,11 @@ export class PythProvider implements PriceProvider {
         if (!config) return null;
 
         try {
-            const response = await axios.get<PythResponse>(ORACLE_CONSTANTS.PYTH_HERMES_URL, {
-                params: {
-                    'ids[]': config.pythPriceId,
-                },
+            // Pyth Hermes API format - use URLSearchParams for proper encoding
+            const url = new URL(ORACLE_CONSTANTS.PYTH_HERMES_URL);
+            url.searchParams.append('ids[]', config.pythPriceId);
+            
+            const response = await axios.get<PythResponse>(url.toString(), {
                 timeout: 5000,
             });
 

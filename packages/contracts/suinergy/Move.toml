@@ -2,9 +2,11 @@
 name = "suinergy"
 version = "0.1.0"
 edition = "2024.beta"
+published-at = "0xb18e10c0d4cd763ae8f2d2972a6397d0d92f1638840a6f868f06d52683bf3d58"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
 
 [addresses]
-suinergy = "0xb18e10c0d4cd763ae8f2d2972a6397d0d92f1638840a6f868f06d52683bf3d58"
+# Set to 0x0 for upgrades - the package ID will be resolved from the upgrade capability
+suinergy = "0x0"

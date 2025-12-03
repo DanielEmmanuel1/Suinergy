@@ -25,6 +25,20 @@ module suinergy::vault_entry {
         transfer::public_transfer(position, tx_context::sender(ctx));
     }
 
+    /// Deposit any coin type into a vault
+    public entry fun deposit<T>(
+        vault: &mut Vault<T>,
+        config: &ProtocolConfig,
+        payment: Coin<T>,
+        ctx: &mut TxContext
+    ) {
+        let amount = coin::value(&payment);
+        assert!(amount > 0, EZeroAmount);
+        
+        let position = vault::deposit(vault, config, payment, ctx);
+        transfer::public_transfer(position, tx_context::sender(ctx));
+    }
+
     /// Withdraw SUI from a vault
     public entry fun withdraw_sui(
         vault: &mut Vault<SUI>,

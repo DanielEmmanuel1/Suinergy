@@ -5,8 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { useAppStore } from '@/store/use-app-store'
-import { DepositModal } from '../modals/deposit-modal'
 import Link from 'next/link'
 
 interface Platform {
@@ -44,8 +42,6 @@ interface StrategyGridProps {
 }
 
 export function StrategyGrid({ strategies }: StrategyGridProps) {
-    const { setDepositModalOpen, setSelectedStrategy } = useAppStore()
-
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
@@ -53,11 +49,6 @@ export function StrategyGrid({ strategies }: StrategyGridProps) {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
         }).format(value)
-    }
-
-    const handleDeposit = (strategyId: string) => {
-        setSelectedStrategy(strategyId)
-        setDepositModalOpen(true)
     }
 
     const getCapacityPercentage = (tvl: number, capacity: number) => {
@@ -145,23 +136,15 @@ export function StrategyGrid({ strategies }: StrategyGridProps) {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex flex-col sm:flex-row gap-2">
-                            <Button
-                                className="flex-1"
-                                onClick={() => handleDeposit(strategy.id)}
-                            >
-                                Deposit
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="flex-1"
-                                asChild
-                            >
-                                <Link href={`/strategies/${strategy.id}`}>
-                                    View Details
-                                </Link>
-                            </Button>
-                        </div>
+                        <Button
+                            variant="outline"
+                            className="w-full"
+                            asChild
+                        >
+                            <Link href={`/strategies/${strategy.id}`}>
+                                View Details
+                            </Link>
+                        </Button>
                     </CardContent>
                 </Card>
             ))}

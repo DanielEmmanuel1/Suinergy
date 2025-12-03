@@ -11,13 +11,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { ArrowLeft, TrendingUp, DollarSign, Activity, Info, Clock, AlertCircle, ExternalLink, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useAppStore } from '@/store/use-app-store'
-import { DepositModal } from '@/components/modals/deposit-modal'
 import { TransactionSettingsModal, TransactionSettings } from '@/components/modals/transaction-settings-modal'
 import { TransactionHistory, Transaction } from '@/components/transactions/transaction-history'
 import { useUserPositions } from '@/hooks/use-user-positions'
 import { useTransactions } from '@/hooks/use-transactions'
-import { useCurrentAccount } from '@mysten/dapp-kit'
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
+import { useTokenBalances } from '@/hooks/use-token-balances'
+import { Transaction as SuiTransaction } from '@mysten/sui/transactions'
+import { TOKENS } from '@/lib/oracle/constants'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 // Mock strategy data - will be replaced with real data hooks
 const getStrategyData = (id: string) => {
@@ -161,9 +163,15 @@ export default function StrategyDetailPage() {
     const router = useRouter()
     const strategyId = params.id as string
     const strategy = getStrategyData(strategyId)
-    const { setDepositModalOpen, setSelectedStrategy } = useAppStore()
     const { data: positions } = useUserPositions()
     const account = useCurrentAccount()
+    const { data: balances } = useTokenBalances()
+    const { mutate: signAndExecute } = useSignAndExecuteTransaction()
+    const client = useSuiClient()
+    
+    // Deposit state
+    const [depositAmount, setDepositAmount] = useState('')
+    const [isDepositing, setIsDepositing] = useState(false)
     
     // Map strategy page IDs to position strategyIds
     // Strategy page '1' = Prime USDC Vault (positions have 'usdc-liquidity' or 'usdc-liquidity-pool')
@@ -202,6 +210,136 @@ export default function StrategyDetailPage() {
         gasPrice: 'standard',
         deadline: 20,
     })
+
+    // Get balance for the strategy's asset
+    const tokenType = strategy.asset as 'SUI' | 'USDC' | 'USDT'
+    const decimals = tokenType === 'SUI' ? 9 : 6
+    const balance = useMemo(() => {
+        if (!balances) return BigInt(0)
+        return tokenType === 'SUI' ? balances.sui :
+               tokenType === 'USDC' ? balances.usdc :
+               balances.usdt
+    }, [balances, tokenType])
+    
+    const balanceFormatted = useMemo(() => {
+        return (Number(balance) / Math.pow(10, decimals)).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 6,
+        })
+    }, [balance, decimals])
+
+    // Handle deposit
+    const handleDeposit = async () => {
+        if (!account?.address || !depositAmount || parseFloat(depositAmount) <= 0) {
+            return
+        }
+
+        setIsDepositing(true)
+
+        try {
+            const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || '0x0'
+            const vaultId = 
+                tokenType === 'USDC' 
+                    ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+                    : tokenType === 'USDT'
+                        ? process.env.NEXT_PUBLIC_USDT_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+                        : process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+            const configId = process.env.NEXT_PUBLIC_PROTOCOL_CONFIG_ID || '0x0'
+
+            const amountInSmallestUnit = BigInt(Math.floor(parseFloat(depositAmount) * Math.pow(10, decimals)))
+
+            const coinType =
+                tokenType === 'SUI'
+                    ? '0x2::sui::SUI'
+                    : tokenType === 'USDC'
+                        ? TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
+                        : TOKENS.USDT.coinType || process.env.NEXT_PUBLIC_USDT_COIN_TYPE || ''
+
+            if (!coinType && tokenType !== 'SUI') {
+                throw new Error(`Coin type not configured for ${tokenType}`)
+            }
+
+            const tx = new SuiTransaction()
+            let coin
+
+            if (tokenType === 'SUI') {
+                const [splitCoin] = tx.splitCoins(tx.gas, [amountInSmallestUnit])
+                coin = splitCoin
+            } else {
+                const coins = await client.getCoins({
+                    owner: account.address,
+                    coinType: coinType,
+                })
+
+                if (!coins.data || coins.data.length === 0) {
+                    throw new Error(`No ${tokenType} coins found in wallet`)
+                }
+
+                const primaryCoin = tx.object(coins.data[0].coinObjectId)
+                
+                if (coins.data.length > 1) {
+                    const mergeCoins = coins.data.slice(1).map(c => tx.object(c.coinObjectId))
+                    tx.mergeCoins(primaryCoin, mergeCoins)
+                }
+
+                const [splitCoin] = tx.splitCoins(primaryCoin, [amountInSmallestUnit])
+                coin = splitCoin
+            }
+
+            const functionName = tokenType === 'SUI' ? 'deposit_sui' : 'deposit'
+
+            tx.moveCall({
+                target: `${packageId}::vault_entry::${functionName}`,
+                typeArguments: tokenType === 'SUI' ? [] : [coinType],
+                arguments: [
+                    tx.object(vaultId),
+                    tx.object(configId),
+                    coin,
+                ],
+            })
+
+            signAndExecute(
+                {
+                    transaction: tx as any,
+                    chain: 'sui:testnet',
+                },
+                {
+                    onSuccess: () => {
+                        setIsDepositing(false)
+                        setDepositAmount('')
+                        // Optionally refresh positions
+                    },
+                    onError: (error) => {
+                        console.error('Deposit failed', error)
+                        setIsDepositing(false)
+                    },
+                }
+            )
+        } catch (error) {
+            console.error('Error preparing deposit:', error)
+            setIsDepositing(false)
+        }
+    }
+
+    // Handle Half and Max buttons
+    const handleHalf = () => {
+        const halfBalance = Number(balance) / Math.pow(10, decimals) / 2
+        setDepositAmount(halfBalance.toFixed(6))
+    }
+
+    const handleMax = () => {
+        const maxBalance = Number(balance) / Math.pow(10, decimals)
+        // Reserve some for gas if SUI
+        const maxAmount = tokenType === 'SUI' 
+            ? Math.max(0, maxBalance - 0.1) // Reserve 0.1 SUI for gas
+            : maxBalance
+        setDepositAmount(maxAmount.toFixed(6))
+    }
+
+    const hasInsufficientBalance = 
+        balance !== undefined &&
+        depositAmount &&
+        BigInt(Math.floor(parseFloat(depositAmount) * Math.pow(10, decimals))) > balance
 
     // Get real transactions for this strategy
     const { data: strategyTransactionsData = [] } = useTransactions(strategyId)
@@ -668,28 +806,51 @@ export default function StrategyDetailPage() {
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-sm text-muted-foreground">Amount</span>
-                                                <span className="text-xs text-muted-foreground">Balance: 0 {strategy.asset}</span>
+                                                <span className="text-xs text-muted-foreground">
+                                                    Balance: {account ? balanceFormatted : '0.00'} {strategy.asset}
+                                                </span>
                                             </div>
                                             <div className="flex flex-col sm:flex-row gap-2">
                                                 <input
                                                     type="number"
                                                     placeholder="0"
+                                                    value={depositAmount}
+                                                    onChange={(e) => setDepositAmount(e.target.value)}
                                                     className="flex-1 px-4 py-3 rounded-lg border border-black/10 bg-white text-black text-sm sm:text-base"
+                                                    disabled={!account || isDepositing}
                                                 />
                                                 <div className="flex gap-2">
-                                                    <Button variant="outline" size="sm" className="flex-1 sm:flex-none">Half</Button>
-                                                    <Button variant="outline" size="sm" className="flex-1 sm:flex-none">Max</Button>
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="flex-1 sm:flex-none"
+                                                        onClick={handleHalf}
+                                                        disabled={!account || isDepositing || balance === BigInt(0)}
+                                                    >
+                                                        Half
+                                                    </Button>
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="flex-1 sm:flex-none"
+                                                        onClick={handleMax}
+                                                        disabled={!account || isDepositing || balance === BigInt(0)}
+                                                    >
+                                                        Max
+                                                    </Button>
                                                 </div>
                                             </div>
+                                            {hasInsufficientBalance && (
+                                                <p className="text-xs text-red-500 mt-1">Insufficient balance</p>
+                                            )}
                                         </div>
                                         <Button 
-                                            className="w-full bg-brand-gradient"
-                                            onClick={() => {
-                                                setSelectedStrategy(strategyId)
-                                                setDepositModalOpen(true)
-                                            }}
+                                            className="w-full bg-brand-gradient flex items-center justify-center gap-2"
+                                            onClick={handleDeposit}
+                                            disabled={!account || !depositAmount || parseFloat(depositAmount) <= 0 || hasInsufficientBalance || isDepositing}
                                         >
-                                            {account ? 'Deposit' : 'Connect Wallet'}
+                                            {isDepositing && <LoadingSpinner size="sm" />}
+                                            {isDepositing ? 'Processing...' : account ? 'Deposit' : 'Connect Wallet'}
                                         </Button>
                                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                                             <span>Transaction Settings</span>
@@ -902,24 +1063,14 @@ export default function StrategyDetailPage() {
                                     <Activity className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
                                     <p className="text-lg font-semibold text-black mb-2">No Position Yet</p>
                                     <p className="text-sm text-muted-foreground mb-6">
-                                        Deposit into this strategy to start earning yield
+                                        Go to the "Vault Overview" tab to deposit into this strategy and start earning yield
                                     </p>
-                                    <Button
-                                        className="bg-brand-gradient"
-                                        onClick={() => {
-                                            setSelectedStrategy(strategyId)
-                                            setDepositModalOpen(true)
-                                        }}
-                                    >
-                                        Deposit Now
-                                    </Button>
                                 </CardContent>
                             </Card>
                         )}
                     </TabsContent>
                 </Tabs>
             </div>
-            <DepositModal />
             <TransactionSettingsModal
                 open={transactionSettingsOpen}
                 onOpenChange={setTransactionSettingsOpen}

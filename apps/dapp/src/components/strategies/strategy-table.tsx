@@ -4,8 +4,6 @@ import { ArrowUpRight, ArrowDownRight } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { useAppStore } from '@/store/use-app-store'
-import { DepositModal } from '../modals/deposit-modal'
 import Link from 'next/link'
 
 interface Strategy {
@@ -29,8 +27,6 @@ interface StrategyTableProps {
 }
 
 export function StrategyTable({ strategies }: StrategyTableProps) {
-    const { setDepositModalOpen, setSelectedStrategy } = useAppStore()
-
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
@@ -38,11 +34,6 @@ export function StrategyTable({ strategies }: StrategyTableProps) {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
         }).format(value)
-    }
-
-    const handleDeposit = (strategyId: string) => {
-        setSelectedStrategy(strategyId)
-        setDepositModalOpen(true)
     }
 
     return (
@@ -115,32 +106,22 @@ export function StrategyTable({ strategies }: StrategyTableProps) {
                                     </Badge>
                                 </td>
                                 <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-right">
-                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 justify-end">
-                                        <Button
-                                            size="sm"
-                                            onClick={() => handleDeposit(strategy.id)}
-                                            className="w-full sm:w-auto text-xs px-2 sm:px-3"
-                                        >
-                                            Deposit
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            asChild
-                                            className="w-full sm:w-auto text-xs px-2 sm:px-3"
-                                        >
-                                            <Link href={`/strategies/${strategy.id}`}>
-                                                View Details
-                                            </Link>
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        asChild
+                                        className="w-full sm:w-auto text-xs px-2 sm:px-3"
+                                    >
+                                        <Link href={`/strategies/${strategy.id}`}>
+                                            View Details
+                                        </Link>
+                                    </Button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
-            <DepositModal />
         </Card>
     )
 }

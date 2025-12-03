@@ -4,6 +4,7 @@ import './globals.css';
 import '@mysten/dapp-kit/dist/index.css';
 import { Providers } from '@/providers/providers';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { RouteGuard } from '@/components/auth/route-guard';
 
 const bungee = Bungee({
     weight: '400',
@@ -36,7 +37,9 @@ export default function RootLayout({
             <body className="font-sans antialiased bg-[#f4f3f0] text-black">
                 <Providers>
                     <TooltipProvider>
-                        {children}
+                        <RouteGuard>
+                            {children}
+                        </RouteGuard>
                     </TooltipProvider>
                 </Providers>
             </body>

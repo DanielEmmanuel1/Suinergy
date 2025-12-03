@@ -115,20 +115,20 @@ export function useUserPositions() {
                         // Determine coin type and strategy from vault ID
                         let coinDecimals = 9 // Default to SUI
                         let strategyId = 'sui-staking'
-                        let strategyName = 'SUI Staking'
+                        let strategyName = 'Sovereign SUI Vault'
 
                         if (vaultId === usdcVaultId) {
                             coinDecimals = 6 // USDC has 6 decimals
                             strategyId = 'usdc-liquidity'
-                            strategyName = 'USDC Liquidity Pool'
+                            strategyName = 'Prime USDC Vault'
                         } else if (vaultId === usdtVaultId) {
                             coinDecimals = 6 // USDT has 6 decimals
                             strategyId = 'usdt-liquidity'
-                            strategyName = 'USDT Liquidity Pool'
+                            strategyName = 'Amplified USDT Vault'
                         } else if (vaultId === suiVaultId) {
                             coinDecimals = 9 // SUI has 9 decimals
                             strategyId = 'sui-staking'
-                            strategyName = 'SUI Staking'
+                            strategyName = 'Sovereign SUI Vault'
                         }
 
                         // Note: Shares are vault shares, not coin amounts

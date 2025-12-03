@@ -51,10 +51,10 @@ const getMockPortfolioData = () => Array.from({ length: 90 }, (_, i) => {
 
 // Mock recent activity
 const mockRecentActivity = [
-    { type: 'deposit', strategy: 'USDC Liquidity Pool', amount: 5000, timestamp: '2h ago', status: 'completed' },
-    { type: 'earnings', strategy: 'SUI Staking', amount: 125.50, timestamp: '5h ago', status: 'completed' },
-    { type: 'deposit', strategy: 'Leveraged Yield', amount: 2000, timestamp: '1d ago', status: 'completed' },
-    { type: 'withdrawal', strategy: 'USDC Liquidity Pool', amount: 1000, timestamp: '2d ago', status: 'completed' },
+    { type: 'deposit', strategy: 'Prime USDC Vault', amount: 5000, timestamp: '2h ago', status: 'completed' },
+    { type: 'earnings', strategy: 'Sovereign SUI Vault', amount: 125.50, timestamp: '5h ago', status: 'completed' },
+    { type: 'deposit', strategy: 'Amplified USDT Vault', amount: 2000, timestamp: '1d ago', status: 'completed' },
+    { type: 'withdrawal', strategy: 'Prime USDC Vault', amount: 1000, timestamp: '2d ago', status: 'completed' },
 ]
 
 export default function DashboardPage() {

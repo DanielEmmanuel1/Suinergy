@@ -79,7 +79,14 @@ export function useTransactions(strategyId?: string) {
 
                             // Try to get function name/strategy from transaction block
                             let strategyName = 'Suinergy Vault'
-                            // Simple heuristic for now
+                            // Map token to vault name
+                            if (token === 'USDC') {
+                                strategyName = 'Prime USDC Vault'
+                            } else if (token === 'SUI') {
+                                strategyName = 'Sovereign SUI Vault'
+                            } else if (token === 'USDT') {
+                                strategyName = 'Amplified USDT Vault'
+                            }
 
                             transactions.push({
                                 id: tx.digest + change.coinType, // Unique ID

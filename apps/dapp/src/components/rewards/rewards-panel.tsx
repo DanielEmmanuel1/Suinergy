@@ -14,8 +14,8 @@ const mockRewards = {
     nextTier: 'Platinum',
     tierProgress: 65,
     receiptTokens: [
-        { id: '1', name: 'USDC Strategy', amount: 5000, apy: 12.5 },
-        { id: '2', name: 'SUI Staking', amount: 10000, apy: 8.2 },
+        { id: '1', name: 'Prime USDC Vault', amount: 5000, apy: 12.5 },
+        { id: '2', name: 'Sovereign SUI Vault', amount: 10000, apy: 8.2 },
     ],
     recentActivity: [
         { type: 'points_earned', amount: 100, description: 'Liquidity mining reward', timestamp: '2h ago' },

@@ -24,7 +24,7 @@ const getStrategyData = (id: string) => {
     const strategies: Record<string, any> = {
         '1': {
             id: '1',
-            name: 'USDC Liquidity Pool',
+            name: 'Prime USDC Vault',
             asset: 'USDC',
             apy: 12.5,
             apr: 11.8,
@@ -35,7 +35,7 @@ const getStrategyData = (id: string) => {
             risk: 'low',
             withdrawalLatency: '24h',
             platformFee: 0.1,
-            description: 'USDC Prime is a conservative lending strategy designed to deliver consistent, risk-adjusted yields by allocating funds across highly liquid markets and premium collateral. This strategy optimizes returns by lending USDC against both core collateral markets and select real-world asset (RWA) pools, dynamically adapting to market conditions to ensure robust yield performance and capital preservation.',
+            description: 'Prime USDC Vault is a conservative lending strategy designed to deliver consistent, risk-adjusted yields by allocating funds across highly liquid markets and premium collateral. This strategy optimizes returns by lending USDC against both core collateral markets and select real-world asset (RWA) pools, dynamically adapting to market conditions to ensure robust yield performance and capital preservation.',
             platforms: [
                 { id: 'scallop', name: 'Scallop', allocation: 35, apy: 11.5, apyContribution: 4.03, yieldType: 'lending', risk: 'low', health: 'excellent', color: '#1565c0', supplied: 875000, utilization: 87.5, supplyApy: 4.54 },
                 { id: 'cetus', name: 'Cetus', allocation: 30, apy: 13.2, apyContribution: 3.96, yieldType: 'lp', risk: 'low', health: 'good', color: '#b92b27', supplied: 750000, utilization: 83.7, supplyApy: 4.34 },
@@ -67,7 +67,7 @@ const getStrategyData = (id: string) => {
         },
         '2': {
             id: '2',
-            name: 'SUI Staking',
+            name: 'Sovereign SUI Vault',
             asset: 'SUI',
             apy: 8.2,
             apr: 7.9,
@@ -78,7 +78,7 @@ const getStrategyData = (id: string) => {
             risk: 'low',
             withdrawalLatency: '7d',
             platformFee: 0.15,
-            description: 'SUI Staking is a low-risk strategy focused on native Sui blockchain staking rewards. This strategy allocates funds primarily to liquid staking tokens (LST) and validator staking pools, providing consistent yields with minimal risk exposure.',
+            description: 'Sovereign SUI Vault is a low-risk strategy focused on native Sui blockchain staking rewards. This strategy allocates funds primarily to liquid staking tokens (LST) and validator staking pools, providing consistent yields with minimal risk exposure.',
             platforms: [
                 { id: 'lst', name: 'LST Staking', allocation: 60, apy: 8.5, apyContribution: 5.1, yieldType: 'staking', risk: 'low', health: 'excellent', color: '#8b5cf6', supplied: 3000000, utilization: 92.1, supplyApy: 8.5 },
                 { id: 'scallop', name: 'Scallop', allocation: 25, apy: 11.5, apyContribution: 2.88, yieldType: 'lending', risk: 'low', health: 'excellent', color: '#1565c0', supplied: 1250000, utilization: 87.5, supplyApy: 4.54 },
@@ -109,7 +109,7 @@ const getStrategyData = (id: string) => {
         },
         '3': {
             id: '3',
-            name: 'Leveraged Yield Farming',
+            name: 'Amplified USDT Vault',
             asset: 'USDT',
             apy: 18.5,
             apr: 16.2,
@@ -120,7 +120,7 @@ const getStrategyData = (id: string) => {
             risk: 'high',
             withdrawalLatency: '48h',
             platformFee: 0.2,
-            description: 'Leveraged Yield Farming is an aggressive strategy that employs leverage to amplify returns. This strategy allocates funds across high-yield structured products, leveraged positions, and emissions farming, targeting maximum APY while managing risk through dynamic rebalancing.',
+            description: 'Amplified USDT Vault is an aggressive strategy that employs leverage to amplify returns. This strategy allocates funds across high-yield structured products, leveraged positions, and emissions farming, targeting maximum APY while managing risk through dynamic rebalancing.',
             platforms: [
                 { id: 'kriya', name: 'Kriya', allocation: 40, apy: 15.8, apyContribution: 6.32, yieldType: 'structured', risk: 'medium', health: 'good', color: '#10b981', supplied: 480000, utilization: 75.2, supplyApy: 15.8 },
                 { id: 'cetus', name: 'Cetus', allocation: 35, apy: 13.2, apyContribution: 4.62, yieldType: 'lp', risk: 'low', health: 'good', color: '#b92b27', supplied: 420000, utilization: 83.7, supplyApy: 4.34 },
@@ -166,13 +166,13 @@ export default function StrategyDetailPage() {
     const account = useCurrentAccount()
     
     // Map strategy page IDs to position strategyIds
-    // Strategy page '1' = USDC Liquidity Pool (positions have 'usdc-liquidity' or 'usdc-liquidity-pool')
-    // Strategy page '2' = SUI Staking (positions have 'sui-staking')
-    // Strategy page '3' = Leveraged Yield Farming (not implemented, positions would have 'usdt-liquidity' or similar)
+    // Strategy page '1' = Prime USDC Vault (positions have 'usdc-liquidity' or 'usdc-liquidity-pool')
+    // Strategy page '2' = Sovereign SUI Vault (positions have 'sui-staking')
+    // Strategy page '3' = Amplified USDT Vault (not implemented, positions would have 'usdt-liquidity' or similar)
     const strategyIdMap: Record<string, string[]> = {
-        '1': ['usdc-liquidity', 'usdc-liquidity-pool'], // USDC Liquidity Pool
-        '2': ['sui-staking'], // SUI Staking
-        '3': ['usdt-liquidity', 'leveraged-yield'], // Leveraged Yield Farming (not implemented)
+        '1': ['usdc-liquidity', 'usdc-liquidity-pool'], // Prime USDC Vault
+        '2': ['sui-staking'], // Sovereign SUI Vault
+        '3': ['usdt-liquidity', 'leveraged-yield'], // Amplified USDT Vault (not implemented)
     }
     
     // Find all positions for this strategy

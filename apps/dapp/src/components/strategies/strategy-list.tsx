@@ -16,7 +16,7 @@ import { DepositModal } from '../modals/deposit-modal'
 const mockStrategies = [
     {
         id: '1',
-        name: 'USDC Liquidity Pool',
+        name: 'Prime USDC Vault',
         asset: 'USDC',
         apy: 12.5,
         apr: 11.8,
@@ -31,7 +31,7 @@ const mockStrategies = [
     },
     {
         id: '2',
-        name: 'SUI Staking',
+        name: 'Sovereign SUI Vault',
         asset: 'SUI',
         apy: 8.2,
         apr: 7.9,
@@ -46,7 +46,7 @@ const mockStrategies = [
     },
     {
         id: '3',
-        name: 'Leveraged Yield Farming',
+        name: 'Amplified USDT Vault',
         asset: 'USDT',
         apy: 18.5,
         apr: 16.2,

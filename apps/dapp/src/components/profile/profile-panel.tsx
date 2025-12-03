@@ -15,7 +15,7 @@ const getStrategyData = (id: string) => {
     const strategies: Record<string, any> = {
         '1': {
             id: '1',
-            name: 'USDC Liquidity Pool',
+            name: 'Prime USDC Vault',
             platforms: [
                 { id: 'scallop', name: 'Scallop', allocation: 35, color: '#1565c0' },
                 { id: 'cetus', name: 'Cetus', allocation: 30, color: '#b92b27' },
@@ -25,7 +25,7 @@ const getStrategyData = (id: string) => {
         },
         '2': {
             id: '2',
-            name: 'SUI Staking',
+            name: 'Sovereign SUI Vault',
             platforms: [
                 { id: 'lst', name: 'LST Staking', allocation: 60, color: '#8b5cf6' },
                 { id: 'scallop', name: 'Scallop', allocation: 25, color: '#1565c0' },
@@ -34,7 +34,7 @@ const getStrategyData = (id: string) => {
         },
         '3': {
             id: '3',
-            name: 'Leveraged Yield Farming',
+            name: 'Amplified USDT Vault',
             platforms: [
                 { id: 'kriya', name: 'Kriya', allocation: 40, color: '#10b981' },
                 { id: 'cetus', name: 'Cetus', allocation: 35, color: '#b92b27' },
@@ -106,7 +106,7 @@ export function ProfilePanel() {
             amount: 5000,
             token: 'USDC',
             strategyId: '1',
-            strategyName: 'USDC Liquidity Pool',
+            strategyName: 'Prime USDC Vault',
             txHash: '0x1234567890abcdef',
             timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
             status: 'completed',
@@ -117,7 +117,7 @@ export function ProfilePanel() {
             amount: 125.50,
             token: 'SUI',
             strategyId: '2',
-            strategyName: 'SUI Staking',
+            strategyName: 'Sovereign SUI Vault',
             txHash: '0xabcdef1234567890',
             timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
             status: 'completed',
@@ -128,7 +128,7 @@ export function ProfilePanel() {
             amount: 2000,
             token: 'SUI',
             strategyId: '2',
-            strategyName: 'SUI Staking',
+            strategyName: 'Sovereign SUI Vault',
             txHash: '0x9876543210fedcba',
             timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
             status: 'completed',
@@ -139,7 +139,7 @@ export function ProfilePanel() {
             amount: 10000,
             token: 'SUI',
             strategyId: '2',
-            strategyName: 'SUI Staking',
+            strategyName: 'Sovereign SUI Vault',
             txHash: '0x5555555555555555',
             timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
             status: 'completed',
@@ -150,7 +150,7 @@ export function ProfilePanel() {
             amount: 2000,
             token: 'USDT',
             strategyId: '3',
-            strategyName: 'Leveraged Yield Farming',
+            strategyName: 'Amplified USDT Vault',
             txHash: '0x4444444444444444',
             timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
             status: 'completed',
@@ -161,7 +161,7 @@ export function ProfilePanel() {
             amount: 37.00,
             token: 'USDC',
             strategyId: '1',
-            strategyName: 'USDC Liquidity Pool',
+            strategyName: 'Prime USDC Vault',
             txHash: '0x3333333333333333',
             timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
             status: 'completed',
@@ -172,8 +172,9 @@ export function ProfilePanel() {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
+            // Show cents so small positions don't appear as $0
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
         }).format(value)
     }
 

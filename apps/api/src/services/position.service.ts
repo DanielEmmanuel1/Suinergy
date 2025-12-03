@@ -85,12 +85,27 @@ export class PositionService {
     }
 
     /**
-     * Extract strategy ID from vault ID (simplified - in production would query vault object)
+     * Extract strategy ID from vault ID by mapping vault IDs to strategy IDs
+     * In production, this would query the vault object to get its associated strategy ID
      */
     private extractStrategyIdFromVaultId(vaultId: string): string | null {
-        // This is a placeholder - in production, you'd query the vault object
-        // to get its associated strategy ID
-        // For now, return null or use a mapping
+        // Get vault IDs from environment variables
+        const suiVaultId = process.env.SUI_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || ''
+        const usdcVaultId = process.env.SUI_USDC_VAULT_ID || process.env.NEXT_PUBLIC_USDC_VAULT_ID || ''
+        const usdtVaultId = process.env.SUI_USDT_VAULT_ID || process.env.NEXT_PUBLIC_USDT_VAULT_ID || ''
+
+        // Map vault IDs to strategy IDs
+        if (vaultId === suiVaultId && suiVaultId) {
+            return 'sui-staking'
+        } else if (vaultId === usdcVaultId && usdcVaultId) {
+            return 'usdc-liquidity'
+        } else if (vaultId === usdtVaultId && usdtVaultId) {
+            return 'usdt-liquidity'
+        }
+
+        // If no match found, return null
+        // In production, you could query the vault object to get the strategy ID
+        logger.warn(`Could not map vault ID ${vaultId} to a strategy ID`)
         return null
     }
 

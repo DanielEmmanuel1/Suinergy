@@ -79,8 +79,11 @@ export class AdapterRegistryService {
 
             const hasAnyMockAdapters = strategies.some((s) => s.hasMockAdapters)
 
+            // Extract boolean value from return values (1 = true, 0 = false)
+            const isTestnetValue = isTestnet.results?.[0]?.returnValues?.[0]?.[0] === 1
+
             return {
-                isTestnet: isTestnet.results?.[0]?.returnValues?.[0]?.[0] === 1 || true,
+                isTestnet: isTestnetValue,
                 strategies,
                 hasAnyMockAdapters,
             }

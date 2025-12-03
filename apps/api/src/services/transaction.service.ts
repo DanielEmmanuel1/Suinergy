@@ -47,7 +47,7 @@ export class TransactionService {
             }>(`${this.packageId}::events::DepositEvent`, userAddress)
 
             for (const event of depositEvents) {
-                if (strategyId && !this.matchesStrategy(event.vault_id, strategyId)) continue
+                if (strategyId && !this.matchesStrategy(event.parsedJson.vault_id, strategyId)) continue
 
                 transactions.push({
                     id: event.id.eventId,
@@ -71,7 +71,7 @@ export class TransactionService {
             }>(`${this.packageId}::events::WithdrawEvent`, userAddress)
 
             for (const event of withdrawEvents) {
-                if (strategyId && !this.matchesStrategy(event.vault_id, strategyId)) continue
+                if (strategyId && !this.matchesStrategy(event.parsedJson.vault_id, strategyId)) continue
 
                 transactions.push({
                     id: event.id.eventId,

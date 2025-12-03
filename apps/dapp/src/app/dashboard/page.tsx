@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useCurrentAccount } from '@mysten/dapp-kit'
+import { useRouter } from 'next/navigation'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -58,6 +59,7 @@ const mockRecentActivity = [
 
 export default function DashboardPage() {
     const currentAccount = useCurrentAccount()
+    const router = useRouter()
     const { data: positions } = useUserPositions()
     const { data: rewards } = useRewards()
     const { data: suiPriceData } = useTokenPrice('SUI')
@@ -75,9 +77,19 @@ export default function DashboardPage() {
         return fullPortfolioData.slice(-days)
     }, [portfolioTimePeriod, fullPortfolioData])
 
+    // Redirect to home page if wallet is disconnected
+    // This prevents browser back button from returning to dashboard
+    // Using replace instead of push to avoid adding to history
+    useEffect(() => {
+        if (!currentAccount) {
+            router.replace('/')
+        }
+    }, [currentAccount, router])
+
     // Show landing screen if wallet is not connected
+    // This check happens early to ensure immediate redirect when wallet disconnects
     if (!currentAccount) {
-        return <WalletLandingScreen />
+        return <WalletLandingScreen key="no-account" />
     }
 
     const suiPrice = suiPriceData?.priceUsd ?? 0

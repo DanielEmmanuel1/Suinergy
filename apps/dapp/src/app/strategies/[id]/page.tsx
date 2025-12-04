@@ -540,7 +540,13 @@ export default function StrategyDetailPage() {
                     return
                 }
 
-                const positionFields = matchingPosition.data.content.fields as any
+                // Type guard for moveObject content
+                if (matchingPosition.data.content.dataType !== 'moveObject') {
+                    setActualPositionValue(null)
+                    return
+                }
+
+                const positionFields = (matchingPosition.data.content as { dataType: 'moveObject'; fields: any }).fields
                 const shares = BigInt(positionFields?.shares || userPosition.receiptTokenBalance)
 
                 // Query vault to get actual value
@@ -665,7 +671,12 @@ export default function StrategyDetailPage() {
             }
 
             // Get the actual position shares from the on-chain object
-            const positionFields = matchingPosition.data.content?.fields as any
+            // Type guard for moveObject content
+            if (!matchingPosition.data.content || matchingPosition.data.content.dataType !== 'moveObject') {
+                throw new Error('Position object has invalid content type')
+            }
+            
+            const positionFields = (matchingPosition.data.content as { dataType: 'moveObject'; fields: any }).fields
             const actualShares = BigInt(positionFields?.shares || userPosition.receiptTokenBalance)
 
             // Query vault to get actual current position value
@@ -1254,7 +1265,7 @@ export default function StrategyDetailPage() {
                                                                 <div className="font-medium text-black text-xs sm:text-sm">
                                                                     <div>{platform.name}</div>
                                                                     <div className="sm:hidden mt-1">
-                                                                        <div className="w-6 h-6 rounded-lg bg-brand-gradient flex items-center justify-center text-white font-bold text-xs inline-flex mr-2">
+                                                                        <div className="w-6 h-6 rounded-lg bg-brand-gradient inline-flex items-center justify-center text-white font-bold text-xs mr-2">
                                                                             {platform.name.charAt(0)}
                                                                         </div>
                                                                         <span className="text-xs text-muted-foreground">{formatCurrency(platform.supplied)}</span>

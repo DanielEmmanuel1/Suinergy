@@ -71,6 +71,37 @@ module suinergy::vault {
         position::new_user_position(object::uid_to_inner(&vault.id), shares, ctx)
     }
 
+    /// Get total shares
+    public fun total_shares<T>(vault: &Vault<T>): u64 {
+        vault.total_shares
+    }
+
+    /// Get total assets
+    public fun total_assets<T>(vault: &Vault<T>): u64 {
+        vault.total_assets
+    }
+
+    /// Get balance value
+    public fun balance_value<T>(vault: &Vault<T>): u64 {
+        balance::value(&vault.balance)
+    }
+
+    /// Split balance (for selective withdrawal)
+    public fun split_balance<T>(vault: &mut Vault<T>, amount: u64): Balance<T> {
+        balance::split(&mut vault.balance, amount)
+    }
+
+    /// Update vault state after withdrawal
+    public fun update_after_withdrawal<T>(vault: &mut Vault<T>, shares: u64, assets: u64) {
+        vault.total_shares = vault.total_shares - shares;
+        vault.total_assets = vault.total_assets - assets;
+    }
+
+    /// Get vault ID
+    public fun vault_id<T>(vault: &Vault<T>): ID {
+        object::uid_to_inner(&vault.id)
+    }
+
     /// Withdraw assets from the vault
     public fun withdraw<T>(
         vault: &mut Vault<T>,

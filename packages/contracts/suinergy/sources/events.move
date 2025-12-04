@@ -121,4 +121,28 @@ module suinergy::events {
             new_package_id,
         });
     }
+
+    public struct WithdrawPositionEvent has copy, drop {
+        user: address,
+        vault_id: ID,
+        adapter_id: ID,
+        amount_withdrawn: u64,
+        shares_burned: u64,
+    }
+
+    public fun emit_withdraw_position(
+        user: address,
+        vault_id: ID,
+        adapter_id: ID,
+        amount_withdrawn: u64,
+        shares_burned: u64,
+    ) {
+        event::emit(WithdrawPositionEvent {
+            user,
+            vault_id,
+            adapter_id,
+            amount_withdrawn,
+            shares_burned,
+        });
+    }
 }

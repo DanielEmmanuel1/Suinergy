@@ -82,4 +82,24 @@ module suinergy::position {
         let UserPosition { id, vault_id: _, shares: _ } = position;
         object::delete(id);
     }
+
+    /// Reduce shares from a user position (for partial withdrawals)
+    /// Returns the reduced shares for accounting
+    public fun reduce_shares(position: &mut UserPosition, amount: u64): u64 {
+        assert!(amount <= position.shares, 0);
+        position.shares = position.shares - amount;
+        amount
+    }
+
+    /// Split a UserPosition into two (for partial withdrawals)
+    /// Original position keeps (shares - amount), new position gets amount
+    public fun split(
+        position: &mut UserPosition,
+        shares: u64,
+        ctx: &mut TxContext
+    ): UserPosition {
+        assert!(shares <= position.shares, 0);
+        position.shares = position.shares - shares;
+        new_user_position(position.vault_id, shares, ctx)
+    }
 }

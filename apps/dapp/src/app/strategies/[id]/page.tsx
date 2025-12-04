@@ -16,6 +16,8 @@ import { TransactionHistory, Transaction } from '@/components/transactions/trans
 import { ProcessingModal } from '@/components/modals/processing-modal'
 import { ErrorModal } from '@/components/modals/error-modal'
 import { SuccessModal } from '@/components/modals/success-modal'
+import { SelectiveWithdrawModal } from '@/components/modals/selective-withdraw-modal'
+import { useVaultPositions } from '@/hooks/use-vault-positions'
 import { useUserPositions } from '@/hooks/use-user-positions'
 import { useTransactions } from '@/hooks/use-transactions'
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
@@ -187,6 +189,7 @@ export default function StrategyDetailPage() {
     const [showErrorModal, setShowErrorModal] = useState(false)
     const [errorMessage, setErrorMessage] = useState<string>('')
     const [successMessage, setSuccessMessage] = useState<string>('')
+    const [showSelectiveWithdrawModal, setShowSelectiveWithdrawModal] = useState(false)
     
     // Map strategy page IDs to position strategyIds
     // Strategy page '1' = Prime USDC Vault (positions have 'usdc-liquidity' or 'usdc-liquidity-pool')
@@ -241,6 +244,24 @@ export default function StrategyDetailPage() {
     // Get balance for the strategy's asset
     const tokenType = strategy.asset as 'SUI' | 'USDC' | 'USDT'
     const decimals = tokenType === 'SUI' ? 9 : 6
+    
+    // Get vault ID and registry ID for selective withdrawal
+    const vaultId = useMemo(() => {
+        return tokenType === 'USDC' 
+            ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || ''
+            : tokenType === 'USDT'
+                ? process.env.NEXT_PUBLIC_USDT_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || ''
+                : process.env.NEXT_PUBLIC_VAULT_ID || ''
+    }, [tokenType])
+    const registryId = process.env.NEXT_PUBLIC_STRATEGY_REGISTRY_ID || ''
+    
+    // Get vault positions for selective withdrawal
+    const { data: vaultPositionsFromAPI = [] } = useVaultPositions(
+        vaultId,
+        registryId,
+        userPosition ? BigInt(Math.floor(userPosition.receiptTokenBalance)) : BigInt(0)
+    )
+    
     const balance = useMemo(() => {
         if (!balances) return BigInt(0)
         return tokenType === 'SUI' ? balances.sui :
@@ -624,6 +645,37 @@ export default function StrategyDetailPage() {
             maximumFractionDigits: 6,
         })
     }, [userPosition, actualPositionValue])
+
+    // Create positions from strategy.platforms data (until on-chain positions are available)
+    // Must be after actualPositionValue is defined
+    const vaultPositions = useMemo(() => {
+        // If API returned positions, use those
+        if (vaultPositionsFromAPI.length > 0) {
+            return vaultPositionsFromAPI
+        }
+
+        // Otherwise, create positions from strategy.platforms
+        if (!userPosition) return []
+        
+        const totalPositionValue = actualPositionValue !== null ? actualPositionValue : userPosition.amount
+        const decimals = tokenType === 'SUI' ? 9 : 6
+        
+        return strategy.platforms.map((platform: any) => {
+            // Calculate position value based on allocation
+            const positionValue = (totalPositionValue * platform.allocation) / 100
+            
+            return {
+                adapterId: platform.id,
+                positionId: `${vaultId}-${platform.id}`, // Placeholder position ID
+                protocolName: platform.name,
+                allocationPercent: platform.allocation,
+                currentValue: BigInt(Math.floor(positionValue * Math.pow(10, decimals))),
+                userShare: BigInt(Math.floor(positionValue * Math.pow(10, decimals))),
+                apy: platform.apy || 0,
+                logo: undefined,
+            }
+        })
+    }, [vaultPositionsFromAPI, strategy.platforms, userPosition, actualPositionValue, tokenType, vaultId])
 
     // Handle withdraw
     const handleWithdraw = async () => {
@@ -1413,71 +1465,25 @@ export default function StrategyDetailPage() {
                                                 </Button>
                                             </>
                                         ) : (
-                                            // Withdraw Form
+                                            // Withdraw - just button to open modal
                                             <>
-                                                <div>
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <span className="text-sm text-muted-foreground">Amount</span>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            Position: {userPosition ? positionBalanceFormatted : '0.00'} {strategy.asset}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex flex-col sm:flex-row gap-2">
-                                                        <input
-                                                            type="text"
-                                                            inputMode="decimal"
-                                                            placeholder="0"
-                                                            value={withdrawAmount}
-                                                            onChange={(e) => {
-                                                                const val = e.target.value
-                                                                // Allow empty, numbers, and decimals
-                                                                if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                                                                    setWithdrawAmount(val)
-                                                                }
-                                                            }}
-                                                            className="flex-1 px-4 py-3 rounded-lg border border-black/10 bg-white text-black text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                            disabled={!account || isWithdrawing || !userPosition}
-                                                        />
-                                                        <div className="flex gap-2">
-                                                            <Button 
-                                                                variant="outline" 
-                                                                size="sm" 
-                                                                className="flex-1 sm:flex-none"
-                                                                onClick={handleWithdrawHalf}
-                                                                disabled={!account || isWithdrawing || !userPosition || (actualPositionValue !== null ? actualPositionValue === 0 : userPosition.amount === 0)}
-                                                            >
-                                                                Half
-                                                            </Button>
-                                                            <Button 
-                                                                variant="outline" 
-                                                                size="sm" 
-                                                                className="flex-1 sm:flex-none"
-                                                                onClick={handleWithdrawMax}
-                                                                disabled={!account || isWithdrawing || !userPosition || (actualPositionValue !== null ? actualPositionValue === 0 : userPosition.amount === 0)}
-                                                            >
-                                                                Max
-                                                            </Button>
+                                                {!userPosition && account && (
+                                                    <p className="text-xs text-muted-foreground mb-4">No position found. Deposit first to create a position.</p>
+                                                )}
+                                                {userPosition && (
+                                                    <div className="mb-4 p-3 rounded-lg bg-[#f4f3f0]">
+                                                        <div className="flex items-center justify-between text-sm">
+                                                            <span className="text-muted-foreground">Your Position</span>
+                                                            <span className="font-semibold text-black">
+                                                                {positionBalanceFormatted} {strategy.asset}
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                    {hasInsufficientPositionBalance && (
-                                                        <p className="text-xs text-red-500 mt-1">Insufficient position balance</p>
-                                                    )}
-                                                    {!userPosition && account && (
-                                                        <p className="text-xs text-muted-foreground mt-1">No position found. Deposit first to create a position.</p>
-                                                    )}
-                                                    {userPosition && parseFloat(withdrawAmount) > 0 && (() => {
-                                                        const positionValue = actualPositionValue !== null ? actualPositionValue : userPosition.amount
-                                                        return parseFloat(withdrawAmount) < positionValue
-                                                    })() && (
-                                                        <p className="text-xs text-blue-600 mt-1">
-                                                            Partial withdrawal: {parseFloat(withdrawAmount).toFixed(6)} {strategy.asset} will be withdrawn. The remaining {((actualPositionValue !== null ? actualPositionValue : userPosition.amount) - parseFloat(withdrawAmount)).toFixed(6)} {strategy.asset} will be automatically deposited back.
-                                                        </p>
-                                                    )}
-                                                </div>
+                                                )}
                                                 <Button 
                                                     className="w-full bg-brand-gradient flex items-center justify-center gap-2"
-                                                    onClick={handleWithdraw}
-                                                    disabled={!account || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || hasInsufficientPositionBalance || isWithdrawing || !userPosition}
+                                                    onClick={() => setShowSelectiveWithdrawModal(true)}
+                                                    disabled={!account || !userPosition || isWithdrawing}
                                                 >
                                                     {isWithdrawing && <LoadingSpinner size="sm" />}
                                                     {isWithdrawing ? 'Processing...' : account ? 'Withdraw' : 'Connect Wallet'}
@@ -1738,6 +1744,36 @@ export default function StrategyDetailPage() {
                 error={errorMessage}
                 onClose={() => {
                     setErrorMessage('')
+                }}
+            />
+            
+            <SelectiveWithdrawModal
+                open={showSelectiveWithdrawModal}
+                onOpenChange={setShowSelectiveWithdrawModal}
+                vaultId={vaultId}
+                configId={process.env.NEXT_PUBLIC_PROTOCOL_CONFIG_ID || ''}
+                registryId={registryId}
+                userPosition={userPosition ? {
+                    shares: BigInt(Math.floor(userPosition.receiptTokenBalance)),
+                    vaultId,
+                } : {
+                    shares: BigInt(0),
+                    vaultId,
+                }}
+                positions={vaultPositions}
+                tokenType={tokenType}
+                totalPositionValue={actualPositionValue !== null ? actualPositionValue : (userPosition?.amount || 0)}
+                onWithdrawAll={async (amount: string) => {
+                    // Handle proportional withdrawal (withdraw all)
+                    setWithdrawAmount(amount)
+                    await handleWithdraw()
+                }}
+                onSuccess={() => {
+                    // Refresh positions after successful withdrawal
+                    // The hook will automatically refetch
+                    if (positions) {
+                        // Refetch positions
+                    }
                 }}
             />
         </MainLayout>

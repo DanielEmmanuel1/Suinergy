@@ -139,6 +139,128 @@ export class PositionService {
             return shares // Fallback to 1:1
         }
     }
+
+    /**
+     * Get all protocol positions for a vault
+     * Queries the StrategyVaultRegistry on-chain
+     */
+    async getVaultPositions(vaultId: string, registryId?: string): Promise<any[]> {
+        const regId = registryId || process.env.SUI_STRATEGY_REGISTRY_ID || null
+        
+        if (!regId || !this.packageId) {
+            logger.warn('Registry ID or Package ID not configured')
+            return []
+        }
+
+        try {
+            // Call view function: get_active_positions
+            const result = await this.suiClient.devInspectTransactionBlock({
+                sender: '0x0',
+                transactionBlock: {
+                    kind: 'moveCall',
+                    data: {
+                        packageId: this.packageId,
+                        module: 'vault_selective',
+                        function: 'get_active_positions',
+                        arguments: [regId],
+                    },
+                },
+            })
+
+            // Parse position IDs from return values
+            const positionIds: string[] = []
+            // Extract position IDs from result (implementation depends on return format)
+
+            // For each position ID, get position info
+            const positions = []
+            for (const positionId of positionIds) {
+                try {
+                    const posInfo = await this.suiClient.devInspectTransactionBlock({
+                        sender: '0x0',
+                        transactionBlock: {
+                            kind: 'moveCall',
+                            data: {
+                                packageId: this.packageId,
+                                module: 'vault_selective',
+                                function: 'get_position_info',
+                                arguments: [regId, positionId],
+                            },
+                        },
+                    })
+                    
+                    // Parse PositionInfo and add to positions array
+                    // This requires parsing the return values properly
+                } catch (error) {
+                    logger.warn(`Failed to get info for position ${positionId}`, error)
+                }
+            }
+
+            return positions
+        } catch (error) {
+            logger.error(`Failed to fetch vault positions for ${vaultId}`, error)
+            return []
+        }
+    }
+
+    /**
+     * Get user's proportional share of each position
+     */
+    async getUserVaultPositions(vaultId: string, userAddress: string, registryId?: string): Promise<any[]> {
+        // Get all vault positions
+        const positions = await this.getVaultPositions(vaultId, registryId)
+        
+        // Get user's total shares
+        const userPositions = await this.getUserPositions(userAddress)
+        const userVaultPosition = userPositions.find(p => {
+            // Match vault ID - would need to store vault ID mapping
+            return true // Simplified
+        })
+
+        if (!userVaultPosition) {
+            return []
+        }
+
+        // Calculate user's share of each position
+        return positions.map(pos => ({
+            ...pos,
+            userShare: this.calculateUserPositionShare(
+                pos.currentValue,
+                userVaultPosition.receiptTokenBalance,
+                // Would need vault.total_shares and vault.total_assets
+            ),
+        }))
+    }
+
+    /**
+     * Get current allocation breakdown
+     */
+    async getVaultAllocations(vaultId: string, registryId?: string): Promise<any[]> {
+        const positions = await this.getVaultPositions(vaultId, registryId)
+        
+        // Calculate total value
+        const totalValue = positions.reduce((sum, pos) => sum + BigInt(pos.currentValue || 0), BigInt(0))
+        
+        // Calculate allocation percentages
+        return positions.map(pos => ({
+            adapterId: pos.adapterId,
+            protocolName: pos.protocolName,
+            allocationPercent: totalValue > 0 
+                ? (Number(BigInt(pos.currentValue) * BigInt(10000) / totalValue)) / 100
+                : 0,
+            currentValue: pos.currentValue,
+            apy: pos.apy,
+        }))
+    }
+
+    private calculateUserPositionShare(
+        positionValue: bigint,
+        userShares: number,
+        // Would need totalShares and totalAssets parameters
+    ): bigint {
+        // Simplified calculation
+        // In production: (userShares * positionValue) / totalShares
+        return BigInt(0) // Placeholder
+    }
 }
 
 import { suiClient } from '../lib/sui-client'

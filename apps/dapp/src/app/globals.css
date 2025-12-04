@@ -106,4 +106,16 @@
     @apply text-transparent bg-clip-text;
     background-image: linear-gradient(to right, #b92b27, #1565c0);
   }
+
+  /* Hide scrollbar but keep scrolling functionality */
+  .custom-scrollbar-hide {
+    -ms-overflow-style: none !important; /* IE and Edge */
+    scrollbar-width: none !important; /* Firefox */
+  }
+
+  .custom-scrollbar-hide::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, Opera */
+    width: 0 !important;
+    height: 0 !important;
+  }
 }

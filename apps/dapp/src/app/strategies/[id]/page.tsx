@@ -13,6 +13,9 @@ import { ArrowLeft, TrendingUp, DollarSign, Activity, Info, Clock, AlertCircle, 
 import { cn } from '@/lib/utils'
 import { TransactionSettingsModal, TransactionSettings } from '@/components/modals/transaction-settings-modal'
 import { TransactionHistory, Transaction } from '@/components/transactions/transaction-history'
+import { ProcessingModal } from '@/components/modals/processing-modal'
+import { ErrorModal } from '@/components/modals/error-modal'
+import { SuccessModal } from '@/components/modals/success-modal'
 import { useUserPositions } from '@/hooks/use-user-positions'
 import { useTransactions } from '@/hooks/use-transactions'
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
@@ -177,6 +180,13 @@ export default function StrategyDetailPage() {
     const [isDepositing, setIsDepositing] = useState(false)
     const [isWithdrawing, setIsWithdrawing] = useState(false)
     const [pendingPartialDeposit, setPendingPartialDeposit] = useState<{amount: bigint, vaultId: string, configId: string, tokenType: 'SUI' | 'USDC' | 'USDT'} | null>(null)
+    
+    // Modal states
+    const [showProcessingModal, setShowProcessingModal] = useState(false)
+    const [showSuccessModal, setShowSuccessModal] = useState(false)
+    const [showErrorModal, setShowErrorModal] = useState(false)
+    const [errorMessage, setErrorMessage] = useState<string>('')
+    const [successMessage, setSuccessMessage] = useState<string>('')
     
     // Map strategy page IDs to position strategyIds
     // Strategy page '1' = Prime USDC Vault (positions have 'usdc-liquidity' or 'usdc-liquidity-pool')
@@ -430,6 +440,8 @@ export default function StrategyDetailPage() {
                 ],
             })
 
+            setShowProcessingModal(true)
+            
             signAndExecute(
                 {
                     transaction: tx as any,
@@ -438,18 +450,27 @@ export default function StrategyDetailPage() {
                 {
                     onSuccess: () => {
                         setIsDepositing(false)
+                        setShowProcessingModal(false)
                         setDepositAmount('')
+                        setSuccessMessage(`Successfully deposited ${depositAmount} ${strategy.asset}`)
+                        setShowSuccessModal(true)
                         // Optionally refresh positions
                     },
                     onError: (error) => {
                         console.error('Deposit failed', error)
                         setIsDepositing(false)
+                        setShowProcessingModal(false)
+                        setErrorMessage(error instanceof Error ? error.message : 'Deposit failed. Please try again.')
+                        setShowErrorModal(true)
                     },
                 }
             )
         } catch (error) {
             console.error('Error preparing deposit:', error)
             setIsDepositing(false)
+            setShowProcessingModal(false)
+            setErrorMessage(error instanceof Error ? error.message : 'Failed to prepare deposit. Please try again.')
+            setShowErrorModal(true)
         }
     }
 
@@ -776,6 +797,8 @@ export default function StrategyDetailPage() {
                 ? { amount: amountToKeep, vaultId, configId, tokenType }
                 : null
 
+            setShowProcessingModal(true)
+            
             signAndExecute(
                 {
                     transaction: tx as any,
@@ -784,7 +807,10 @@ export default function StrategyDetailPage() {
                 {
                     onSuccess: () => {
                         setIsWithdrawing(false)
+                        setShowProcessingModal(false)
                         setWithdrawAmount('')
+                        setSuccessMessage(`Successfully withdrew ${withdrawAmount} ${strategy.asset}`)
+                        setShowSuccessModal(true)
                         // Only set pendingPartialDeposit if this was a partial withdrawal
                         // This will trigger the useEffect to deposit back the remainder
                         if (partialDepositInfo) {
@@ -798,13 +824,19 @@ export default function StrategyDetailPage() {
                     onError: (error) => {
                         console.error('Withdraw failed', error)
                         setIsWithdrawing(false)
+                        setShowProcessingModal(false)
                         setPendingPartialDeposit(null)
+                        setErrorMessage(error instanceof Error ? error.message : 'Withdraw failed. Please try again.')
+                        setShowErrorModal(true)
                     },
                 }
             )
         } catch (error) {
             console.error('Error preparing withdraw:', error)
             setIsWithdrawing(false)
+            setShowProcessingModal(false)
+            setErrorMessage(error instanceof Error ? error.message : 'Failed to prepare withdrawal. Please try again.')
+            setShowErrorModal(true)
         }
     }
 
@@ -1675,6 +1707,38 @@ export default function StrategyDetailPage() {
                 open={transactionSettingsOpen}
                 onOpenChange={setTransactionSettingsOpen}
                 onSave={setTransactionSettings}
+            />
+            
+            {/* Transaction Modals */}
+            <ProcessingModal
+                open={showProcessingModal}
+                title={isDepositing ? 'Processing Deposit' : isWithdrawing ? 'Processing Withdrawal' : 'Processing Transaction'}
+                message={isDepositing 
+                    ? `Depositing ${depositAmount} ${strategy.asset}...`
+                    : isWithdrawing
+                        ? `Withdrawing ${withdrawAmount} ${strategy.asset}...`
+                        : 'Please wait while we process your transaction...'}
+            />
+            
+            <SuccessModal
+                open={showSuccessModal}
+                onOpenChange={setShowSuccessModal}
+                title="Transaction Successful!"
+                message={successMessage}
+                onClose={() => {
+                    setSuccessMessage('')
+                }}
+            />
+            
+            <ErrorModal
+                open={showErrorModal}
+                onOpenChange={setShowErrorModal}
+                title="Transaction Failed"
+                message="Your transaction could not be completed."
+                error={errorMessage}
+                onClose={() => {
+                    setErrorMessage('')
+                }}
             />
         </MainLayout>
     )

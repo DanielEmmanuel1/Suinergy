@@ -1,4 +1,4 @@
-export type TokenSymbol = 'SUI' | 'USDC' | 'USDT';
+export type TokenSymbol = 'SUI' | 'USDC';
 export type PriceSource = 'birdeye' | 'pyth' | 'switchboard' | 'none';
 
 export interface OraclePrice {

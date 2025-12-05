@@ -112,13 +112,13 @@ export function SuccessModal({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent ref={contentRef} className="sm:max-w-md">
-                <DialogHeader>
-                    <div ref={iconRef} className="flex justify-center mb-4">
-                        <div className="relative">
-                            <CheckCircle2 className="w-16 h-16 text-[#10b981]" />
-                            <div className="absolute inset-0 bg-[#10b981] rounded-full opacity-20 animate-ping" />
-                        </div>
+                <div ref={iconRef} className="flex justify-center mb-4">
+                    <div className="relative">
+                        <CheckCircle2 className="w-16 h-16 text-[#10b981]" />
+                        <div className="absolute inset-0 bg-[#10b981] rounded-full opacity-20 animate-ping" />
                     </div>
+                </div>
+                <DialogHeader>
                     <DialogTitle ref={titleRef} className="text-center text-xl font-semibold">
                         {title}
                     </DialogTitle>

@@ -26,14 +26,6 @@ export const TOKENS: Record<TokenSymbol, TokenConfig> = {
         pythPriceId: '0x41f3625971ca2ed2263e78573fe5ce23e13d40375caf505848f2099015f8e7db', // USDC/USD
         switchboardFeedId: '0x...',
     },
-    USDT: {
-        symbol: 'USDT',
-        decimals: 6,
-        coinType: '0xc060006111016b8a020ad5b338349841437d1d2b27158774c98517d92c31332c::coin::COIN', // Wormhole USDT
-        birdeyeAddress: '0xc060006111016b8a020ad5b338349841437d1d2b27158774c98517d92c31332c::coin::COIN',
-        pythPriceId: '0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b', // USDT/USD
-        switchboardFeedId: '0x...',
-    },
 };
 
 export const SUPPORTED_TOKENS = Object.keys(TOKENS) as TokenSymbol[];

@@ -29,7 +29,7 @@ import { useTokenBalances } from '@/hooks/use-token-balances'
 import { Transaction } from '@mysten/sui/transactions'
 import { TOKENS } from '@/lib/oracle/constants'
 
-type TokenType = 'SUI' | 'USDC' | 'USDT'
+type TokenType = 'SUI' | 'USDC'
 
 export function DepositModal() {
     const { depositModalOpen, setDepositModalOpen, selectedStrategy } = useAppStore()
@@ -71,12 +71,9 @@ export function DepositModal() {
         try {
             const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || '0x0'
             // Use coin-specific vault ID if available, otherwise fall back to general vault ID
-            const vaultId = 
-                tokenType === 'USDC' 
-                    ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
-                    : tokenType === 'USDT'
-                        ? process.env.NEXT_PUBLIC_USDT_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
-                        : process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+            const vaultId = tokenType === 'USDC'
+                ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+                : process.env.NEXT_PUBLIC_SUI_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
             const configId = process.env.NEXT_PUBLIC_PROTOCOL_CONFIG_ID || '0x0'
 
             // Convert amount to smallest unit (MIST for SUI, typically 6-9 decimals for stablecoins)
@@ -87,9 +84,7 @@ export function DepositModal() {
             const coinType =
                 tokenType === 'SUI'
                     ? '0x2::sui::SUI'
-                    : tokenType === 'USDC'
-                        ? TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
-                        : TOKENS.USDT.coinType || process.env.NEXT_PUBLIC_USDT_COIN_TYPE || ''
+                    : TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
 
             if (!coinType && tokenType !== 'SUI') {
                 throw new Error(`Coin type not configured for ${tokenType}`)
@@ -107,14 +102,11 @@ export function DepositModal() {
                 coin = splitCoin
             } else {
                 // Check if user actually has balance first (from the hook data)
-                const userBalance = 
-                    tokenType === 'USDC' ? balances?.usdc :
-                    tokenType === 'USDT' ? balances?.usdt :
-                    BigInt(0)
+                const userBalance = tokenType === 'USDC' ? balances?.usdc : BigInt(0)
 
                 // Build list of coin types to try - start with configured, then try common ones
                 const coinTypesToTry: string[] = [coinType]
-                
+
                 if (tokenType === 'USDC') {
                     // Add common USDC coin type variations
                     coinTypesToTry.push(
@@ -125,12 +117,6 @@ export function DepositModal() {
                         '0xa1ec7fc00a6f40db9693ad1415d0c193ad3906494428cf252621037bd7117e29::usdc::USDC', // Circle native USDC (Testnet)
                         '0x2::coin::Coin<0xa1ec7fc00a6f40db9693ad1415d0c193ad3906494428cf252621037bd7117e29::usdc::USDC>', // Circle wrapped format
                         process.env.NEXT_PUBLIC_USDC_COIN_TYPE || '' // From env
-                    )
-                } else if (tokenType === 'USDT') {
-                    coinTypesToTry.push(
-                        TOKENS.USDT.coinType,
-                        '0xc060006111016b8a020ad5b338349841437d1d2b27158774c98517d92c31332c::coin::COIN',
-                        process.env.NEXT_PUBLIC_USDT_COIN_TYPE || ''
                     )
                 }
 
@@ -153,7 +139,7 @@ export function DepositModal() {
                                 owner: account.address,
                                 coinType: testCoinType,
                             })
-                            
+
                             if (testCoins.data && testCoins.data.length > 0) {
                                 coins = testCoins
                                 actualCoinType = testCoinType
@@ -169,60 +155,60 @@ export function DepositModal() {
 
                 // If still no coins, try querying all balances to find the coin type
                 if (!coins || !coins.data || coins.data.length === 0) {
-                        // Query all coin types by checking balances
-                        const allCoins = await client.getAllCoins({
+                    // Query all coin types by checking balances
+                    const allCoins = await client.getAllCoins({
+                        owner: account.address,
+                        limit: 100, // Increase limit
+                    })
+
+                    // Handle pagination if needed
+                    let allCoinData = [...allCoins.data]
+                    let nextCursor = allCoins.nextCursor
+                    while (nextCursor && allCoinData.length < 500) {
+                        const moreCoins = await client.getAllCoins({
                             owner: account.address,
-                            limit: 100, // Increase limit
+                            cursor: nextCursor,
+                            limit: 100,
+                        })
+                        allCoinData = [...allCoinData, ...moreCoins.data]
+                        nextCursor = moreCoins.nextCursor
+                        if (!nextCursor) break
+                    }
+
+                    // Filter for coins that match the token type
+                    const matchingCoins = allCoinData.filter((coin) => {
+                        const coinTypeLower = coin.coinType.toLowerCase()
+                        const tokenTypeLower = tokenType.toLowerCase()
+                        return coinTypeLower.includes(tokenTypeLower)
+                    })
+
+                    if (matchingCoins.length > 0) {
+                        // Group by coin type and find the one with the highest balance
+                        const coinTypeMap = new Map<string, bigint>()
+                        matchingCoins.forEach((coin) => {
+                            const current = coinTypeMap.get(coin.coinType) || BigInt(0)
+                            coinTypeMap.set(coin.coinType, current + BigInt(coin.balance))
                         })
 
-                        // Handle pagination if needed
-                        let allCoinData = [...allCoins.data]
-                        let nextCursor = allCoins.nextCursor
-                        while (nextCursor && allCoinData.length < 500) {
-                            const moreCoins = await client.getAllCoins({
-                                owner: account.address,
-                                cursor: nextCursor,
-                                limit: 100,
-                            })
-                            allCoinData = [...allCoinData, ...moreCoins.data]
-                            nextCursor = moreCoins.nextCursor
-                            if (!nextCursor) break
-                        }
-
-                        // Filter for coins that match the token type
-                        const matchingCoins = allCoinData.filter((coin) => {
-                            const coinTypeLower = coin.coinType.toLowerCase()
-                            const tokenTypeLower = tokenType.toLowerCase()
-                            return coinTypeLower.includes(tokenTypeLower)
-                        })
-
-                        if (matchingCoins.length > 0) {
-                            // Group by coin type and find the one with the highest balance
-                            const coinTypeMap = new Map<string, bigint>()
-                            matchingCoins.forEach((coin) => {
-                                const current = coinTypeMap.get(coin.coinType) || BigInt(0)
-                                coinTypeMap.set(coin.coinType, current + BigInt(coin.balance))
-                            })
-
-                            // Get the coin type with the highest balance
-                            let maxBalance = BigInt(0)
-                            let bestCoinType = ''
-                            coinTypeMap.forEach((balance, type) => {
-                                if (balance > maxBalance) {
-                                    maxBalance = balance
-                                    bestCoinType = type
-                                }
-                            })
-
-                            if (bestCoinType) {
-                                actualCoinType = bestCoinType
-                                coins = await client.getCoins({
-                                    owner: account.address,
-                                    coinType: bestCoinType,
-                                })
+                        // Get the coin type with the highest balance
+                        let maxBalance = BigInt(0)
+                        let bestCoinType = ''
+                        coinTypeMap.forEach((balance, type) => {
+                            if (balance > maxBalance) {
+                                maxBalance = balance
+                                bestCoinType = type
                             }
+                        })
+
+                        if (bestCoinType) {
+                            actualCoinType = bestCoinType
+                            coins = await client.getCoins({
+                                owner: account.address,
+                                coinType: bestCoinType,
+                            })
                         }
                     }
+                }
 
                 // If still no coins found, provide helpful error with all discovered coin types
                 if (!coins || !coins.data || coins.data.length === 0) {
@@ -230,28 +216,28 @@ export function DepositModal() {
                         `No ${tokenType} coin objects found in wallet.`,
                         `\nConfigured coin type: ${coinType}`,
                     ]
-                    
+
                     // Discover all coin types in wallet
                     try {
                         const allCoins = await client.getAllCoins({
                             owner: account.address,
                             limit: 200,
                         })
-                        
+
                         // Get unique coin types
                         const uniqueCoinTypes = new Set(allCoins.data.map(c => c.coinType))
-                        
+
                         // Find USDC-like coin types
                         const usdcLikeTypes = Array.from(uniqueCoinTypes).filter(type => {
                             const lower = type.toLowerCase()
                             return lower.includes('usdc') || lower.includes('circle') || lower.includes('coin')
                         })
-                        
+
                         if (usdcLikeTypes.length > 0) {
                             errorDetails.push(
                                 `\n\n📋 Found ${tokenType}-like coin types in your wallet:`
                             )
-                            
+
                             // Check balance for each type
                             for (const testType of usdcLikeTypes.slice(0, 10)) {
                                 try {
@@ -259,7 +245,7 @@ export function DepositModal() {
                                         owner: account.address,
                                         coinType: testType,
                                     })
-                                    
+
                                     if (BigInt(testBalance.totalBalance) > 0) {
                                         const humanBalance = Number(testBalance.totalBalance) / Math.pow(10, decimals)
                                         errorDetails.push(
@@ -272,7 +258,7 @@ export function DepositModal() {
                                 }
                             }
                         }
-                        
+
                         errorDetails.push(
                             `\n\n💡 To fix this:`,
                             `\n1. Copy one of the coin types above that has a balance`,
@@ -286,7 +272,7 @@ export function DepositModal() {
                             `\n\nUnable to auto-detect coin types. Please check your wallet and update NEXT_PUBLIC_${tokenType}_COIN_TYPE manually.`
                         )
                     }
-                    
+
                     if (userBalance && userBalance > 0) {
                         errorDetails.push(
                             `\n\nℹ️  Note: Your wallet shows a balance of ${Number(userBalance) / Math.pow(10, decimals)} ${tokenType}, but the coin type differs from the configured type.`
@@ -298,7 +284,7 @@ export function DepositModal() {
 
                 // Merge all coins and split the required amount
                 const primaryCoin = tx.object(coins.data[0].coinObjectId)
-                
+
                 // If we have multiple coins, merge them first
                 if (coins.data.length > 1) {
                     const mergeCoins = coins.data.slice(1).map(c => tx.object(c.coinObjectId))
@@ -358,9 +344,7 @@ export function DepositModal() {
     const selectedBalance =
         tokenType === 'SUI'
             ? balances?.sui
-            : tokenType === 'USDC'
-                ? balances?.usdc
-                : balances?.usdt
+            : balances?.usdc
 
     const hasInsufficientBalance =
         selectedBalance !== undefined &&
@@ -387,7 +371,6 @@ export function DepositModal() {
                                 <SelectContent>
                                     <SelectItem value="SUI">SUI</SelectItem>
                                     <SelectItem value="USDC">USDC</SelectItem>
-                                    <SelectItem value="USDT">USDT</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

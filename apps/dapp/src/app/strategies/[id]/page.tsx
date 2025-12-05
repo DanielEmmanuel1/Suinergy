@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,8 +16,7 @@ import { TransactionHistory, Transaction } from '@/components/transactions/trans
 import { ProcessingModal } from '@/components/modals/processing-modal'
 import { ErrorModal } from '@/components/modals/error-modal'
 import { SuccessModal } from '@/components/modals/success-modal'
-import { SelectiveWithdrawModal } from '@/components/modals/selective-withdraw-modal'
-import { useVaultPositions } from '@/hooks/use-vault-positions'
+import { MigrationModal } from '@/components/modals/migration-modal'
 import { useUserPositions } from '@/hooks/use-user-positions'
 import { useTransactions } from '@/hooks/use-transactions'
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
@@ -26,6 +25,7 @@ import { Transaction as SuiTransaction } from '@mysten/sui/transactions'
 import { TOKENS } from '@/lib/oracle/constants'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ToggleSwitch } from '@/components/ui/toggle-switch'
+import { getProtocolConfigForPackage } from '@/lib/package-mappings'
 
 // Mock strategy data - will be replaced with real data hooks
 const getStrategyData = (id: string) => {
@@ -115,49 +115,7 @@ const getStrategyData = (id: string) => {
             managementFee: 0.0,
             performanceFee: 0.0,
         },
-        '3': {
-            id: '3',
-            name: 'Amplified USDT Vault',
-            asset: 'USDT',
-            apy: 18.5,
-            apr: 16.2,
-            apyChange: 1.2,
-            tvl: 1200000,
-            capacity: 3000000,
-            remaining: 1800000,
-            risk: 'high',
-            withdrawalLatency: '48h',
-            platformFee: 0.2,
-            description: 'Amplified USDT Vault is an aggressive strategy that employs leverage to amplify returns. This strategy allocates funds across high-yield structured products, leveraged positions, and emissions farming, targeting maximum APY while managing risk through dynamic rebalancing.',
-            platforms: [
-                { id: 'kriya', name: 'Kriya', allocation: 40, apy: 15.8, apyContribution: 6.32, yieldType: 'structured', risk: 'medium', health: 'good', color: '#10b981', supplied: 480000, utilization: 75.2, supplyApy: 15.8 },
-                { id: 'cetus', name: 'Cetus', allocation: 35, apy: 13.2, apyContribution: 4.62, yieldType: 'lp', risk: 'low', health: 'good', color: '#b92b27', supplied: 420000, utilization: 83.7, supplyApy: 4.34 },
-                { id: 'scallop', name: 'Scallop', allocation: 15, apy: 11.5, apyContribution: 1.73, yieldType: 'lending', risk: 'low', health: 'excellent', color: '#1565c0', supplied: 180000, utilization: 87.5, supplyApy: 4.54 },
-                { id: 'emissions', name: 'Emissions', allocation: 10, apy: 25.0, apyContribution: 2.5, yieldType: 'emissions', risk: 'high', health: 'fair', color: '#f59e0b', supplied: 120000, utilization: 65.0, supplyApy: 25.0 },
-            ],
-            performanceHistory: Array.from({ length: 90 }, (_, i) => {
-                const date = new Date()
-                date.setDate(date.getDate() - (89 - i))
-                return {
-                    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                    supplyApy: 18.5 + (Math.random() - 0.5) * 4,
-                    benchmarkApy: 12.0 + (Math.random() - 0.5) * 2,
-                    totalSupply: 1000000 + (i * 220) + Math.random() * 2000,
-                }
-            }),
-            interestGenerated: Array.from({ length: 180 }, (_, i) => {
-                const date = new Date()
-                date.setDate(date.getDate() - (179 - i))
-                return {
-                    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                    value: 20000 + (i * 12000) + Math.random() * 4000,
-                }
-            }),
-            totalInterestGenerated: 2200000,
-            deploymentDate: '2024-05-10',
-            managementFee: 0.0,
-            performanceFee: 0.0,
-        },
+
     }
     return strategies[id] || strategies['1']
 }
@@ -169,38 +127,42 @@ export default function StrategyDetailPage() {
     const router = useRouter()
     const strategyId = params.id as string
     const strategy = getStrategyData(strategyId)
-    const { data: positions } = useUserPositions()
+    const { data: positions, refetch: refetchPositions } = useUserPositions()
     const account = useCurrentAccount()
     const { data: balances } = useTokenBalances()
     const { mutate: signAndExecute } = useSignAndExecuteTransaction()
     const client = useSuiClient()
-    
+
     // Deposit/Withdraw state
     const [isWithdrawMode, setIsWithdrawMode] = useState(false) // false = deposit, true = withdraw
     const [depositAmount, setDepositAmount] = useState('')
     const [withdrawAmount, setWithdrawAmount] = useState('')
     const [isDepositing, setIsDepositing] = useState(false)
     const [isWithdrawing, setIsWithdrawing] = useState(false)
-    const [pendingPartialDeposit, setPendingPartialDeposit] = useState<{amount: bigint, vaultId: string, configId: string, tokenType: 'SUI' | 'USDC' | 'USDT'} | null>(null)
-    
+    const [pendingPartialDeposit, setPendingPartialDeposit] = useState<{ amount: bigint, vaultId: string, configId: string, tokenType: 'SUI' | 'USDC' } | null>(null)
+
     // Modal states
     const [showProcessingModal, setShowProcessingModal] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [showErrorModal, setShowErrorModal] = useState(false)
     const [errorMessage, setErrorMessage] = useState<string>('')
     const [successMessage, setSuccessMessage] = useState<string>('')
-    const [showSelectiveWithdrawModal, setShowSelectiveWithdrawModal] = useState(false)
-    
+    const [showMigrationModal, setShowMigrationModal] = useState(false)
+    // Use ref to avoid closure issues in error handlers
+    const migrationDataRef = useRef<{
+        oldPositionId: string
+        vaultId: string
+        shares: string
+    } | null>(null)
+
     // Map strategy page IDs to position strategyIds
     // Strategy page '1' = Prime USDC Vault (positions have 'usdc-liquidity' or 'usdc-liquidity-pool')
     // Strategy page '2' = Sovereign SUI Vault (positions have 'sui-staking')
-    // Strategy page '3' = Amplified USDT Vault (not implemented, positions would have 'usdt-liquidity' or similar)
     const strategyIdMap: Record<string, string[]> = {
         '1': ['usdc-liquidity', 'usdc-liquidity-pool'], // Prime USDC Vault
         '2': ['sui-staking'], // Sovereign SUI Vault
-        '3': ['usdt-liquidity', 'leveraged-yield'], // Amplified USDT Vault (not implemented)
     }
-    
+
     // Find all positions for this strategy
     const strategyPositionIds = strategyIdMap[strategyId] || []
     const userPositions = positions?.filter(p => {
@@ -211,26 +173,21 @@ export default function StrategyDetailPage() {
         const strategyNameLower = strategy.name.toLowerCase()
         return positionNameLower.includes(strategyNameLower) || strategyNameLower.includes(positionNameLower)
     }) || []
-    
-    // For backward compatibility, use first position if only one
-    const userPosition = userPositions.length === 1 ? userPositions[0] : 
-                         userPositions.length > 1 ? {
-                             ...userPositions[0],
-                             amount: userPositions.reduce((sum, p) => sum + p.amount, 0),
-                             receiptTokenBalance: userPositions.reduce((sum, p) => sum + p.receiptTokenBalance, 0),
-                         } : null
 
-    // Auto-fill withdraw amount when switching to withdraw mode (only on initial switch, not when userPosition changes)
-    const [hasAutoFilled, setHasAutoFilled] = useState(false)
+    // For backward compatibility, use first position if only one
+    const userPosition = userPositions.length === 1 ? userPositions[0] :
+        userPositions.length > 1 ? {
+            ...userPositions[0],
+            amount: userPositions.reduce((sum, p) => sum + p.amount, 0),
+            receiptTokenBalance: userPositions.reduce((sum, p) => sum + p.receiptTokenBalance, 0),
+        } : null
+
+    // Clear withdraw amount when switching modes
     useEffect(() => {
-        if (isWithdrawMode && userPosition && !hasAutoFilled) {
-            setWithdrawAmount(userPosition.amount.toFixed(6))
-            setHasAutoFilled(true)
-        } else if (!isWithdrawMode) {
+        if (!isWithdrawMode) {
             setWithdrawAmount('')
-            setHasAutoFilled(false)
         }
-    }, [isWithdrawMode, userPosition, hasAutoFilled])
+    }, [isWithdrawMode])
 
     const [apyTimePeriod, setApyTimePeriod] = useState<TimePeriod>('90D')
     const [interestTimePeriod, setInterestTimePeriod] = useState<TimePeriod>('90D')
@@ -242,33 +199,21 @@ export default function StrategyDetailPage() {
     })
 
     // Get balance for the strategy's asset
-    const tokenType = strategy.asset as 'SUI' | 'USDC' | 'USDT'
+    const tokenType = strategy.asset as 'SUI' | 'USDC'
     const decimals = tokenType === 'SUI' ? 9 : 6
-    
-    // Get vault ID and registry ID for selective withdrawal
+
+    // Get vault ID for withdrawals
     const vaultId = useMemo(() => {
-        return tokenType === 'USDC' 
+        return tokenType === 'USDC'
             ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || ''
-            : tokenType === 'USDT'
-                ? process.env.NEXT_PUBLIC_USDT_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || ''
-                : process.env.NEXT_PUBLIC_VAULT_ID || ''
+            : process.env.NEXT_PUBLIC_SUI_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || ''
     }, [tokenType])
-    const registryId = process.env.NEXT_PUBLIC_STRATEGY_REGISTRY_ID || ''
-    
-    // Get vault positions for selective withdrawal
-    const { data: vaultPositionsFromAPI = [] } = useVaultPositions(
-        vaultId,
-        registryId,
-        userPosition ? BigInt(Math.floor(userPosition.receiptTokenBalance)) : BigInt(0)
-    )
-    
+
     const balance = useMemo(() => {
         if (!balances) return BigInt(0)
-        return tokenType === 'SUI' ? balances.sui :
-               tokenType === 'USDC' ? balances.usdc :
-               balances.usdt
+        return tokenType === 'SUI' ? balances.sui : balances.usdc
     }, [balances, tokenType])
-    
+
     const balanceFormatted = useMemo(() => {
         return (Number(balance) / Math.pow(10, decimals)).toLocaleString(undefined, {
             minimumFractionDigits: 2,
@@ -283,7 +228,7 @@ export default function StrategyDetailPage() {
         const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || '0x0'
         const depositTokenType = pendingPartialDeposit.tokenType
         const depositDecimals = depositTokenType === 'SUI' ? 9 : 6
-        
+
         const executePartialDeposit = async () => {
             try {
                 console.log('Executing partial deposit back:', {
@@ -294,18 +239,16 @@ export default function StrategyDetailPage() {
 
                 // Wait for withdrawal transaction to be processed and coins to be available
                 await new Promise(resolve => setTimeout(resolve, 5000))
-                
+
                 // Determine coin type based on token type
                 const coinType = depositTokenType === 'SUI'
                     ? '0x2::sui::SUI'
-                    : depositTokenType === 'USDC'
-                        ? TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
-                        : TOKENS.USDT.coinType || process.env.NEXT_PUBLIC_USDT_COIN_TYPE || ''
+                    : TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
 
                 if (!coinType) {
                     throw new Error(`Coin type not configured for ${depositTokenType}`)
                 }
-                
+
                 // Get the coin that was withdrawn
                 const coins = await client.getCoins({
                     owner: account.address,
@@ -314,7 +257,7 @@ export default function StrategyDetailPage() {
 
                 if (coins.data && coins.data.length > 0) {
                     // Find a coin with sufficient balance
-                    const coinWithBalance = coins.data.find(c => 
+                    const coinWithBalance = coins.data.find(c =>
                         BigInt(c.balance) >= pendingPartialDeposit.amount
                     )
 
@@ -327,10 +270,10 @@ export default function StrategyDetailPage() {
                         // Create a new transaction to deposit back
                         const depositTx = new SuiTransaction()
                         const coinObject = depositTx.object(coinWithBalance.coinObjectId)
-                        
+
                         // Determine deposit function name
                         const functionName = depositTokenType === 'SUI' ? 'deposit_sui' : 'deposit'
-                        
+
                         // If we need to split, do that first
                         if (BigInt(coinWithBalance.balance) > pendingPartialDeposit.amount) {
                             const [splitCoin] = depositTx.splitCoins(coinObject, [pendingPartialDeposit.amount])
@@ -401,12 +344,9 @@ export default function StrategyDetailPage() {
 
         try {
             const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || '0x0'
-            const vaultId = 
-                tokenType === 'USDC' 
-                    ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
-                    : tokenType === 'USDT'
-                        ? process.env.NEXT_PUBLIC_USDT_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
-                        : process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+            const vaultId = tokenType === 'USDC'
+                ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+                : process.env.NEXT_PUBLIC_SUI_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
             const configId = process.env.NEXT_PUBLIC_PROTOCOL_CONFIG_ID || '0x0'
 
             const amountInSmallestUnit = BigInt(Math.floor(parseFloat(depositAmount) * Math.pow(10, decimals)))
@@ -414,9 +354,7 @@ export default function StrategyDetailPage() {
             const coinType =
                 tokenType === 'SUI'
                     ? '0x2::sui::SUI'
-                    : tokenType === 'USDC'
-                        ? TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
-                        : TOKENS.USDT.coinType || process.env.NEXT_PUBLIC_USDT_COIN_TYPE || ''
+                    : TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
 
             if (!coinType && tokenType !== 'SUI') {
                 throw new Error(`Coin type not configured for ${tokenType}`)
@@ -439,7 +377,7 @@ export default function StrategyDetailPage() {
                 }
 
                 const primaryCoin = tx.object(coins.data[0].coinObjectId)
-                
+
                 if (coins.data.length > 1) {
                     const mergeCoins = coins.data.slice(1).map(c => tx.object(c.coinObjectId))
                     tx.mergeCoins(primaryCoin, mergeCoins)
@@ -451,8 +389,13 @@ export default function StrategyDetailPage() {
 
             const functionName = tokenType === 'SUI' ? 'deposit_sui' : 'deposit'
 
+            // Use v3 package for deposits to ensure new positions are created with the latest version
+            // This ensures consistency and allows using latest features
+            const v3PackageId = '0x8ec1b77488b5eb5307b3f4196cb71f32c9830c66d02678146e4298f68539ee34'
+            const packageIdForDeposit = v3PackageId
+
             tx.moveCall({
-                target: `${packageId}::vault_entry::${functionName}`,
+                target: `${packageIdForDeposit}::vault_entry::${functionName}`,
                 typeArguments: tokenType === 'SUI' ? [] : [coinType],
                 arguments: [
                     tx.object(vaultId),
@@ -462,7 +405,7 @@ export default function StrategyDetailPage() {
             })
 
             setShowProcessingModal(true)
-            
+
             signAndExecute(
                 {
                     transaction: tx as any,
@@ -504,20 +447,20 @@ export default function StrategyDetailPage() {
     const handleMax = () => {
         const maxBalance = Number(balance) / Math.pow(10, decimals)
         // Reserve some for gas if SUI
-        const maxAmount = tokenType === 'SUI' 
+        const maxAmount = tokenType === 'SUI'
             ? Math.max(0, maxBalance - 0.1) // Reserve 0.1 SUI for gas
             : maxBalance
         setDepositAmount(maxAmount.toFixed(6))
     }
 
-    const hasInsufficientBalance = 
+    const hasInsufficientBalance =
         balance !== undefined &&
         depositAmount &&
         BigInt(Math.floor(parseFloat(depositAmount) * Math.pow(10, decimals))) > balance
 
     // Calculate position balance for withdraw - query vault directly for accurate value
     const [actualPositionValue, setActualPositionValue] = useState<number | null>(null)
-    
+
     useEffect(() => {
         const fetchActualPositionValue = async () => {
             if (!userPosition || !account?.address) {
@@ -526,56 +469,41 @@ export default function StrategyDetailPage() {
             }
 
             try {
-                const vaultId = 
-                    tokenType === 'USDC' 
-                        ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
-                        : tokenType === 'USDT'
-                            ? process.env.NEXT_PUBLIC_USDT_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
-                            : process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+                const envVaultId = tokenType === 'USDC'
+                    ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+                    : process.env.NEXT_PUBLIC_SUI_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
 
-                // Get position objects to find the matching one
-                const packageIdForQuery = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || ''
-                const positionType = `${packageIdForQuery}::position::UserPosition`
-                
-                let positionObjects = await client.getOwnedObjects({
+                // Get ALL UserPosition objects from the chain (multi-version support)
+                // Query all owned objects first, then filter for UserPosition types
+                const allUserPositions = await client.getOwnedObjects({
                     owner: account.address,
-                    filter: {
-                        StructType: positionType,
-                    },
                     options: {
                         showContent: true,
                         showType: true,
                     },
                 })
 
-                // Also try old package ID
-                const oldPackageId = '0xb18e10c0d4cd763ae8f2d2972a6397d0d92f1638840a6f868f06d52683bf3d58'
-                if (positionObjects.data.length === 0 && packageIdForQuery !== oldPackageId) {
-                    const oldPositionType = `${oldPackageId}::position::UserPosition`
-                    const oldObjects = await client.getOwnedObjects({
-                        owner: account.address,
-                        filter: {
-                            StructType: oldPositionType,
-                        },
-                        options: {
-                            showContent: true,
-                            showType: true,
-                        },
-                    })
-                    if (oldObjects.data.length > 0) {
-                        positionObjects = oldObjects
-                    }
-                }
+                // Filter for UserPosition objects from any package version
+                const userPositionCandidates = allUserPositions.data.filter((obj: any) => {
+                    const type = obj.data?.type
+                    return type && type.includes('::position::UserPosition')
+                })
 
-                // Find matching position and get shares
-                const matchingPosition = positionObjects.data.find((obj: any) => {
+                // Find the position that matches the env vault ID (for this strategy page)
+                let matchingPosition = userPositionCandidates.find((obj: any) => {
                     if (obj.data?.content?.dataType === 'moveObject') {
                         const fields = obj.data.content.fields as any
                         const positionVaultId = fields.vault_id || ''
-                        return positionVaultId === vaultId
+                        return positionVaultId === envVaultId
                     }
                     return false
                 })
+
+                // If no exact match, use first position (for multi-version support)
+                if (!matchingPosition && userPositionCandidates.length > 0) {
+                    matchingPosition = userPositionCandidates[0]
+                    console.log('Using first available position for value calculation:', matchingPosition.data?.type)
+                }
 
                 if (!matchingPosition?.data?.content) {
                     setActualPositionValue(null)
@@ -591,30 +519,44 @@ export default function StrategyDetailPage() {
                 const positionFields = (matchingPosition.data.content as { dataType: 'moveObject'; fields: any }).fields
                 const shares = BigInt(positionFields?.shares || userPosition.receiptTokenBalance)
 
-                // Query vault to get actual value
+                // CRITICAL: Get the vault ID from the position object itself, not from env vars
+                const positionVaultId = positionFields?.vault_id || envVaultId
+                console.log('Fetching position value using vault ID from position:', { positionVaultId, envVaultId })
+
+                // Query vault to get actual value using the position's vault ID
                 const vaultObject = await client.getObject({
-                    id: vaultId,
+                    id: positionVaultId, // Use position's vault ID, not env var
                     options: {
                         showContent: true,
                     },
                 })
-                
+
                 if (vaultObject.data?.content && 'fields' in vaultObject.data.content) {
                     const vaultFields = vaultObject.data.content.fields as any
                     const totalAssets = BigInt(vaultFields?.total_assets || 0)
                     const totalShares = BigInt(vaultFields?.total_shares || 1)
-                    
+
+                    console.log('Vault state for position value:', {
+                        vaultId: positionVaultId,
+                        totalAssets: totalAssets.toString(),
+                        totalShares: totalShares.toString(),
+                        userShares: shares.toString(),
+                    })
+
                     if (totalShares > 0) {
                         // Calculate actual value: (shares * total_assets) / total_shares
                         const actualValue = (shares * totalAssets) / totalShares
                         const amount = Number(actualValue) / Math.pow(10, decimals)
+                        console.log('Calculated actual position value:', { actualValue: actualValue.toString(), amount })
                         setActualPositionValue(amount)
                     } else {
                         // Fallback to userPosition.amount
+                        console.warn('Vault has zero total shares, using userPosition.amount')
                         setActualPositionValue(userPosition.amount)
                     }
                 } else {
                     // Fallback to userPosition.amount
+                    console.warn('Vault object has invalid content, using userPosition.amount')
                     setActualPositionValue(userPosition.amount)
                 }
             } catch (error) {
@@ -646,40 +588,10 @@ export default function StrategyDetailPage() {
         })
     }, [userPosition, actualPositionValue])
 
-    // Create positions from strategy.platforms data (until on-chain positions are available)
-    // Must be after actualPositionValue is defined
-    const vaultPositions = useMemo(() => {
-        // If API returned positions, use those
-        if (vaultPositionsFromAPI.length > 0) {
-            return vaultPositionsFromAPI
-        }
-
-        // Otherwise, create positions from strategy.platforms
-        if (!userPosition) return []
-        
-        const totalPositionValue = actualPositionValue !== null ? actualPositionValue : userPosition.amount
-        const decimals = tokenType === 'SUI' ? 9 : 6
-        
-        return strategy.platforms.map((platform: any) => {
-            // Calculate position value based on allocation
-            const positionValue = (totalPositionValue * platform.allocation) / 100
-            
-            return {
-                adapterId: platform.id,
-                positionId: `${vaultId}-${platform.id}`, // Placeholder position ID
-                protocolName: platform.name,
-                allocationPercent: platform.allocation,
-                currentValue: BigInt(Math.floor(positionValue * Math.pow(10, decimals))),
-                userShare: BigInt(Math.floor(positionValue * Math.pow(10, decimals))),
-                apy: platform.apy || 0,
-                logo: undefined,
-            }
-        })
-    }, [vaultPositionsFromAPI, strategy.platforms, userPosition, actualPositionValue, tokenType, vaultId])
-
     // Handle withdraw
-    const handleWithdraw = async () => {
-        if (!account?.address || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || !userPosition) {
+    const handleWithdraw = async (amountOverride?: string) => {
+        const amountToWithdraw = amountOverride || withdrawAmount
+        if (!account?.address || !amountToWithdraw || parseFloat(amountToWithdraw) <= 0 || !userPosition) {
             return
         }
 
@@ -687,50 +599,38 @@ export default function StrategyDetailPage() {
 
         try {
             const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || '0x0'
-            const vaultId = 
-                tokenType === 'USDC' 
-                    ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
-                    : tokenType === 'USDT'
-                        ? process.env.NEXT_PUBLIC_USDT_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
-                        : process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+            const vaultId = tokenType === 'USDC'
+                ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
+                : process.env.NEXT_PUBLIC_SUI_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
             const configId = process.env.NEXT_PUBLIC_PROTOCOL_CONFIG_ID || '0x0'
 
-            // Get UserPosition objects from the chain - use same fallback logic as use-user-positions
-            const packageIdForQuery = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || ''
-            const positionType = `${packageIdForQuery}::position::UserPosition`
-            
-            let positionObjects = await client.getOwnedObjects({
+            // CRITICAL: Validate vaultId and configId are actually set (not 0x0)
+            if (!vaultId || vaultId === '0x0' || vaultId === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+                throw new Error(`Vault ID not configured for ${tokenType}. Please set NEXT_PUBLIC_${tokenType}_VAULT_ID or NEXT_PUBLIC_VAULT_ID in .env.local`)
+            }
+            if (!configId || configId === '0x0' || configId === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+                throw new Error('Protocol config ID not configured. Please set NEXT_PUBLIC_PROTOCOL_CONFIG_ID in .env.local')
+            }
+
+            // Get ALL UserPosition objects from the chain (multi-version support)
+            // Query all owned objects first, then filter for UserPosition types
+            // This approach works for all package versions, unlike StructType filter
+            const allUserPositions = await client.getOwnedObjects({
                 owner: account.address,
-                filter: {
-                    StructType: positionType,
-                },
                 options: {
                     showContent: true,
                     showType: true,
                 },
             })
 
-            // Also try old package ID in case positions were created before upgrade
-            const oldPackageId = '0xb18e10c0d4cd763ae8f2d2972a6397d0d92f1638840a6f868f06d52683bf3d58'
-            if (positionObjects.data.length === 0 && packageIdForQuery !== oldPackageId) {
-                const oldPositionType = `${oldPackageId}::position::UserPosition`
-                const oldObjects = await client.getOwnedObjects({
-                    owner: account.address,
-                    filter: {
-                        StructType: oldPositionType,
-                    },
-                    options: {
-                        showContent: true,
-                        showType: true,
-                    },
-                })
-                if (oldObjects.data.length > 0) {
-                    positionObjects = oldObjects
-                }
-            }
+            // Filter for UserPosition objects from any package version
+            const userPositionCandidates = allUserPositions.data.filter((obj: any) => {
+                const type = obj.data?.type
+                return type && type.includes('::position::UserPosition')
+            })
 
             // Find the position object that matches this vault
-            const matchingPosition = positionObjects.data.find((obj: any) => {
+            let matchingPosition = userPositionCandidates.find((obj: any) => {
                 if (obj.data?.content?.dataType === 'moveObject') {
                     const fields = obj.data.content.fields as any
                     const positionVaultId = fields.vault_id || ''
@@ -739,8 +639,29 @@ export default function StrategyDetailPage() {
                 return false
             })
 
+            // If no match found for current vault, try to find any position for this token type
+            // (This handles cases where vault IDs might differ across package versions)
+            if (!matchingPosition && userPositionCandidates.length > 0) {
+                console.log('No exact vault match found, trying to match by token type...')
+                // For now, just use the first position found (user should have only one position per token type typically)
+                matchingPosition = userPositionCandidates[0]
+                console.log('Using position from different package version:', matchingPosition.data?.type)
+            }
+
             if (!matchingPosition?.data?.objectId) {
                 throw new Error('Position not found. Please ensure you have a position in this vault.')
+            }
+
+            // Detect the package ID from the position object's type
+            // Extract package ID from the type string (format: "PackageID::module::Type")
+            const packageIdForQuery = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || ''
+            let detectedPackageId = packageIdForQuery
+            if (matchingPosition.data?.type) {
+                const typeParts = matchingPosition.data.type.split('::')
+                if (typeParts.length >= 1) {
+                    detectedPackageId = typeParts[0]
+                    console.log('Detected package ID from position type:', detectedPackageId)
+                }
             }
 
             // Get the actual position shares from the on-chain object
@@ -748,36 +669,137 @@ export default function StrategyDetailPage() {
             if (!matchingPosition.data.content || matchingPosition.data.content.dataType !== 'moveObject') {
                 throw new Error('Position object has invalid content type')
             }
-            
+
             const positionFields = (matchingPosition.data.content as { dataType: 'moveObject'; fields: any }).fields
             const actualShares = BigInt(positionFields?.shares || userPosition.receiptTokenBalance)
 
+            // CRITICAL: Get the vault ID from the position object itself, not from env vars
+            // Positions from different package versions may reference different vault IDs
+            const positionVaultId = positionFields?.vault_id || vaultId
+
+            // Validate vault ID - it must not be 0x0 or empty
+            if (!positionVaultId || positionVaultId === '0x0' || positionVaultId === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+                throw new Error(`Invalid vault ID from position: ${positionVaultId}. Position object may be corrupted.`)
+            }
+
+            // Get the correct config ID for this package version
+            const packageConfigId = getProtocolConfigForPackage(detectedPackageId)
+            const correctConfigId = packageConfigId || configId
+
+            // Validate config ID - it must not be 0x0
+            if (!correctConfigId || correctConfigId === '0x0' || correctConfigId === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+                throw new Error(`Protocol config ID not found for package ${detectedPackageId}. Please ensure NEXT_PUBLIC_PROTOCOL_CONFIG_ID is set in environment variables.`)
+            }
+
+            // Verify the objects exist and extract package ID from vault type
+            // CRITICAL: Query the env var vaultId (the one we'll actually use), not positionVaultId
+            let vaultPackageId = detectedPackageId // Default to position's package
+            try {
+                const [vaultCheck, configCheck] = await Promise.all([
+                    client.getObject({ id: vaultId, options: { showType: true } }), // Query env var vaultId, not positionVaultId
+                    client.getObject({ id: configId, options: { showType: true } })
+                ])
+
+                if (!vaultCheck.data) {
+                    throw new Error(`Vault object ${vaultId} does not exist on-chain`)
+                }
+                if (!configCheck.data) {
+                    throw new Error(`Config object ${configId} does not exist on-chain`)
+                }
+
+                // CRITICAL: Extract package ID from the vault we're actually using (env var vaultId)
+                // The vault type determines which package's function we can call
+                if (vaultCheck.data.type) {
+                    const vaultTypeParts = vaultCheck.data.type.split('::')
+                    if (vaultTypeParts.length >= 1) {
+                        vaultPackageId = vaultTypeParts[0]
+                        console.log('Extracted package ID from env var vault type:', {
+                            vaultId,
+                            vaultType: vaultCheck.data.type,
+                            vaultPackageId,
+                            positionPackageId: detectedPackageId,
+                            positionVaultId
+                        })
+                    }
+                }
+
+                console.log('Object verification:', {
+                    vaultType: vaultCheck.data.type,
+                    vaultPackageId,
+                    configType: configCheck.data.type,
+                    positionPackageId: detectedPackageId
+                })
+            } catch (error) {
+                console.error('Error verifying objects:', error)
+                throw new Error(`Failed to verify objects exist: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            }
+
+            console.log('Using vault ID and config ID from position:', {
+                positionVaultId,
+                envVaultId: vaultId,
+                detectedPackageId,
+                packageConfigId,
+                correctConfigId,
+                envConfigId: configId
+            })
+
+            // Store migration data if this is an old package position
+            const isOldPackagePosition = detectedPackageId !== packageId
+            console.log('Package comparison:', {
+                detectedPackageId,
+                packageId,
+                isOldPackagePosition
+            })
+            if (isOldPackagePosition) {
+                const migData = {
+                    oldPositionId: matchingPosition.data.objectId,
+                    vaultId: positionVaultId, // Use position's vault ID
+                    shares: actualShares.toString(),
+                }
+                console.log('Setting migration data:', migData)
+                migrationDataRef.current = migData
+            }
+
             // Query vault to get actual current position value
             // Formula: actualValue = (shares * vault.total_assets) / vault.total_shares
+            // IMPORTANT: Use the vault ID from the position object, not the env var
             let actualPositionValue = BigInt(0)
             try {
                 const vaultObject = await client.getObject({
-                    id: vaultId,
+                    id: positionVaultId, // Use position's vault ID, not env var vault ID
                     options: {
                         showContent: true,
                     },
                 })
-                
+
                 if (vaultObject.data?.content && 'fields' in vaultObject.data.content) {
                     const vaultFields = vaultObject.data.content.fields as any
                     const totalAssets = BigInt(vaultFields?.total_assets || 0)
                     const totalShares = BigInt(vaultFields?.total_shares || 1)
-                    
+
+                    console.log('Vault state:', {
+                        vaultId: positionVaultId,
+                        totalAssets: totalAssets.toString(),
+                        totalShares: totalShares.toString(),
+                        userShares: actualShares.toString(),
+                    })
+
                     if (totalShares > 0) {
                         // Calculate actual value: (shares * total_assets) / total_shares
                         actualPositionValue = (actualShares * totalAssets) / totalShares
+                        console.log('Calculated position value:', {
+                            value: actualPositionValue.toString(),
+                            formatted: Number(actualPositionValue) / Math.pow(10, tokenType === 'SUI' ? 9 : 6),
+                        })
                     } else {
                         // Fallback: if no shares, use shares as value (1:1)
                         actualPositionValue = actualShares
+                        console.warn('Vault has zero total shares, using shares as value')
                     }
                 } else {
                     // Fallback: use shares as value if we can't query vault
                     actualPositionValue = actualShares
+                    console.warn('Vault object has invalid content, using shares as value')
                 }
             } catch (error) {
                 console.warn('Could not query vault for actual value, using shares as fallback:', error)
@@ -785,72 +807,76 @@ export default function StrategyDetailPage() {
                 actualPositionValue = actualShares
             }
 
-            const withdrawAmountInSmallestUnit = BigInt(Math.floor(parseFloat(withdrawAmount) * Math.pow(10, decimals)))
+            const decimals = tokenType === 'SUI' ? 9 : 6
+            const withdrawAmountInSmallestUnit = BigInt(Math.floor(parseFloat(amountToWithdraw) * Math.pow(10, decimals)))
 
-            // Check if user wants to withdraw more than available
-            if (withdrawAmountInSmallestUnit > actualPositionValue) {
-                throw new Error(`Insufficient position balance. Your position is worth ${Number(actualPositionValue) / Math.pow(10, decimals)} ${strategy.asset}, but you're trying to withdraw ${withdrawAmount} ${strategy.asset}.`)
+            // Validate amount is greater than zero
+            if (withdrawAmountInSmallestUnit <= 0) {
+                throw new Error('Withdrawal amount must be greater than zero.')
+            }
+
+            // Check if user wants to withdraw more than available (with small buffer for rounding)
+            // Add 1% buffer to account for rounding differences
+            const maxAllowed = (actualPositionValue * BigInt(101)) / BigInt(100) // 1% buffer
+            if (withdrawAmountInSmallestUnit > maxAllowed) {
+                const availableAmount = Number(actualPositionValue) / Math.pow(10, decimals)
+                throw new Error(`Insufficient position balance. Your position is worth ${availableAmount.toFixed(6)} ${strategy.asset}, but you're trying to withdraw ${amountToWithdraw} ${strategy.asset}.`)
             }
 
             const tx = new SuiTransaction()
-
-            // Use the position object
-            const positionObject = tx.object(matchingPosition.data.objectId)
 
             // Calculate if this is a partial withdrawal
             // The contract will withdraw the FULL position (actualPositionValue), so we need to deposit back the difference
             const isPartialWithdrawal = withdrawAmountInSmallestUnit < actualPositionValue
             const amountToKeep = actualPositionValue - withdrawAmountInSmallestUnit
 
-            // Determine withdraw function based on token type
+            // Use the vault's package ID - must match the vault type (extracted from env var vaultId)
+            // This is CRITICAL: the function package must match the vault's package for type compatibility
+            const packageIdForWithdraw = vaultPackageId
+
+            console.log('Using package for withdraw:', packageIdForWithdraw, {
+                vaultPackageId,
+                vaultId,
+                positionPackageId: detectedPackageId,
+                tokenType,
+                note: 'Using vault package ID to match vault type - same as deposits'
+            })
+
             if (tokenType === 'SUI') {
-                // Always withdraw the full position (contract requirement)
                 tx.moveCall({
-                    target: `${packageId}::vault_entry::withdraw_sui`,
+                    target: `${packageIdForWithdraw}::vault_entry::withdraw_sui`,
                     arguments: [
                         tx.object(vaultId),
-                        tx.object(configId),
-                        positionObject,
+                        tx.object(correctConfigId), // Use correctConfigId, not configId
+                        tx.object(matchingPosition.data.objectId), // Pass object by value using tx.object()
                     ],
                 })
             } else {
-                // For USDC/USDT, check if generic withdraw exists
-                // Note: The contract may need a generic withdraw<T> function
-                // For now, we'll try to use withdraw_sui pattern but with type arguments
-                const coinType = tokenType === 'USDC'
-                    ? TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
-                    : TOKENS.USDT.coinType || process.env.NEXT_PUBLIC_USDT_COIN_TYPE || ''
-                
+                const coinType = TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
+
                 if (!coinType) {
                     throw new Error(`Coin type not configured for ${tokenType}`)
                 }
 
-                // Try generic withdraw - this may need to be implemented in the contract
-                // For now, we'll attempt it and see if the contract supports it
-                try {
-                    tx.moveCall({
-                        target: `${packageId}::vault_entry::withdraw`,
-                        typeArguments: [coinType],
-                        arguments: [
-                            tx.object(vaultId),
-                            tx.object(configId),
-                            positionObject,
-                        ],
-                    })
-                } catch (error) {
-                    // If generic withdraw doesn't exist, throw a helpful error
-                    throw new Error(`Withdraw for ${tokenType} is not yet supported. The contract may need a generic withdraw<T> function.`)
-                }
+                tx.moveCall({
+                    target: `${packageIdForWithdraw}::vault_entry::withdraw`,
+                    typeArguments: [coinType],
+                    arguments: [
+                        tx.object(vaultId),
+                        tx.object(correctConfigId), // Use correctConfigId, not configId
+                        tx.object(matchingPosition.data.objectId), // Pass object by value using tx.object()
+                    ],
+                })
             }
 
             // Only set pendingPartialDeposit AFTER withdrawal succeeds
             // Calculate the amount to keep for partial withdrawal
-            const partialDepositInfo = isPartialWithdrawal && amountToKeep > 0 
-                ? { amount: amountToKeep, vaultId, configId, tokenType }
+            const partialDepositInfo = isPartialWithdrawal && amountToKeep > 0
+                ? { amount: amountToKeep, vaultId: vaultId, configId: configId, tokenType } // Use env var IDs like deposits
                 : null
 
             setShowProcessingModal(true)
-            
+
             signAndExecute(
                 {
                     transaction: tx as any,
@@ -861,7 +887,7 @@ export default function StrategyDetailPage() {
                         setIsWithdrawing(false)
                         setShowProcessingModal(false)
                         setWithdrawAmount('')
-                        setSuccessMessage(`Successfully withdrew ${withdrawAmount} ${strategy.asset}`)
+                        setSuccessMessage(`Successfully withdrew ${amountToWithdraw} ${strategy.asset}`)
                         setShowSuccessModal(true)
                         // Only set pendingPartialDeposit if this was a partial withdrawal
                         // This will trigger the useEffect to deposit back the remainder
@@ -878,7 +904,27 @@ export default function StrategyDetailPage() {
                         setIsWithdrawing(false)
                         setShowProcessingModal(false)
                         setPendingPartialDeposit(null)
-                        setErrorMessage(error instanceof Error ? error.message : 'Withdraw failed. Please try again.')
+
+                        // Provide helpful error message for dependency issues
+                        let errorMsg = error instanceof Error ? error.message : 'Withdraw failed. Please try again.'
+
+                        if (errorMsg.includes('Dependent package not found') ||
+                            errorMsg.includes('not found on-chain') ||
+                            errorMsg.includes('0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf')) {
+                            // If we have migration data, show migration option
+                            console.log('Migration needed. Migration data:', migrationDataRef.current)
+                            if (migrationDataRef.current) {
+                                console.log('Showing migration modal')
+                                setShowErrorModal(false)
+                                setShowMigrationModal(true)
+                                return
+                            }
+
+                            errorMsg = `Cannot withdraw: Your position was created with an older package version that has missing dependencies on-chain.\n\n` +
+                                `Migrate your position to the new package to continue. The migration button will appear if migration is available.`
+                        }
+
+                        setErrorMessage(errorMsg)
                         setShowErrorModal(true)
                     },
                 }
@@ -907,7 +953,6 @@ export default function StrategyDetailPage() {
         const formattedValue = halfBalance.toString()
         console.log('Setting withdraw amount to:', formattedValue)
         setWithdrawAmount(formattedValue)
-        setHasAutoFilled(true) // Prevent auto-fill from overriding
     }
 
     const handleWithdrawMax = (e: React.MouseEvent) => {
@@ -923,7 +968,60 @@ export default function StrategyDetailPage() {
         const formattedValue = positionValue.toString()
         console.log('Setting withdraw amount to:', formattedValue)
         setWithdrawAmount(formattedValue)
-        setHasAutoFilled(true) // Prevent auto-fill from overriding
+    }
+
+    // Handle position migration
+    const handleMigratePosition = async (oldPositionId: string, vaultId: string, shares: string) => {
+        if (!account?.address) {
+            throw new Error('Wallet not connected')
+        }
+
+        const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || '0x0'
+        // MigrationCap ID - needs to be set in env after deployment
+        const migrationCapId = process.env.NEXT_PUBLIC_MIGRATION_CAP_ID || ''
+
+        if (!migrationCapId) {
+            throw new Error('Migration capability not configured. Please contact support.')
+        }
+
+        const tx = new SuiTransaction()
+
+        // We must use the NEW package (v3) for the migration call, as it contains the migrate_position function
+        const v3PackageId = '0x8ec1b774942d997e3359d9b43171881a798363c87f9e8d4779601d293235640f'
+
+        tx.moveCall({
+            target: `${v3PackageId}::vault_entry::migrate_position`,
+            arguments: [
+                tx.object(migrationCapId),
+                tx.pure.id(oldPositionId),
+                tx.pure.id(vaultId),
+                tx.pure.u64(BigInt(shares)),
+            ],
+        })
+
+        setShowProcessingModal(true)
+
+        await signAndExecute(
+            {
+                transaction: tx as any,
+                chain: 'sui:testnet',
+            },
+            {
+                onSuccess: () => {
+                    setShowProcessingModal(false)
+                    setSuccessMessage('Position migrated successfully! You can now use all features with the new package.')
+                    setShowSuccessModal(true)
+                    migrationDataRef.current = null
+                    // Refetch positions to get the new one
+                    refetchPositions()
+                },
+                onError: (error) => {
+                    console.error('Migration failed', error)
+                    setShowProcessingModal(false)
+                    throw error
+                },
+            }
+        )
     }
 
     const hasInsufficientPositionBalance = useMemo(() => {
@@ -1107,8 +1205,8 @@ export default function StrategyDetailPage() {
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2 md:gap-3">
                                             <CardTitle className="text-xs sm:text-sm md:text-base lg:text-lg leading-tight">Supply APY / Total Supply</CardTitle>
                                             <div className="flex gap-1 sm:gap-1.5 md:gap-2 flex-wrap">
-                                                <Button 
-                                                    variant={apyTimePeriod === '7D' ? 'default' : 'outline'} 
+                                                <Button
+                                                    variant={apyTimePeriod === '7D' ? 'default' : 'outline'}
                                                     size="sm"
                                                     onClick={() => setApyTimePeriod('7D')}
                                                     className={cn(
@@ -1118,8 +1216,8 @@ export default function StrategyDetailPage() {
                                                 >
                                                     7D
                                                 </Button>
-                                                <Button 
-                                                    variant={apyTimePeriod === '30D' ? 'default' : 'outline'} 
+                                                <Button
+                                                    variant={apyTimePeriod === '30D' ? 'default' : 'outline'}
                                                     size="sm"
                                                     onClick={() => setApyTimePeriod('30D')}
                                                     className={cn(
@@ -1129,8 +1227,8 @@ export default function StrategyDetailPage() {
                                                 >
                                                     30D
                                                 </Button>
-                                                <Button 
-                                                    variant={apyTimePeriod === '90D' ? 'default' : 'outline'} 
+                                                <Button
+                                                    variant={apyTimePeriod === '90D' ? 'default' : 'outline'}
                                                     size="sm"
                                                     onClick={() => setApyTimePeriod('90D')}
                                                     className={cn(
@@ -1147,15 +1245,15 @@ export default function StrategyDetailPage() {
                                         <ResponsiveContainer width="100%" height={150} className="sm:h-[180px] md:h-[220px] lg:h-[250px] xl:h-[300px]">
                                             <LineChart data={apyChartData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-                                                <XAxis 
-                                                    dataKey="date" 
+                                                <XAxis
+                                                    dataKey="date"
                                                     stroke="#000000"
                                                     style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
                                                     interval="preserveStartEnd"
                                                 />
-                                                <YAxis 
+                                                <YAxis
                                                     yAxisId="left"
                                                     stroke="#000000"
                                                     style={{ fontSize: '10px' }}
@@ -1164,7 +1262,7 @@ export default function StrategyDetailPage() {
                                                     tickFormatter={(value) => `${value}%`}
                                                     width={40}
                                                 />
-                                                <YAxis 
+                                                <YAxis
                                                     yAxisId="right"
                                                     orientation="right"
                                                     stroke="#000000"
@@ -1181,19 +1279,19 @@ export default function StrategyDetailPage() {
                                                         borderRadius: '8px',
                                                     }}
                                                 />
-                                                <Line 
+                                                <Line
                                                     yAxisId="left"
-                                                    type="monotone" 
-                                                    dataKey="supplyApy" 
-                                                    stroke="#1565c0" 
+                                                    type="monotone"
+                                                    dataKey="supplyApy"
+                                                    stroke="#1565c0"
                                                     strokeWidth={2}
                                                     dot={false}
                                                 />
-                                                <Line 
+                                                <Line
                                                     yAxisId="left"
-                                                    type="monotone" 
-                                                    dataKey="benchmarkApy" 
-                                                    stroke="#b92b27" 
+                                                    type="monotone"
+                                                    dataKey="benchmarkApy"
+                                                    stroke="#b92b27"
                                                     strokeWidth={2}
                                                     strokeDasharray="5 5"
                                                     dot={false}
@@ -1214,8 +1312,8 @@ export default function StrategyDetailPage() {
                                                 </p>
                                             </div>
                                             <div className="flex gap-1 sm:gap-1.5 md:gap-2 flex-wrap flex-shrink-0">
-                                                <Button 
-                                                    variant={interestTimePeriod === '7D' ? 'default' : 'outline'} 
+                                                <Button
+                                                    variant={interestTimePeriod === '7D' ? 'default' : 'outline'}
                                                     size="sm"
                                                     onClick={() => setInterestTimePeriod('7D')}
                                                     className={cn(
@@ -1225,8 +1323,8 @@ export default function StrategyDetailPage() {
                                                 >
                                                     7D
                                                 </Button>
-                                                <Button 
-                                                    variant={interestTimePeriod === '30D' ? 'default' : 'outline'} 
+                                                <Button
+                                                    variant={interestTimePeriod === '30D' ? 'default' : 'outline'}
                                                     size="sm"
                                                     onClick={() => setInterestTimePeriod('30D')}
                                                     className={cn(
@@ -1236,8 +1334,8 @@ export default function StrategyDetailPage() {
                                                 >
                                                     30D
                                                 </Button>
-                                                <Button 
-                                                    variant={interestTimePeriod === '90D' ? 'default' : 'outline'} 
+                                                <Button
+                                                    variant={interestTimePeriod === '90D' ? 'default' : 'outline'}
                                                     size="sm"
                                                     onClick={() => setInterestTimePeriod('90D')}
                                                     className={cn(
@@ -1269,15 +1367,15 @@ export default function StrategyDetailPage() {
                                                     </linearGradient>
                                                 </defs>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-                                                <XAxis 
-                                                    dataKey="date" 
+                                                <XAxis
+                                                    dataKey="date"
                                                     stroke="#000000"
                                                     style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
                                                     interval="preserveStartEnd"
                                                 />
-                                                <YAxis 
+                                                <YAxis
                                                     stroke="#000000"
                                                     style={{ fontSize: '10px' }}
                                                     axisLine={false}
@@ -1293,9 +1391,9 @@ export default function StrategyDetailPage() {
                                                     }}
                                                     formatter={(value: number) => formatCurrency(value)}
                                                 />
-                                                <Area 
-                                                    type="monotone" 
-                                                    dataKey="value" 
+                                                <Area
+                                                    type="monotone"
+                                                    dataKey="value"
                                                     stroke="url(#lineGradient)"
                                                     strokeWidth={2}
                                                     fill="url(#interestGradient)"
@@ -1431,18 +1529,18 @@ export default function StrategyDetailPage() {
                                                             disabled={!account || isDepositing}
                                                         />
                                                         <div className="flex gap-2">
-                                                            <Button 
-                                                                variant="outline" 
-                                                                size="sm" 
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
                                                                 className="flex-1 sm:flex-none"
                                                                 onClick={handleHalf}
                                                                 disabled={!account || isDepositing || balance === BigInt(0)}
                                                             >
                                                                 Half
                                                             </Button>
-                                                            <Button 
-                                                                variant="outline" 
-                                                                size="sm" 
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
                                                                 className="flex-1 sm:flex-none"
                                                                 onClick={handleMax}
                                                                 disabled={!account || isDepositing || balance === BigInt(0)}
@@ -1455,7 +1553,7 @@ export default function StrategyDetailPage() {
                                                         <p className="text-xs text-red-500 mt-1">Insufficient balance</p>
                                                     )}
                                                 </div>
-                                                <Button 
+                                                <Button
                                                     className="w-full bg-brand-gradient flex items-center justify-center gap-2"
                                                     onClick={handleDeposit}
                                                     disabled={!account || !depositAmount || parseFloat(depositAmount) <= 0 || hasInsufficientBalance || isDepositing}
@@ -1465,25 +1563,60 @@ export default function StrategyDetailPage() {
                                                 </Button>
                                             </>
                                         ) : (
-                                            // Withdraw - just button to open modal
+                                            // Withdraw Form
                                             <>
-                                                {!userPosition && account && (
-                                                    <p className="text-xs text-muted-foreground mb-4">No position found. Deposit first to create a position.</p>
-                                                )}
-                                                {userPosition && (
-                                                    <div className="mb-4 p-3 rounded-lg bg-[#f4f3f0]">
-                                                        <div className="flex items-center justify-between text-sm">
-                                                            <span className="text-muted-foreground">Your Position</span>
-                                                            <span className="font-semibold text-black">
-                                                                {positionBalanceFormatted} {strategy.asset}
-                                                            </span>
+                                                <div>
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <span className="text-sm text-muted-foreground">Amount</span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Position: {userPosition ? positionBalanceFormatted : '0.00'} {strategy.asset}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-col sm:flex-row gap-2">
+                                                        <input
+                                                            type="number"
+                                                            step="any"
+                                                            placeholder="0"
+                                                            value={withdrawAmount}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value
+                                                                // Allow empty, numbers, and decimals
+                                                                if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                                                                    setWithdrawAmount(val)
+                                                                }
+                                                            }}
+                                                            className="flex-1 px-4 py-3 rounded-lg border border-black/10 bg-white text-black text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                            disabled={!account || isWithdrawing || !userPosition}
+                                                        />
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="flex-1 sm:flex-none"
+                                                                onClick={handleWithdrawHalf}
+                                                                disabled={!account || isWithdrawing || !userPosition}
+                                                            >
+                                                                Half
+                                                            </Button>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="flex-1 sm:flex-none"
+                                                                onClick={handleWithdrawMax}
+                                                                disabled={!account || isWithdrawing || !userPosition}
+                                                            >
+                                                                Max
+                                                            </Button>
                                                         </div>
                                                     </div>
-                                                )}
-                                                <Button 
+                                                    {hasInsufficientPositionBalance && (
+                                                        <p className="text-xs text-red-500 mt-1">Insufficient position balance</p>
+                                                    )}
+                                                </div>
+                                                <Button
                                                     className="w-full bg-brand-gradient flex items-center justify-center gap-2"
-                                                    onClick={() => setShowSelectiveWithdrawModal(true)}
-                                                    disabled={!account || !userPosition || isWithdrawing}
+                                                    onClick={() => handleWithdraw()}
+                                                    disabled={!account || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || hasInsufficientPositionBalance || isWithdrawing || !userPosition}
                                                 >
                                                     {isWithdrawing && <LoadingSpinner size="sm" />}
                                                     {isWithdrawing ? 'Processing...' : account ? 'Withdraw' : 'Connect Wallet'}
@@ -1492,7 +1625,7 @@ export default function StrategyDetailPage() {
                                         )}
                                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                                             <span>Transaction Settings</span>
-                                            <button 
+                                            <button
                                                 className="hover:text-black transition-colors"
                                                 onClick={() => setTransactionSettingsOpen(true)}
                                             >
@@ -1616,7 +1749,7 @@ export default function StrategyDetailPage() {
                                             {strategy.platforms.map((platform: any) => {
                                                 const totalAmount = userPositions.reduce((sum, p) => sum + p.amount, 0)
                                                 const userAllocation = (platform.allocation / 100) * totalAmount
-                                                
+
                                                 // Platform icons/images mapping
                                                 const platformIcons: Record<string, { icon: string; image?: string }> = {
                                                     scallop: { icon: '🏦', image: '/images/scallop.webp' },
@@ -1625,9 +1758,9 @@ export default function StrategyDetailPage() {
                                                     kriya: { icon: '💎', image: '/images/kriya.png' },
                                                     emissions: { icon: '🔥', image: '/images/emissions.png' },
                                                 }
-                                                
+
                                                 const platformIcon = platformIcons[platform.id.toLowerCase()] || { icon: '📊' }
-                                                
+
                                                 return (
                                                     <div key={platform.id} className="space-y-2">
                                                         <div className="flex items-center justify-between">
@@ -1686,13 +1819,13 @@ export default function StrategyDetailPage() {
                                 </Card>
 
                                 {/* Transaction History */}
-                                <TransactionHistory 
+                                <TransactionHistory
                                     transactions={
-                                        strategyTransactionsData.length > 0 
-                                            ? strategyTransactionsData 
+                                        strategyTransactionsData.length > 0
+                                            ? strategyTransactionsData
                                             : mockStrategyTransactions
-                                    } 
-                                    showStrategy={false} 
+                                    }
+                                    showStrategy={false}
                                 />
                             </div>
                         ) : (
@@ -1714,18 +1847,18 @@ export default function StrategyDetailPage() {
                 onOpenChange={setTransactionSettingsOpen}
                 onSave={setTransactionSettings}
             />
-            
+
             {/* Transaction Modals */}
             <ProcessingModal
                 open={showProcessingModal}
                 title={isDepositing ? 'Processing Deposit' : isWithdrawing ? 'Processing Withdrawal' : 'Processing Transaction'}
-                message={isDepositing 
+                message={isDepositing
                     ? `Depositing ${depositAmount} ${strategy.asset}...`
                     : isWithdrawing
                         ? `Withdrawing ${withdrawAmount} ${strategy.asset}...`
                         : 'Please wait while we process your transaction...'}
             />
-            
+
             <SuccessModal
                 open={showSuccessModal}
                 onOpenChange={setShowSuccessModal}
@@ -1735,7 +1868,7 @@ export default function StrategyDetailPage() {
                     setSuccessMessage('')
                 }}
             />
-            
+
             <ErrorModal
                 open={showErrorModal}
                 onOpenChange={setShowErrorModal}
@@ -1746,36 +1879,23 @@ export default function StrategyDetailPage() {
                     setErrorMessage('')
                 }}
             />
-            
-            <SelectiveWithdrawModal
-                open={showSelectiveWithdrawModal}
-                onOpenChange={setShowSelectiveWithdrawModal}
-                vaultId={vaultId}
-                configId={process.env.NEXT_PUBLIC_PROTOCOL_CONFIG_ID || ''}
-                registryId={registryId}
-                userPosition={userPosition ? {
-                    shares: BigInt(Math.floor(userPosition.receiptTokenBalance)),
-                    vaultId,
-                } : {
-                    shares: BigInt(0),
-                    vaultId,
-                }}
-                positions={vaultPositions}
-                tokenType={tokenType}
-                totalPositionValue={actualPositionValue !== null ? actualPositionValue : (userPosition?.amount || 0)}
-                onWithdrawAll={async (amount: string) => {
-                    // Handle proportional withdrawal (withdraw all)
-                    setWithdrawAmount(amount)
-                    await handleWithdraw()
-                }}
-                onSuccess={() => {
-                    // Refresh positions after successful withdrawal
-                    // The hook will automatically refetch
-                    if (positions) {
-                        // Refetch positions
-                    }
-                }}
-            />
+
+
+            {migrationDataRef.current && (
+                <MigrationModal
+                    open={showMigrationModal}
+                    onOpenChange={setShowMigrationModal}
+                    oldPositionId={migrationDataRef.current.oldPositionId}
+                    vaultId={migrationDataRef.current.vaultId}
+                    shares={migrationDataRef.current.shares}
+                    vaultIdDisplay={vaultId}
+                    onMigrate={handleMigratePosition}
+                    onSuccess={() => {
+                        // Refresh user positions after successful migration
+                        refetchPositions()
+                    }}
+                />
+            )}
         </MainLayout>
     )
 }

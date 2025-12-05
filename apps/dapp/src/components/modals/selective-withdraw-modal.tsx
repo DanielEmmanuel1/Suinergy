@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useTokenPrice } from '@/hooks/oracle/use-token-price'
 import { TOKENS } from '@/lib/oracle/constants'
+import { extractPackageIdFromType, getVaultIdForPackage, getProtocolConfigForPackage } from '@/lib/package-mappings'
 
 export interface ProtocolPosition {
     adapterId: string
@@ -41,7 +42,7 @@ interface SelectiveWithdrawModalProps {
         vaultId: string
     }
     positions: ProtocolPosition[]
-    tokenType: 'SUI' | 'USDC' | 'USDT'
+    tokenType: 'SUI' | 'USDC'
     onSuccess?: () => void
     onWithdrawAll?: (amount: string) => Promise<void>
     totalPositionValue?: number
@@ -53,7 +54,7 @@ export function SelectiveWithdrawModal({
     vaultId,
     configId,
     registryId,
-    userPosition,
+    userPosition: _userPosition,
     positions,
     tokenType,
     onSuccess,
@@ -82,15 +83,16 @@ export function SelectiveWithdrawModal({
 
     // Calculate total USD value of all withdrawals
     const totalUsdValue = useMemo(() => {
-        if (!tokenPrice?.priceUsd) return 0
+        const priceUsd = tokenPrice?.priceUsd
+        if (!priceUsd) return 0
 
         let total = 0
         if (isAllPositions && allPositionsAmount) {
-            total += parseFloat(allPositionsAmount) * tokenPrice.priceUsd
+            total += parseFloat(allPositionsAmount) * priceUsd
         } else {
-            Object.entries(positionAmounts).forEach(([adapterId, amount]) => {
+            Object.entries(positionAmounts).forEach(([_, amount]) => {
                 if (amount && parseFloat(amount) > 0) {
-                    total += parseFloat(amount) * tokenPrice.priceUsd
+                    total += parseFloat(amount) * priceUsd
                 }
             })
         }
@@ -213,12 +215,9 @@ export function SelectiveWithdrawModal({
         setError(null)
 
         try {
-            const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || '0x0'
             const coinType = tokenType === 'SUI'
                 ? '0x2::sui::SUI'
-                : tokenType === 'USDC'
-                    ? TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
-                    : TOKENS.USDT.coinType || process.env.NEXT_PUBLIC_USDT_COIN_TYPE || ''
+                : TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
 
             if (!coinType && tokenType !== 'SUI') {
                 throw new Error(`Coin type not configured for ${tokenType}`)
@@ -227,28 +226,76 @@ export function SelectiveWithdrawModal({
             const clockId = '0x6'
             const functionName = tokenType === 'SUI' ? 'withdraw_from_position_sui' : 'withdraw_from_position'
 
-            // Get UserPosition
-            const userPositionObjects = await client.getOwnedObjects({
+            // Get ALL UserPosition objects (from all package versions)
+            const allUserPositions = await client.getOwnedObjects({
                 owner: account.address,
-                filter: {
-                    StructType: `${packageId}::position::UserPosition`,
-                },
                 options: {
                     showContent: true,
+                    showType: true,
                 },
             })
 
-            const matchingUserPosition = userPositionObjects.data.find((obj: any) => {
+            // Filter for UserPosition objects and find one matching our vault
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const userPositionCandidates = allUserPositions.data.filter((obj: any) => {
+                const type = obj.data?.type
+                return type && type.includes('::position::UserPosition')
+            })
+
+            // Try to find a position matching the current vault ID
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let matchingUserPosition = userPositionCandidates.find((obj: any) => {
                 if (obj.data?.content?.dataType === 'moveObject') {
-                    const fields = (obj.data.content as any).fields
+                    const fields = obj.data.content.fields
                     return fields?.vault_id === vaultId
                 }
                 return false
             })
 
+            // If no match found for current vault, it might be an old position
+            // In that case, just use the first UserPosition we find
+            // (The vault ID will be determined from the position's package ID)
+            if (!matchingUserPosition && userPositionCandidates.length > 0) {
+                matchingUserPosition = userPositionCandidates[0]
+                console.log('Using position from different package version:', matchingUserPosition.data?.type)
+            }
+
             if (!matchingUserPosition?.data?.objectId) {
                 throw new Error('User position not found')
             }
+
+            // Detect package ID from the position's type
+            const positionType = matchingUserPosition.data.type || ''
+            const detectedPackageId = extractPackageIdFromType(positionType)
+
+            if (!detectedPackageId) {
+                throw new Error('Could not determine package version from position')
+            }
+
+            // Use the upgraded package object ID (version 3) for USDC/USDT withdrawals
+            // This package has the generic withdraw_from_position<T> function
+            // For SUI, we can use the detected package ID since withdraw_from_position_sui exists in all versions
+            const upgradedPackageId = '0x8ec1b77488b5eb5307b3f4196cb71f32c9830c66d02678146e4298f68539ee34'
+            const packageIdForCall = tokenType === 'SUI' ? detectedPackageId : upgradedPackageId
+
+            // Get the correct vault ID for this package version
+            const correctVaultId = getVaultIdForPackage(detectedPackageId, tokenType)
+            if (!correctVaultId) {
+                throw new Error(`No vault mapping found for package ${detectedPackageId} and token ${tokenType}`)
+            }
+
+            // Get the correct config ID (use package-specific if available, otherwise use current)
+            const correctConfigId = getProtocolConfigForPackage(detectedPackageId) || configId
+
+            console.log('Multi-version withdrawal:', {
+                detectedPackageId,
+                packageIdForCall,
+                correctVaultId,
+                correctConfigId,
+                positionType,
+                tokenType,
+                note: tokenType === 'SUI' ? 'Using detected package ID' : 'Using upgraded package ID (v3)'
+            })
 
             // Create transaction with multiple withdrawals
             const tx = new Transaction()
@@ -260,7 +307,9 @@ export function SelectiveWithdrawModal({
                 // In production, adapterId should be a proper Sui object ID
                 let adapterIdU128: bigint
                 if (position.adapterId.startsWith('0x')) {
-                    adapterIdU128 = BigInt(position.adapterId.replace('0x', ''), 16)
+                    // Parse hex string: remove 0x prefix and convert to bigint
+                    const hexValue = position.adapterId.replace('0x', '')
+                    adapterIdU128 = BigInt('0x' + hexValue)
                 } else {
                     // For mock/testnet: convert string to hash-like value
                     // In production, this should be a real object ID from the registry
@@ -269,16 +318,16 @@ export function SelectiveWithdrawModal({
                 }
 
                 tx.moveCall({
-                    target: `${packageId}::vault_entry::${functionName}`,
+                    target: `${packageIdForCall}::vault_entry::${functionName}`,
                     typeArguments: tokenType === 'SUI' ? [] : [coinType],
                     arguments: [
-                        tx.object(vaultId),
+                        tx.object(correctVaultId),
                         tx.object(registryId),
-                        tx.object(configId),
+                        tx.object(correctConfigId),
                         tx.object(matchingUserPosition.data.objectId),
                         tx.object(position.positionId),
-                        adapterIdU128,
-                        amountInSmallestUnit,
+                        tx.pure.u64(adapterIdU128),
+                        tx.pure.u64(amountInSmallestUnit),
                         tx.object(clockId),
                     ],
                 })
@@ -286,6 +335,7 @@ export function SelectiveWithdrawModal({
 
             signAndExecute(
                 {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     transaction: tx as any,
                     chain: 'sui:testnet',
                 },

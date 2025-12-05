@@ -1,27 +1,18 @@
 {
     "network": "testnet",
-    "packageId": "0xb18e10c0d4cd763ae8f2d2972a6397d0d92f1638840a6f868f06d52683bf3d58",
-    "protocolConfigId": "0x7a1b696b29feb33c286b90791be4d7a5121b89d1bc63124827ffc921dd3f07e3",
-    "registryCapId": "0xdb97422bc31ed52d43daebeb340bbb6968876181477bd4f41a0b2d97933d91a5",
-    "upgradeCapId": "0xc9ab5ef73b5198843dd35cdb54c4fbc94472f1c36bcd51bce2f48f1d903ca912",
-    "transactionDigest": "3eytjoey93XwcB83vxWaUmYK1u3xqNQFGbegqbXBPyXo",
-    "deployedBy": "0xb7ca1a42fc80bd12e488db0bbf086bd32ac604f160edef289e739bd339b395ff",
-    "deployedAt": "2025-12-02T15:55:13+01:00",
+    "packageId": "0xf9905c6611e02cd1834a5f3b966276085d314037b1d6c2e56a6c20be2ea6b620",
+    "registryCapId": "0xa8653acdf7b208ef06b3f94fb559ac15325823689d40550a8a3cc4ec55500f05",
+    "upgradeCapId": "0xe755028b4868c2d2369a4908e62f6e2f12d0c17eb4289c76f17bf3d0bcd274d2",
+    "deployedAt": "2025-12-04T20:35:00+01:00",
     "vaults": {
         "SUI": {
-            "vaultId": "0x0a40ef0c750be9e67b885933b13b7ae212df2732fb33a0165fbe991217cc5bf9",
-            "vaultCapId": "0xd5e3b7fee8f12faf3cd028dba2cd0fc833b94681ad21b8761307953e9b83b0cb",
-            "coinType": "0x2::sui::SUI",
-            "transactionDigest": "9A4F8SacU28NsYupFXvUwKwzNrHutPiT2P52hh3w8Zs5",
-            "initializedAt": "2025-12-02T16:15:16Z"
+            "vaultId": "0x0cdf99a21b5d2512a03248db836886d1d6526125863704fa2fbcd8f76a1c7674",
+            "vaultCapId": "0xeb4a9e8bcd150266910936645495dba3d2c322d19a7a8b662b2c31d287616337",
+            "coinType": "0x2::sui::SUI"
         },
         "USDC": {
-            "vaultId": "0x13b13f28f4096c897381f14cc9eec2c7e393b08b666daf5a7aa1f753b2437403",
-            "vaultCapId": "0x525cd630a9c09c13d0c7c9d6892a89bc4d39548db28e489d202826ad356665cf",
-            "coinType": "0xa1ec7fc00a6f40db9693ad1415d0c193ad3906494428cf252621037bd7117e29::usdc::USDC",
-            "transactionDigest": "CM31DoupYpBERgB5LF9CUMPvJkwkfR3LJqbN1jMSY9Wt",
-            "initializedAt": "2025-12-03T01:42:29.268Z"
+            "vaultId": "0x0beb6af7b2b9dbe9d31a7f3df90638a3d3dd2b7b3461af5d1964f8ae3862f326",
+            "coinType": "0xa1ec7fc00a6f40db9693ad1415d0c193ad3906494428cf252621037bd7117e29::usdc::USDC"
         }
-    },
-    "notes": "Vaults need to be initialized separately using init_vault function"
+    }
 }

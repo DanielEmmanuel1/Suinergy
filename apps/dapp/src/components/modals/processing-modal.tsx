@@ -71,10 +71,10 @@ export function ProcessingModal({
     return (
         <Dialog open={open} onOpenChange={() => {}}>
             <DialogContent ref={contentRef} className="sm:max-w-md [&>button]:hidden">
+                <div ref={iconRef} className="flex justify-center mb-4">
+                    <Loader2 className="w-16 h-16 text-[#1055C9] animate-spin" />
+                </div>
                 <DialogHeader>
-                    <div ref={iconRef} className="flex justify-center mb-4">
-                        <Loader2 className="w-16 h-16 text-[#1055C9] animate-spin" />
-                    </div>
                     <DialogTitle className="text-center text-xl font-semibold">
                         {title}
                     </DialogTitle>

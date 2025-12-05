@@ -9,9 +9,15 @@ module suinergy::vault_entry {
     use suinergy::registry::ProtocolConfig;
     use suinergy::position::{Self, UserPosition, Position};
     use suinergy::vault_selective::{Self, StrategyVaultRegistry};
+    use suinergy::migration::MigrationCap;
 
     /// Error codes
     const EZeroAmount: u64 = 1;
+
+    /// Initialize a new vault
+    public entry fun init_vault<T>(ctx: &mut TxContext) {
+        vault::init_vault<T>(ctx);
+    }
 
     /// Deposit SUI into a vault
     public entry fun deposit_sui(
@@ -44,6 +50,17 @@ module suinergy::vault_entry {
     /// Withdraw SUI from a vault
     public entry fun withdraw_sui(
         vault: &mut Vault<SUI>,
+        config: &ProtocolConfig,
+        position: UserPosition,
+        ctx: &mut TxContext
+    ) {
+        let coin = vault::withdraw(vault, config, position, ctx);
+        transfer::public_transfer(coin, tx_context::sender(ctx));
+    }
+
+    /// Withdraw any coin type from a vault
+    public entry fun withdraw<T>(
+        vault: &mut Vault<T>,
         config: &ProtocolConfig,
         position: UserPosition,
         ctx: &mut TxContext
@@ -100,5 +117,17 @@ module suinergy::vault_entry {
             clock,
             ctx
         );
+    }
+
+    /// Migrate an old UserPosition to the new package
+    /// This allows users with positions from old packages to migrate to the new package
+    public entry fun migrate_position(
+        cap: &mut MigrationCap,
+        old_position_id: ID,
+        vault_id: ID,
+        shares: u64,
+        ctx: &mut TxContext
+    ) {
+        suinergy::migration::migrate_position(cap, old_position_id, vault_id, shares, ctx);
     }
 }

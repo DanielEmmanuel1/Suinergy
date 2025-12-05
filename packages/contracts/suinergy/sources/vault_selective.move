@@ -152,15 +152,17 @@ module suinergy::vault_selective {
         assert!(is_adapter_registered(registry, adapter_id), EInvalidAdapter);
         
         // 4. Get position ID
+        let expected_position_id = position::adapter_id(position_obj);
         let position_id_opt = get_position_id(registry, adapter_id);
-        let expected_position_id = position::adapter_id(position_obj); // Use adapter_id from position to match
         assert!(option::contains(&position_id_opt, &expected_position_id), EInvalidPosition);
-        let position_id = *option::extract(&mut position_id_opt);
+        // Use the expected_position_id since we validated it matches
+        let position_id = expected_position_id;
         
         // 5. Get position info
         let position_info_opt = get_position_info(registry, position_id);
         assert!(option::is_some(&position_info_opt), EPositionNotFound);
-        let position_info = *option::extract(&mut position_info_opt);
+        // Get a reference to the position info
+        let position_info_ref = option::borrow(&position_info_opt);
         
         // 6. Validate position belongs to this adapter
         assert!(position::adapter_id(position_obj) == adapter_id, EInvalidAdapter);
@@ -169,8 +171,7 @@ module suinergy::vault_selective {
         let user_shares = position::shares(user_position);
         assert!(user_shares > 0, EZeroAmount);
         
-        // Access vault state through helper functions (need to add to vault.move)
-        // For now, we'll need to add getter functions to vault.move
+        // Access vault state through helper functions
         let total_shares = suinergy::vault::total_shares(vault);
         let total_assets = suinergy::vault::total_assets(vault);
         assert!(total_shares > 0, EZeroAmount);
@@ -180,8 +181,8 @@ module suinergy::vault_selective {
         // User's total position value in vault
         let user_total_value = ((user_shares as u128) * (total_assets as u128) / (total_shares as u128)) as u64;
         
-        // Position's current value
-        let position_value = position_info.current_value;
+        // Position's current value - access field through reference
+        let position_value = position_info_ref.current_value;
         assert!(position_value > 0, EInsufficientPositionValue);
         
         // User's proportional share of this position

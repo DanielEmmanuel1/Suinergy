@@ -88,28 +88,28 @@ export function ErrorModal({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent ref={contentRef} className="sm:max-w-md">
-                <DialogHeader>
-                    <div ref={iconRef} className="flex justify-center mb-4">
-                        <div className="relative">
-                            <XCircle className="w-16 h-16 text-red-500" />
-                            <div className="absolute inset-0 bg-red-500 rounded-full opacity-20 animate-ping" />
-                        </div>
+                <div ref={iconRef} className="flex justify-center mb-4">
+                    <div className="relative">
+                        <XCircle className="w-16 h-16 text-red-500" />
+                        <div className="absolute inset-0 bg-red-500 rounded-full opacity-20 animate-ping" />
                     </div>
+                </div>
+                <DialogHeader>
                     <DialogTitle className="text-center text-xl font-semibold text-red-600">
                         {title}
                     </DialogTitle>
-                    <DialogDescription className="text-center pt-2 space-y-2">
-                        <p>{message}</p>
-                        {error && (
-                            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                <div className="flex items-start gap-2">
-                                    <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
-                                    <p className="text-sm text-red-800 break-words">{errorMessage}</p>
-                                </div>
-                            </div>
-                        )}
+                    <DialogDescription className="text-center pt-2">
+                        {message}
                     </DialogDescription>
                 </DialogHeader>
+                {error && (
+                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-red-800 break-words">{errorMessage}</p>
+                        </div>
+                    </div>
+                )}
                 <div className="flex justify-center mt-4">
                     <Button onClick={handleClose} className="bg-red-500 hover:bg-red-600">
                         Close

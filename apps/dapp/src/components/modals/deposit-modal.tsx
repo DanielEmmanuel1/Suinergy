@@ -76,6 +76,16 @@ export function DepositModal() {
                 : process.env.NEXT_PUBLIC_SUI_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
             const configId = process.env.NEXT_PUBLIC_PROTOCOL_CONFIG_ID || '0x0'
 
+            console.log('DEBUG: Deposit Transaction Params', {
+                tokenType,
+                packageId,
+                vaultId,
+                configId,
+                envSuiVault: process.env.NEXT_PUBLIC_SUI_VAULT_ID,
+                envUsdcVault: process.env.NEXT_PUBLIC_USDC_VAULT_ID,
+                envPackage: process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID
+            })
+
             // Convert amount to smallest unit (MIST for SUI, typically 6-9 decimals for stablecoins)
             const decimals = tokenType === 'SUI' ? 9 : 6
             const amountInSmallestUnit = BigInt(Math.floor(parseFloat(amount) * Math.pow(10, decimals)))
@@ -303,11 +313,36 @@ export function DepositModal() {
             const functionName = tokenType === 'SUI' ? 'deposit_sui' : 'deposit'
             const finalCoinType = tokenType === 'SUI' ? '0x2::sui::SUI' : (actualCoinType || coinType)
 
+            // Fetch vault object to get initial shared version
+            // This ensures we correctly treat it as a mutable shared object
+            const vaultObj = await client.getObject({
+                id: vaultId,
+                options: { showOwner: true }
+            })
+
+            const initialSharedVersion = vaultObj.data?.owner && typeof vaultObj.data.owner === 'object' && 'Shared' in vaultObj.data.owner
+                ? vaultObj.data.owner.Shared.initial_shared_version
+                : undefined
+
+            if (!initialSharedVersion) {
+                throw new Error(`Vault ${vaultId} is not a shared object or version not found`)
+            }
+
+            console.log('DEBUG: Resolved Vault Object', {
+                vaultId,
+                initialSharedVersion,
+                owner: vaultObj.data?.owner
+            })
+
             tx.moveCall({
                 target: `${packageId}::vault_entry::${functionName}`,
                 typeArguments: tokenType === 'SUI' ? [] : [finalCoinType],
                 arguments: [
-                    tx.object(vaultId),
+                    tx.sharedObjectRef({
+                        objectId: vaultId,
+                        initialSharedVersion: initialSharedVersion,
+                        mutable: true,
+                    }),
                     tx.object(configId),
                     coin,
                 ],

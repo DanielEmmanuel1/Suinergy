@@ -43,5 +43,10 @@ module suinergy::registry {
     public fun is_testnet(config: &ProtocolConfig): bool {
         config.is_testnet
     }
+
+    #[test_only]
+    public fun init_for_testing(ctx: &mut TxContext) {
+        init(ctx)
+    }
 }
 

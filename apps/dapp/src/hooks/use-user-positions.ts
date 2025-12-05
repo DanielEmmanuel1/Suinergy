@@ -45,65 +45,14 @@ export function useUserPositions() {
                 console.log('Fetched position objects (new package):', objects.data)
                 console.log('Total objects found:', objects.data.length)
 
-                // Also try old package ID in case positions were created before upgrade
-                const oldPackageId = '0xb18e10c0d4cd763ae8f2d2972a6397d0d92f1638840a6f868f06d52683bf3d58'
-                if (objects.data.length === 0 && packageId !== oldPackageId) {
-                    console.log('Trying old package ID as fallback:', oldPackageId)
-                    const oldObjects = await client.getOwnedObjects({
-                        owner: account.address,
-                        filter: {
-                            StructType: `${oldPackageId}::position::UserPosition`,
-                        },
-                        options: {
-                            showContent: true,
-                            showType: true,
-                        },
-                    })
-                    console.log('Fetched position objects (old package):', oldObjects.data)
-                    if (oldObjects.data.length > 0) {
-                        objects = oldObjects
-                    }
-                }
-
-                // If no objects found, try querying all owned objects to see what we have
-                if (objects.data.length === 0) {
-                    console.log('No UserPosition objects found. Querying all owned objects to debug...')
-                    const allObjects = await client.getOwnedObjects({
-                        owner: account.address,
-                        options: {
-                            showType: true,
-                            showContent: true,
-                        },
-                        limit: 50,
-                    })
-                    console.log('All owned objects (first 50):', allObjects.data.map(obj => ({
-                        objectId: obj.data?.objectId,
-                        type: obj.data?.type,
-                        hasContent: !!obj.data?.content,
-                    })))
-                    
-                    // Check if any objects match UserPosition pattern (even with different package ID)
-                    const userPositionLike = allObjects.data.filter(obj => 
-                        obj.data?.type?.includes('UserPosition') || 
-                        obj.data?.type?.includes('position')
-                    )
-                    if (userPositionLike.length > 0) {
-                        console.log('Found objects that might be UserPositions:', userPositionLike.map(obj => ({
-                            objectId: obj.data?.objectId,
-                            type: obj.data?.type,
-                            content: obj.data?.content,
-                        })))
-                    }
-                }
-
                 // Parse the UserPosition objects
                 const positions: UserPosition[] = []
-                
+
                 // Get vault IDs from environment to map to coin types
                 const suiVaultId = process.env.NEXT_PUBLIC_VAULT_ID || ''
                 const usdcVaultId = process.env.NEXT_PUBLIC_USDC_VAULT_ID || ''
                 const usdtVaultId = process.env.NEXT_PUBLIC_USDT_VAULT_ID || ''
-                
+
                 for (const obj of objects.data) {
                     if (obj.data?.content?.dataType === 'moveObject') {
                         const fields = obj.data.content.fields as any
@@ -142,12 +91,12 @@ export function useUserPositions() {
                                     showContent: true,
                                 },
                             })
-                            
+
                             if (vaultObject.data?.content && 'fields' in vaultObject.data.content) {
                                 const vaultFields = vaultObject.data.content.fields as any
                                 const totalAssets = BigInt(vaultFields?.total_assets || 0)
                                 const totalShares = BigInt(vaultFields?.total_shares || 1)
-                                
+
                                 if (totalShares > 0) {
                                     // Calculate actual value: (shares * total_assets) / total_shares
                                     const actualValue = (shares * totalAssets) / totalShares

@@ -830,16 +830,25 @@ export default function StrategyDetailPage() {
             const isPartialWithdrawal = withdrawAmountInSmallestUnit < actualPositionValue
             const amountToKeep = actualPositionValue - withdrawAmountInSmallestUnit
 
-            // Use the vault's package ID - must match the vault type (extracted from env var vaultId)
-            // This is CRITICAL: the function package must match the vault's package for type compatibility
-            const packageIdForWithdraw = vaultPackageId
+            // Use the vault's package ID - must match the vault type
+            // CRITICAL: The function package MUST match the vault's package for type compatibility
+            const packageIdForWithdraw = vaultPackageId || process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || detectedPackageId
 
             console.log('Using package for withdraw:', packageIdForWithdraw, {
                 vaultPackageId,
                 vaultId,
                 positionPackageId: detectedPackageId,
                 tokenType,
-                note: 'Using vault package ID to match vault type - same as deposits'
+                envPackageId: process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID,
+                note: 'Using vault package ID to match vault type'
+            })
+
+            console.log('DEBUG: Preparing withdrawal transaction', {
+                vaultId,
+                packageIdForWithdraw,
+                tokenType,
+                coinType: tokenType === 'USDC' ? (process.env.NEXT_PUBLIC_USDC_COIN_TYPE || TOKENS.USDC.coinType) : 'SUI',
+                correctConfigId
             })
 
             if (tokenType === 'SUI') {
@@ -852,11 +861,14 @@ export default function StrategyDetailPage() {
                     ],
                 })
             } else {
-                const coinType = TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
+                // Use env var coin type first (Circle native USDC) instead of TOKENS constant (Wormhole USDC)
+                const coinType = process.env.NEXT_PUBLIC_USDC_COIN_TYPE || TOKENS.USDC.coinType || ''
 
                 if (!coinType) {
                     throw new Error(`Coin type not configured for ${tokenType}`)
                 }
+
+                console.log('DEBUG: Calling withdraw with coinType:', coinType)
 
                 tx.moveCall({
                     target: `${packageIdForWithdraw}::vault_entry::withdraw`,

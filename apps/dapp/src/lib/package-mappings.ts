@@ -13,7 +13,14 @@ export interface VaultMapping {
 }
 
 export const PACKAGE_VAULT_MAPPINGS: Record<string, VaultMapping> = {
-    // v3 (Current - Fresh Deployment)
+    // v4 (Current - Fresh Deployment with withdraw<T>)
+    '0x24df8687d7140f69d475f8c0a3d1ab0b2626f0791fbf54e65424578422b40e86': {
+        SUI: '0x3bf74a7eebce194ce13ca2583c74d52df0765072cf289a034bc5a928c28d01fe',
+        USDC: '0x16d47da8ca130f69e3a2fea9701294f6a951aa764488e78c00d5facedaec44e8',
+        protocolConfigId: '0x37f865d3e6048399fc9b4d7b1ec19ba9b14880442a098aae5d537a65e8259064',
+    },
+
+    // v3 (Previous Deployment)
     '0xf9905c6611e02cd1834a5f3b966276085d314037b1d6c2e56a6c20be2ea6b620': {
         SUI: '0x0cdf99a21b5d2512a03248db836886d1d6526125863704fa2fbcd8f76a1c7674',
         USDC: '0x0beb6af7b2b9dbe9d31a7f3df90638a3d3dd2b7b3461af5d1964f8ae3862f326',

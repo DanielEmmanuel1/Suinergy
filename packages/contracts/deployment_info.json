@@ -1,17 +1,19 @@
 {
     "network": "testnet",
-    "packageId": "0xf9905c6611e02cd1834a5f3b966276085d314037b1d6c2e56a6c20be2ea6b620",
-    "registryCapId": "0xa8653acdf7b208ef06b3f94fb559ac15325823689d40550a8a3cc4ec55500f05",
-    "upgradeCapId": "0xe755028b4868c2d2369a4908e62f6e2f12d0c17eb4289c76f17bf3d0bcd274d2",
-    "deployedAt": "2025-12-04T20:35:00+01:00",
+    "packageId": "0x24df8687d7140f69d475f8c0a3d1ab0b2626f0791fbf54e65424578422b40e86",
+    "registryCapId": "0x054276a4c7c13469303e9f4669eeabd96c8e17de17d24f07e5a83bc33f896e0e",
+    "upgradeCapId": "0xb8523a8e48a3a4b804b3fad60e296a84f1bfb32874785afac79086d23f2cde83",
+    "protocolConfigId": "0x37f865d3e6048399fc9b4d7b1ec19ba9b14880442a098aae5d537a65e8259064",
+    "deployedAt": "2025-12-05T12:30:00+01:00",
     "vaults": {
         "SUI": {
-            "vaultId": "0x0cdf99a21b5d2512a03248db836886d1d6526125863704fa2fbcd8f76a1c7674",
-            "vaultCapId": "0xeb4a9e8bcd150266910936645495dba3d2c322d19a7a8b662b2c31d287616337",
+            "vaultId": "0x3bf74a7eebce194ce13ca2583c74d52df0765072cf289a034bc5a928c28d01fe",
+            "vaultCapId": "0x8a7127e82305518ccc4dc5f1dea2f745ee9f761fb61d9c40f73b49ca3df8563e",
             "coinType": "0x2::sui::SUI"
         },
         "USDC": {
-            "vaultId": "0x0beb6af7b2b9dbe9d31a7f3df90638a3d3dd2b7b3461af5d1964f8ae3862f326",
+            "vaultId": "0x16d47da8ca130f69e3a2fea9701294f6a951aa764488e78c00d5facedaec44e8",
+            "vaultCapId": "0x4910aed7dd5db3698422b86f5e9285269081a30800f71df767fcf615f0ca77bd",
             "coinType": "0xa1ec7fc00a6f40db9693ad1415d0c193ad3906494428cf252621037bd7117e29::usdc::USDC"
         }
     }

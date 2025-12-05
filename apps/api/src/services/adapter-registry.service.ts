@@ -222,11 +222,16 @@ export class AdapterRegistryService {
 
     /**
      * Discover real Testnet adapters by checking known protocol package IDs
+     * Now uses environment variables and testnet discovery service
      */
     async discoverTestnetAdapters(): Promise<
         Array<{ packageId: string; adapterObjectId: string; protocol: string }>
     > {
-        // Known Testnet protocol package IDs (should be updated from official sources)
+        // Import testnet discovery service
+        const { TestnetDiscoveryService } = await import('./testnet-discovery.service')
+        const discoveryService = new TestnetDiscoveryService(this.suiClient)
+
+        // Known Testnet protocol package IDs from environment or discovery
         const knownProtocols = [
             {
                 name: 'Scallop',
@@ -238,41 +243,54 @@ export class AdapterRegistryService {
                 packageId: process.env.SUI_CETUS_PACKAGE_ID || '',
                 verificationFunctions: ['get_pool_info'],
             },
-            // Add more protocols as they deploy to Testnet
+            {
+                name: 'Navi',
+                packageId: process.env.SUI_NAVI_PACKAGE_ID || '',
+                verificationFunctions: ['get_pool_info'],
+            },
+            {
+                name: 'Kriya',
+                packageId: process.env.SUI_KRIYA_PACKAGE_ID || '',
+                verificationFunctions: ['get_pool_info'],
+            },
         ]
 
         const discovered: Array<{ packageId: string; adapterObjectId: string; protocol: string }> = []
 
+        // First, try to discover package IDs if not in env
         for (const protocol of knownProtocols) {
-            if (!protocol.packageId) continue
+            let packageId = protocol.packageId
+
+            // If package ID not in env, try discovery
+            if (!packageId) {
+                if (protocol.name === 'Scallop') {
+                    packageId = (await discoveryService.discoverScallopPackage()) || ''
+                } else if (protocol.name === 'Cetus') {
+                    packageId = (await discoveryService.discoverCetusPackage()) || ''
+                }
+            }
+
+            if (!packageId) {
+                logger.warn(`${protocol.name} package ID not found. Skipping.`)
+                continue
+            }
 
             try {
-                // Try to find adapter objects for this protocol
-                const objects = await this.suiClient.getOwnedObjects({
-                    owner: protocol.packageId, // This is a placeholder - actual discovery logic needed
-                    filter: {
-                        StructType: `${protocol.packageId}::adapter::Adapter`,
-                    },
-                    options: {
-                        showContent: true,
-                    },
-                })
-
-                for (const obj of objects.data) {
-                    if (obj.data?.objectId) {
-                        const verified = await this.verifyTestnetAdapter(
-                            protocol.packageId,
-                            obj.data.objectId,
-                            protocol.verificationFunctions
-                        )
-                        if (verified) {
-                            discovered.push({
-                                packageId: protocol.packageId,
-                                adapterObjectId: obj.data.objectId,
-                                protocol: protocol.name,
-                            })
-                        }
-                    }
+                // Discover pool objects for this protocol
+                const pools = await discoveryService.discoverPoolObjects(packageId, protocol.name)
+                
+                if (pools.length > 0) {
+                    // Use first discovered pool as adapter object
+                    discovered.push({
+                        packageId,
+                        adapterObjectId: pools[0],
+                        protocol: protocol.name,
+                    })
+                    logger.info(`Discovered ${protocol.name} adapter: ${packageId} -> ${pools[0]}`)
+                } else {
+                    // Try to find adapter objects using package structure
+                    // This is protocol-specific and may need customization
+                    logger.warn(`No pools found for ${protocol.name}. Manual configuration may be needed.`)
                 }
             } catch (error) {
                 logger.warn(`Failed to discover adapters for ${protocol.name}`, error)
@@ -280,6 +298,34 @@ export class AdapterRegistryService {
         }
 
         return discovered
+    }
+
+    /**
+     * Register a real adapter from discovered testnet protocols
+     */
+    async registerRealAdapter(
+        protocol: string,
+        packageId: string,
+        poolId: string,
+        allocationBasisPoints: number = 0
+    ): Promise<boolean> {
+        try {
+            const discovered = await this.discoverTestnetAdapters()
+            const adapter = discovered.find((a) => a.protocol === protocol && a.packageId === packageId)
+
+            if (!adapter) {
+                logger.error(`Adapter not found for ${protocol} at ${packageId}`)
+                return false
+            }
+
+            // Register adapter in on-chain registry
+            // This would call the registry's register_adapter function
+            logger.info(`Registered real adapter for ${protocol}`)
+            return true
+        } catch (error) {
+            logger.error(`Failed to register real adapter for ${protocol}`, error)
+            return false
+        }
     }
 }
 

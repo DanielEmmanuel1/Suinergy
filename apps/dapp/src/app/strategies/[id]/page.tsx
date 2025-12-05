@@ -343,11 +343,38 @@ export default function StrategyDetailPage() {
         setIsDepositing(true)
 
         try {
-            const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID || '0x0'
             const vaultId = tokenType === 'USDC'
                 ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
                 : process.env.NEXT_PUBLIC_SUI_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || '0x0'
             const configId = process.env.NEXT_PUBLIC_PROTOCOL_CONFIG_ID || '0x0'
+
+            // Fetch on-chain types to ensure vault/config belong to the same package
+            const [vaultObj, configObj] = await Promise.all([
+                client.getObject({ id: vaultId, options: { showType: true } }),
+                client.getObject({ id: configId, options: { showType: true } }),
+            ])
+
+            const vaultType = vaultObj.data?.type
+            const configType = configObj.data?.type
+
+            if (!vaultType) {
+                throw new Error(`Vault object ${vaultId} not found or missing type`)
+            }
+            if (!configType) {
+                throw new Error(`ProtocolConfig object ${configId} not found or missing type`)
+            }
+
+            const vaultPackageId = vaultType.split('::')[0] || ''
+            const configPackageId = configType.split('::')[0] || ''
+
+            if (!vaultPackageId || !configPackageId) {
+                throw new Error('Unable to determine package IDs for vault/config')
+            }
+            if (vaultPackageId !== configPackageId) {
+                throw new Error(
+                    `Vault and ProtocolConfig are from different packages.\nVault package: ${vaultPackageId}\nConfig package: ${configPackageId}`
+                )
+            }
 
             const amountInSmallestUnit = BigInt(Math.floor(parseFloat(depositAmount) * Math.pow(10, decimals)))
 
@@ -389,13 +416,8 @@ export default function StrategyDetailPage() {
 
             const functionName = tokenType === 'SUI' ? 'deposit_sui' : 'deposit'
 
-            // Use v3 package for deposits to ensure new positions are created with the latest version
-            // This ensures consistency and allows using latest features
-            const v3PackageId = '0x8ec1b77488b5eb5307b3f4196cb71f32c9830c66d02678146e4298f68539ee34'
-            const packageIdForDeposit = v3PackageId
-
             tx.moveCall({
-                target: `${packageIdForDeposit}::vault_entry::${functionName}`,
+                target: `${vaultPackageId}::vault_entry::${functionName}`,
                 typeArguments: tokenType === 'SUI' ? [] : [coinType],
                 arguments: [
                     tx.object(vaultId),
@@ -682,7 +704,7 @@ export default function StrategyDetailPage() {
                 throw new Error(`Invalid vault ID from position: ${positionVaultId}. Position object may be corrupted.`)
             }
 
-            // Get the correct config ID for this package version
+            // Get the correct config ID for this package version (prefer mapping for detected package)
             const packageConfigId = getProtocolConfigForPackage(detectedPackageId)
             const correctConfigId = packageConfigId || configId
 
@@ -691,35 +713,41 @@ export default function StrategyDetailPage() {
                 throw new Error(`Protocol config ID not found for package ${detectedPackageId}. Please ensure NEXT_PUBLIC_PROTOCOL_CONFIG_ID is set in environment variables.`)
             }
 
-            // Verify the objects exist and extract package ID from vault type
-            // CRITICAL: Query the env var vaultId (the one we'll actually use), not positionVaultId
+            // Verify the objects exist and extract package ID from the position's vault type
             let vaultPackageId = detectedPackageId // Default to position's package
             try {
                 const [vaultCheck, configCheck] = await Promise.all([
-                    client.getObject({ id: vaultId, options: { showType: true } }), // Query env var vaultId, not positionVaultId
-                    client.getObject({ id: configId, options: { showType: true } })
+                    client.getObject({ id: positionVaultId, options: { showType: true } }),
+                    client.getObject({ id: correctConfigId, options: { showType: true } })
                 ])
 
                 if (!vaultCheck.data) {
-                    throw new Error(`Vault object ${vaultId} does not exist on-chain`)
+                    throw new Error(`Vault object ${positionVaultId} does not exist on-chain`)
                 }
                 if (!configCheck.data) {
-                    throw new Error(`Config object ${configId} does not exist on-chain`)
+                    throw new Error(`Config object ${correctConfigId} does not exist on-chain`)
                 }
 
-                // CRITICAL: Extract package ID from the vault we're actually using (env var vaultId)
-                // The vault type determines which package's function we can call
                 if (vaultCheck.data.type) {
                     const vaultTypeParts = vaultCheck.data.type.split('::')
                     if (vaultTypeParts.length >= 1) {
                         vaultPackageId = vaultTypeParts[0]
-                        console.log('Extracted package ID from env var vault type:', {
-                            vaultId,
+                        console.log('Extracted package ID from position vault type:', {
+                            positionVaultId,
                             vaultType: vaultCheck.data.type,
                             vaultPackageId,
                             positionPackageId: detectedPackageId,
-                            positionVaultId
                         })
+                    }
+                }
+
+                // Ensure config matches the same package
+                if (configCheck.data.type) {
+                    const configPkg = configCheck.data.type.split('::')[0] || ''
+                    if (configPkg && configPkg !== vaultPackageId) {
+                        throw new Error(
+                            `ProtocolConfig (${correctConfigId}) is from a different package (${configPkg}) than the position's vault (${vaultPackageId}).`
+                        )
                     }
                 }
 
@@ -734,9 +762,8 @@ export default function StrategyDetailPage() {
                 throw new Error(`Failed to verify objects exist: ${error instanceof Error ? error.message : 'Unknown error'}`)
             }
 
-            console.log('Using vault ID and config ID from position:', {
+            console.log('Using vault and config from position package:', {
                 positionVaultId,
-                envVaultId: vaultId,
                 detectedPackageId,
                 packageConfigId,
                 correctConfigId,
@@ -836,15 +863,15 @@ export default function StrategyDetailPage() {
 
             console.log('Using package for withdraw:', packageIdForWithdraw, {
                 vaultPackageId,
-                vaultId,
+                positionVaultId,
                 positionPackageId: detectedPackageId,
                 tokenType,
                 envPackageId: process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID,
-                note: 'Using vault package ID to match vault type'
+                note: 'Using position vault package ID to match vault type'
             })
 
             console.log('DEBUG: Preparing withdrawal transaction', {
-                vaultId,
+                vaultId: positionVaultId,
                 packageIdForWithdraw,
                 tokenType,
                 coinType: tokenType === 'USDC' ? (process.env.NEXT_PUBLIC_USDC_COIN_TYPE || TOKENS.USDC.coinType) : 'SUI',
@@ -855,7 +882,7 @@ export default function StrategyDetailPage() {
                 tx.moveCall({
                     target: `${packageIdForWithdraw}::vault_entry::withdraw_sui`,
                     arguments: [
-                        tx.object(vaultId),
+                        tx.object(positionVaultId),
                         tx.object(correctConfigId), // Use correctConfigId, not configId
                         tx.object(matchingPosition.data.objectId), // Pass object by value using tx.object()
                     ],
@@ -874,7 +901,7 @@ export default function StrategyDetailPage() {
                     target: `${packageIdForWithdraw}::vault_entry::withdraw`,
                     typeArguments: [coinType],
                     arguments: [
-                        tx.object(vaultId),
+                        tx.object(positionVaultId),
                         tx.object(correctConfigId), // Use correctConfigId, not configId
                         tx.object(matchingPosition.data.objectId), // Pass object by value using tx.object()
                     ],
@@ -884,7 +911,7 @@ export default function StrategyDetailPage() {
             // Only set pendingPartialDeposit AFTER withdrawal succeeds
             // Calculate the amount to keep for partial withdrawal
             const partialDepositInfo = isPartialWithdrawal && amountToKeep > 0
-                ? { amount: amountToKeep, vaultId: vaultId, configId: configId, tokenType } // Use env var IDs like deposits
+                ? { amount: amountToKeep, vaultId: positionVaultId, configId: correctConfigId, tokenType }
                 : null
 
             setShowProcessingModal(true)

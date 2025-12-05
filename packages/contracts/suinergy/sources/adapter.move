@@ -69,6 +69,35 @@ module suinergy::adapter {
     /// 
     /// public fun get_adapter_info<T>(adapter: &Adapter<T>, clock: &Clock): AdapterInfo
 
+    /// Public constructor for DepositResult
+    public fun new_deposit_result(shares_minted: u64, actual_amount_deposited: u64): DepositResult {
+        DepositResult {
+            shares_minted,
+            actual_amount_deposited,
+        }
+    }
+
+    /// Public constructor for AdapterInfo
+    public fun new_adapter_info(
+        adapter_id: ID,
+        adapter_type: address,
+        total_assets: u64,
+        total_shares: u64,
+        apy_basis_points: u64,
+        health_status: u8,
+        last_update_timestamp: u64
+    ): AdapterInfo {
+        AdapterInfo {
+            adapter_id,
+            adapter_type,
+            total_assets,
+            total_shares,
+            apy_basis_points,
+            health_status,
+            last_update_timestamp,
+        }
+    }
+
     /// Helper to validate adapter response
     public fun validate_deposit_result(result: &DepositResult): bool {
         result.shares_minted > 0 && result.actual_amount_deposited > 0

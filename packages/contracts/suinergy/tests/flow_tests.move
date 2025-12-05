@@ -5,9 +5,8 @@ module suinergy::flow_tests {
     use sui::sui::SUI;
     use sui::clock::{Self};
     
-    use suinergy::registry::{Self, ProtocolRegistry, ProtocolConfig, RegistryCap};
+    use suinergy::registry::{Self, ProtocolConfig};
     use suinergy::vault::{Self, Vault};
-    use suinergy::mock_adapter::{Self, MockAdapter};
 
     #[test]
     fun test_end_to_end_flow() {
@@ -19,15 +18,15 @@ module suinergy::flow_tests {
 
         // 1. Init Registry
         {
-            registry::init(test_scenario::ctx(&mut scenario));
+            registry::init_for_testing(test_scenario::ctx(&mut scenario));
         };
 
         test_scenario::next_tx(&mut scenario, admin);
 
-        // 2. Init Vault & Mock Adapter
+        // 2. Init Vault
         {
             vault::init_vault<SUI>(test_scenario::ctx(&mut scenario));
-            mock_adapter::new<SUI>(test_scenario::ctx(&mut scenario), 500); // 5% APY
+            // Note: Mock adapter not needed for basic vault deposit/withdraw test
         };
 
         test_scenario::next_tx(&mut scenario, admin);

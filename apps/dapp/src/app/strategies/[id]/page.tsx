@@ -21,11 +21,26 @@ import { useUserPositions } from '@/hooks/use-user-positions'
 import { useTransactions } from '@/hooks/use-transactions'
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
 import { useTokenBalances } from '@/hooks/use-token-balances'
-import { Transaction as SuiTransaction } from '@mysten/sui/transactions'
+import { Transaction as SuiTransaction, Transaction as SuiTransactionType } from '@mysten/sui/transactions'
 import { TOKENS } from '@/lib/oracle/constants'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ToggleSwitch } from '@/components/ui/toggle-switch'
 import { getProtocolConfigForPackage } from '@/lib/package-mappings'
+
+// Defaults for the active USDC vault/coin type (Circle USDC via coin_registry)
+const DEFAULT_USDC_VAULT_ID = '0x7566d35cbcb3ee32b25c716922425312f6dcd8626d8b833a074bebbb69143654'
+const DEFAULT_USDC_COIN_TYPE =
+    '0x2::coin_registry::Currency<0xa1ec7fc00a6f40db9693ad1415d0c193ad3906494428cf252621037bd7117e29::usdc::USDC>'
+
+// Archived vaults (read-only reference)
+const ARCHIVED_VAULTS = [
+    {
+        label: 'USDC (archived)',
+        vaultId: '0x1802a830742c208223d49169a6db29b737b51970f8f4ed5bf1e27e75c0e99bff',
+        coinType: '0xb1b59612aa2ec15501474e40ab176cd298b881bddcf1e7afbb369cefc324614b::usdc::USDC',
+        note: 'Legacy USDC vault (old coin type). Withdraw here if you have positions.',
+    },
+]
 
 // Mock strategy data - will be replaced with real data hooks
 const getStrategyData = (id: string) => {
@@ -205,7 +220,7 @@ export default function StrategyDetailPage() {
     // Get vault ID for withdrawals
     const vaultId = useMemo(() => {
         return tokenType === 'USDC'
-            ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || ''
+            ? process.env.NEXT_PUBLIC_USDC_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || DEFAULT_USDC_VAULT_ID
             : process.env.NEXT_PUBLIC_SUI_VAULT_ID || process.env.NEXT_PUBLIC_VAULT_ID || ''
     }, [tokenType])
 
@@ -331,6 +346,8 @@ export default function StrategyDetailPage() {
             }
         }
 
+
+
         executePartialDeposit()
     }, [pendingPartialDeposit, account, client, signAndExecute, decimals])
 
@@ -381,13 +398,13 @@ export default function StrategyDetailPage() {
             const coinType =
                 tokenType === 'SUI'
                     ? '0x2::sui::SUI'
-                    : TOKENS.USDC.coinType || process.env.NEXT_PUBLIC_USDC_COIN_TYPE || ''
+                    : process.env.NEXT_PUBLIC_USDC_COIN_TYPE || DEFAULT_USDC_COIN_TYPE || TOKENS.USDC.coinType || ''
 
             if (!coinType && tokenType !== 'SUI') {
                 throw new Error(`Coin type not configured for ${tokenType}`)
             }
 
-            const tx = new SuiTransaction()
+            const tx = new SuiTransactionType()
             let coin
 
             if (tokenType === 'SUI') {
@@ -415,6 +432,7 @@ export default function StrategyDetailPage() {
             }
 
             const functionName = tokenType === 'SUI' ? 'deposit_sui' : 'deposit'
+            console.log('DEBUG: Calling deposit with functionName:', functionName)
 
             tx.moveCall({
                 target: `${vaultPackageId}::vault_entry::${functionName}`,
@@ -745,8 +763,8 @@ export default function StrategyDetailPage() {
                 if (configCheck.data.type) {
                     const configPkg = configCheck.data.type.split('::')[0] || ''
                     if (configPkg && configPkg !== vaultPackageId) {
-                        throw new Error(
-                            `ProtocolConfig (${correctConfigId}) is from a different package (${configPkg}) than the position's vault (${vaultPackageId}).`
+                        console.warn(
+                            `ProtocolConfig (${correctConfigId}) is from a different package (${configPkg}) than the position's vault (${vaultPackageId}). Proceeding with caution due to multi-package environment.`
                         )
                     }
                 }
@@ -1856,6 +1874,34 @@ export default function StrategyDetailPage() {
                                         </div>
                                     </CardContent>
                                 </Card>
+
+                                {/* Archive vaults (read-only) */}
+                                {ARCHIVED_VAULTS.length > 0 && (
+                                    <Card className="border-black/10 w-full max-w-full bg-muted/30">
+                                        <CardHeader className="px-3 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-2">
+                                            <CardTitle className="text-sm sm:text-base md:text-lg">
+                                                Archive vaults
+                                            </CardTitle>
+                                            <p className="text-xs sm:text-sm text-muted-foreground">
+                                                Withdraw only. No new deposits are accepted into these legacy vaults.
+                                            </p>
+                                        </CardHeader>
+                                        <CardContent className="px-3 sm:px-6 pb-4 sm:pb-6 space-y-3">
+                                            {ARCHIVED_VAULTS.map((v) => (
+                                                <div key={v.vaultId} className="rounded-lg border border-black/5 bg-white/70 p-3 sm:p-4 text-xs sm:text-sm">
+                                                    <div className="font-semibold text-black mb-1">{v.label}</div>
+                                                    <div className="text-muted-foreground break-all">
+                                                        <div className="font-medium text-black/80">Vault ID:</div>
+                                                        <div className="mb-1">{v.vaultId}</div>
+                                                        <div className="font-medium text-black/80">Coin type:</div>
+                                                        <div className="mb-1">{v.coinType}</div>
+                                                        {v.note && <div className="text-xs text-muted-foreground">{v.note}</div>}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </CardContent>
+                                    </Card>
+                                )}
 
                                 {/* Transaction History */}
                                 <TransactionHistory

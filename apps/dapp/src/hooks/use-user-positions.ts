@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit'
+import { PACKAGE_VAULT_MAPPINGS } from '../lib/package-mappings'
 
 interface UserPosition {
     strategyId: string
@@ -7,6 +8,9 @@ interface UserPosition {
     amount: number
     apy: number
     receiptTokenBalance: number
+    packageId: string
+    vaultId: string
+    objectId: string
 }
 
 export function useUserPositions() {
@@ -21,107 +25,121 @@ export function useUserPositions() {
             }
 
             try {
-                const packageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID
-                if (!packageId) {
-                    console.warn('Package ID not configured')
-                    return []
-                }
+                // Collect all package IDs to check
+                const envPackageId = process.env.NEXT_PUBLIC_SUINERGY_PACKAGE_ID
+                const packageIds = new Set<string>()
 
-                console.log('Querying positions with package ID:', packageId)
-                console.log('Looking for type:', `${packageId}::position::UserPosition`)
+                if (envPackageId) packageIds.add(envPackageId)
+                Object.keys(PACKAGE_VAULT_MAPPINGS).forEach(id => packageIds.add(id))
 
-                // Query all objects owned by the user with new package ID
-                let objects = await client.getOwnedObjects({
-                    owner: account.address,
-                    filter: {
-                        StructType: `${packageId}::position::UserPosition`,
-                    },
-                    options: {
-                        showContent: true,
-                        showType: true,
-                    },
+                console.log('Querying positions across packages:', Array.from(packageIds))
+
+                // Query all packages in parallel
+                const queryPromises = Array.from(packageIds).map(async (packageId) => {
+                    try {
+                        const objects = await client.getOwnedObjects({
+                            owner: account.address,
+                            filter: {
+                                StructType: `${packageId}::position::UserPosition`,
+                            },
+                            options: {
+                                showContent: true,
+                                showType: true,
+                            },
+                        })
+                        return { packageId, objects: objects.data }
+                    } catch (e) {
+                        console.warn(`Failed to query package ${packageId}:`, e)
+                        return { packageId, objects: [] }
+                    }
                 })
 
-                console.log('Fetched position objects (new package):', objects.data)
-                console.log('Total objects found:', objects.data.length)
+                const results = await Promise.all(queryPromises)
 
                 // Parse the UserPosition objects
                 const positions: UserPosition[] = []
 
-                // Get vault IDs from environment to map to coin types
-                const suiVaultId = process.env.NEXT_PUBLIC_VAULT_ID || ''
-                const usdcVaultId = process.env.NEXT_PUBLIC_USDC_VAULT_ID || ''
-                const usdtVaultId = process.env.NEXT_PUBLIC_USDT_VAULT_ID || ''
+                // Helper to resolve strategy info from vault ID
+                const getStrategyInfo = (vaultId: string) => {
+                    // Check env vars first
+                    if (vaultId === process.env.NEXT_PUBLIC_USDC_VAULT_ID) {
+                        return { id: 'usdc-liquidity', name: 'Prime USDC Vault', decimals: 6 }
+                    }
+                    if (vaultId === process.env.NEXT_PUBLIC_USDT_VAULT_ID) {
+                        return { id: 'usdt-liquidity', name: 'Amplified USDT Vault', decimals: 6 }
+                    }
+                    if (vaultId === process.env.NEXT_PUBLIC_VAULT_ID) {
+                        return { id: 'sui-staking', name: 'Sovereign SUI Vault', decimals: 9 }
+                    }
 
-                for (const obj of objects.data) {
-                    if (obj.data?.content?.dataType === 'moveObject') {
-                        const fields = obj.data.content.fields as any
-                        const vaultId = fields.vault_id || ''
-                        const shares = BigInt(fields.shares || 0)
-
-                        console.log('Parsing position:', { vaultId, shares: shares.toString() })
-
-                        // Determine coin type and strategy from vault ID
-                        let coinDecimals = 9 // Default to SUI
-                        let strategyId = 'sui-staking'
-                        let strategyName = 'Sovereign SUI Vault'
-
-                        if (vaultId === usdcVaultId) {
-                            coinDecimals = 6 // USDC has 6 decimals
-                            strategyId = 'usdc-liquidity'
-                            strategyName = 'Prime USDC Vault'
-                        } else if (vaultId === usdtVaultId) {
-                            coinDecimals = 6 // USDT has 6 decimals
-                            strategyId = 'usdt-liquidity'
-                            strategyName = 'Amplified USDT Vault'
-                        } else if (vaultId === suiVaultId) {
-                            coinDecimals = 9 // SUI has 9 decimals
-                            strategyId = 'sui-staking'
-                            strategyName = 'Sovereign SUI Vault'
+                    // Check mappings
+                    for (const mapping of Object.values(PACKAGE_VAULT_MAPPINGS)) {
+                        if (mapping.USDC === vaultId) {
+                            return { id: 'usdc-liquidity', name: 'Prime USDC Vault (Legacy)', decimals: 6 }
                         }
+                        if (mapping.SUI === vaultId) {
+                            return { id: 'sui-staking', name: 'Sovereign SUI Vault (Legacy)', decimals: 9 }
+                        }
+                    }
 
-                        // Calculate actual position value from shares and vault share price
-                        // Formula: amount = (shares * vault.total_assets) / vault.total_shares
-                        let amount = 0
-                        try {
-                            // Query vault to get total_assets and total_shares
-                            const vaultObject = await client.getObject({
-                                id: vaultId,
-                                options: {
-                                    showContent: true,
-                                },
-                            })
+                    // Default fallback
+                    return { id: 'unknown', name: 'Unknown Strategy', decimals: 9 }
+                }
 
-                            if (vaultObject.data?.content && 'fields' in vaultObject.data.content) {
-                                const vaultFields = vaultObject.data.content.fields as any
-                                const totalAssets = BigInt(vaultFields?.total_assets || 0)
-                                const totalShares = BigInt(vaultFields?.total_shares || 1)
+                for (const result of results) {
+                    for (const obj of result.objects) {
+                        if (obj.data?.content?.dataType === 'moveObject') {
+                            const fields = obj.data.content.fields as any
+                            const vaultId = fields.vault_id || ''
+                            const shares = BigInt(fields.shares || 0)
+                            const objectId = obj.data?.objectId || ''
 
-                                if (totalShares > 0) {
-                                    // Calculate actual value: (shares * total_assets) / total_shares
-                                    const actualValue = (shares * totalAssets) / totalShares
-                                    amount = Number(actualValue) / Math.pow(10, coinDecimals)
+                            console.log('Parsing position:', { vaultId, shares: shares.toString(), packageId: result.packageId, objectId })
+
+                            const strategyInfo = getStrategyInfo(vaultId)
+
+                            // Calculate actual position value from shares and vault share price
+                            let amount = 0
+                            try {
+                                // Query vault to get total_assets and total_shares
+                                const vaultObject = await client.getObject({
+                                    id: vaultId,
+                                    options: {
+                                        showContent: true,
+                                    },
+                                })
+
+                                if (vaultObject.data?.content && 'fields' in vaultObject.data.content) {
+                                    const vaultFields = vaultObject.data.content.fields as any
+                                    const totalAssets = BigInt(vaultFields?.total_assets || 0)
+                                    const totalShares = BigInt(vaultFields?.total_shares || 1)
+
+                                    if (totalShares > 0) {
+                                        // Calculate actual value: (shares * total_assets) / total_shares
+                                        const actualValue = (shares * totalAssets) / totalShares
+                                        amount = Number(actualValue) / Math.pow(10, strategyInfo.decimals)
+                                    } else {
+                                        amount = Number(shares) / Math.pow(10, strategyInfo.decimals)
+                                    }
                                 } else {
-                                    // Fallback: if no shares, use shares as value (1:1)
-                                    amount = Number(shares) / Math.pow(10, coinDecimals)
+                                    amount = Number(shares) / Math.pow(10, strategyInfo.decimals)
                                 }
-                            } else {
-                                // Fallback: use shares as value if we can't query vault
-                                amount = Number(shares) / Math.pow(10, coinDecimals)
+                            } catch (error) {
+                                console.warn(`Could not query vault ${vaultId}, using shares as fallback`, error)
+                                amount = Number(shares) / Math.pow(10, strategyInfo.decimals)
                             }
-                        } catch (error) {
-                            console.warn(`Could not query vault ${vaultId} for position value, using shares as fallback:`, error)
-                            // Fallback: use shares as value if vault query fails
-                            amount = Number(shares) / Math.pow(10, coinDecimals)
-                        }
 
-                        positions.push({
-                            strategyId,
-                            strategyName,
-                            amount,
-                            apy: 12.5, // Mock APY for now
-                            receiptTokenBalance: Number(shares),
-                        })
+                            positions.push({
+                                strategyId: strategyInfo.id,
+                                strategyName: strategyInfo.name,
+                                amount,
+                                apy: 12.5, // Mock APY
+                                receiptTokenBalance: Number(shares),
+                                packageId: result.packageId,
+                                vaultId,
+                                objectId
+                            })
+                        }
                     }
                 }
 

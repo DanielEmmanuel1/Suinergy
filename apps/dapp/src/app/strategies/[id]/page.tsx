@@ -431,18 +431,35 @@ export default function StrategyDetailPage() {
                 coin = splitCoin
             }
 
-            const functionName = tokenType === 'SUI' ? 'deposit_sui' : 'deposit'
-            console.log('DEBUG: Calling deposit with functionName:', functionName)
+            if (tokenType === 'SUI') {
+                const functionName = 'deposit_sui'
+                console.log('DEBUG: Calling deposit with functionName:', functionName)
 
-            tx.moveCall({
-                target: `${vaultPackageId}::vault_entry::${functionName}`,
-                typeArguments: tokenType === 'SUI' ? [] : [coinType],
-                arguments: [
-                    tx.object(vaultId),
-                    tx.object(configId),
-                    coin,
-                ],
-            })
+                tx.moveCall({
+                    target: `${vaultPackageId}::vault_entry::${functionName}`,
+                    typeArguments: [],
+                    arguments: [
+                        tx.object(vaultId),
+                        tx.object(configId),
+                        coin,
+                    ],
+                })
+            } else {
+                // DIRECT CALL to vault::deposit for USDC/others
+                console.log('DEBUG: Calling vault::deposit directly')
+
+                const [position] = tx.moveCall({
+                    target: `${vaultPackageId}::vault::deposit`,
+                    typeArguments: [coinType],
+                    arguments: [
+                        tx.object(vaultId),
+                        tx.object(configId),
+                        coin,
+                    ],
+                })
+
+                tx.transferObjects([position], tx.pure.address(account.address))
+            }
 
             setShowProcessingModal(true)
 
@@ -915,8 +932,10 @@ export default function StrategyDetailPage() {
 
                 console.log('DEBUG: Calling withdraw with coinType:', coinType)
 
-                tx.moveCall({
-                    target: `${packageIdForWithdraw}::vault_entry::withdraw`,
+                // DIRECT CALL to vault::withdraw to support older packages that lack vault_entry::withdraw
+                // This returns a Coin<T> that must be transferred to the user
+                const [coin] = tx.moveCall({
+                    target: `${packageIdForWithdraw}::vault::withdraw`,
                     typeArguments: [coinType],
                     arguments: [
                         tx.object(positionVaultId),
@@ -924,6 +943,8 @@ export default function StrategyDetailPage() {
                         tx.object(matchingPosition.data.objectId), // Pass object by value using tx.object()
                     ],
                 })
+
+                tx.transferObjects([coin], tx.pure.address(account.address))
             }
 
             // Only set pendingPartialDeposit AFTER withdrawal succeeds

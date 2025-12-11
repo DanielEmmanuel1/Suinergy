@@ -63,6 +63,9 @@ module suinergy::cetus_adapter {
         //     ctx
         // );
         
+        // Mock behavior: transfer coin back to sender since we can't actually deposit to Cetus
+        transfer::public_transfer(coin, tx_context::sender(ctx));
+        
         adapter::new_deposit_result(amount, amount) // Placeholder - actual LP tokens from Cetus
     }
 

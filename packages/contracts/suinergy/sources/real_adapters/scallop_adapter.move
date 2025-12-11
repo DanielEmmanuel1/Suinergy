@@ -62,6 +62,9 @@ module suinergy::scallop_adapter {
         // In real implementation, this would call:
         // scallop::deposit(adapter.package_id, adapter.pool_id, coin, clock, ctx)
         
+        // Mock behavior: transfer coin back to sender since we can't actually deposit to Scallop
+        transfer::public_transfer(coin, tx_context::sender(ctx));
+        
         adapter::new_deposit_result(amount, amount) // Placeholder - actual shares from Scallop
     }
 

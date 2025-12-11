@@ -1,3 +1,5 @@
 packages:
-  - 'apps/*'
-  - 'packages/*'
+  - 'apps/dapp/frontend'
+  - 'apps/dapp/chains/sui/*'
+  - 'apps/dapp/chains/avalanche/*'
+  - 'apps/dapp/chains/solana/*'

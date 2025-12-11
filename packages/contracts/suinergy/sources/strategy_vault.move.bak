@@ -1,0 +1,317 @@
+module suinergy::strategy_vault {
+    use sui::object::{Self, UID, ID};
+    use sui::coin::{Self, Coin};
+    use sui::tx_context::{Self, TxContext};
+    use sui::transfer;
+    use sui::table::{Self, Table};
+    use sui::vec_map::{Self, VecMap};
+    use sui::clock::{Self, Clock};
+    use sui::vec_set::{Self, VecSet};
+    
+    use suinergy::treasury::{Self, Treasury};
+    use suinergy::position::{Self, Position};
+    use suinergy::registry::{Self, ProtocolConfig};
+    use suinergy::events;
+    use suinergy::vault_share::{Self, VaultShare};
+
+    /// Error codes
+    const EPaused: u64 = 0;
+    const EZeroAmount: u64 = 1;
+    const EInsufficientShares: u64 = 2;
+    const EInsufficientTreasury: u64 = 3;
+    const EInvalidPosition: u64 = 4;
+    const EOverflow: u64 = 5;
+    const EUnderflow: u64 = 6;
+    const EInvalidAllocation: u64 = 7;
+
+    /// Allocation configuration for a strategy
+    public struct AllocationConfig has store {
+        // Maps adapter_slot -> allocation_basis_points (e.g., 3500 = 35%)
+        allocations: VecMap<u8, u64>,
+    }
+
+    /// Strategy Vault - main object managing a yield strategy
+    /// Owns treasury and all positions
+    public struct StrategyVault<phantom BaseAsset> has key {
+        id: UID,
+        treasury: Treasury<BaseAsset>, // Owns idle funds
+        positions: VecSet<ID>, // Set of Position object IDs
+        total_shares: u64, // Total shares minted
+        base_asset_type: address, // Type tag for base asset
+        allocation_config: AllocationConfig,
+        last_rebalance_timestamp: u64,
+        last_harvest_timestamp: u64,
+    }
+
+    /// Admin capability for strategy operations
+    public struct StrategyCap has key, store {
+        id: UID,
+        strategy_id: ID,
+    }
+
+    /// Initialize a new strategy vault
+    public fun new<BaseAsset>(
+        allocation_config: AllocationConfig,
+        ctx: &mut TxContext
+    ): (StrategyVault<BaseAsset>, StrategyCap) {
+        let treasury = treasury::new(ctx);
+        
+        let vault = StrategyVault<BaseAsset> {
+            id: object::new(ctx),
+            treasury,
+            positions: vec_set::empty(),
+            total_shares: 0,
+            base_asset_type: @0x0, // Will be set based on BaseAsset type
+            allocation_config,
+            last_rebalance_timestamp: 0,
+            last_harvest_timestamp: 0,
+        };
+        
+        let cap = StrategyCap {
+            id: object::new(ctx),
+            strategy_id: object::uid_to_inner(&vault.id),
+        };
+        
+        (vault, cap)
+    }
+
+    /// Deposit assets into the vault
+    /// Returns VaultShare object representing user's ownership
+    public fun deposit<BaseAsset>(
+        vault: &mut StrategyVault<BaseAsset>,
+        config: &ProtocolConfig,
+        coin: Coin<BaseAsset>,
+        ctx: &mut TxContext
+    ): VaultShare<BaseAsset> {
+        assert!(!registry::is_paused(config), EPaused);
+        
+        let deposit_amount = coin::value(&coin);
+        assert!(deposit_amount > 0, EZeroAmount);
+
+        // Add to treasury
+        treasury::deposit(&mut vault.treasury, coin);
+
+        // Calculate shares to mint
+        let total_assets = total_assets(vault);
+        let shares = if (vault.total_shares == 0) {
+            deposit_amount // First deposit: 1:1 ratio
+        } else {
+            // shares = (deposit_amount * total_shares) / total_assets
+            let numerator = (deposit_amount as u128) * (vault.total_shares as u128);
+            let denominator = total_assets as u128;
+            assert!(denominator > 0, EUnderflow);
+            (numerator / denominator) as u64
+        };
+
+        // Update state
+        vault.total_shares = vault.total_shares + shares;
+
+        // Emit event
+        events::emit_deposit(
+            tx_context::sender(ctx),
+            object::uid_to_inner(&vault.id),
+            deposit_amount,
+            shares
+        );
+
+        // Mint share object (user receives shares equal to their deposit portion)
+        vault_share::mint(shares, object::uid_to_inner(&vault.id), ctx)
+    }
+
+    /// Withdraw assets from the vault
+    /// Burns shares and returns proportional assets
+    public fun withdraw<BaseAsset>(
+        vault: &mut StrategyVault<BaseAsset>,
+        config: &ProtocolConfig,
+        share: VaultShare<BaseAsset>,
+        ctx: &mut TxContext
+    ): Coin<BaseAsset> {
+        assert!(!registry::is_paused(config), EPaused);
+        
+        let shares_to_burn = vault_share::shares(&share);
+        assert!(shares_to_burn > 0, EZeroAmount);
+        assert!(vault.total_shares >= shares_to_burn, EInsufficientShares);
+
+        // Calculate redemption amount
+        let total_assets = total_assets(vault);
+        let redemption_amount = if (vault.total_shares == 0) {
+            0
+        } else {
+            let numerator = (shares_to_burn as u128) * (total_assets as u128);
+            let denominator = vault.total_shares as u128;
+            (numerator / denominator) as u64
+        };
+
+        // Burn share
+        vault_share::burn(share);
+        vault.total_shares = vault.total_shares - shares_to_burn;
+
+        // Withdraw from treasury first, then unwind positions if needed
+        let treasury_balance = treasury::balance(&vault.treasury);
+        let coin = if (treasury_balance >= redemption_amount) {
+            // Sufficient treasury balance
+            treasury::withdraw(&mut vault.treasury, redemption_amount, ctx)
+        } else {
+            // Need to unwind positions proportionally
+            unwind_positions(vault, redemption_amount - treasury_balance, ctx);
+            // Withdraw remaining from treasury
+            treasury::withdraw(&mut vault.treasury, redemption_amount, ctx)
+        };
+
+        // Emit event
+        events::emit_withdraw(
+            tx_context::sender(ctx),
+            object::uid_to_inner(&vault.id),
+            redemption_amount,
+            shares_to_burn
+        );
+
+        coin
+    }
+
+    /// Unwind positions proportionally to meet withdrawal demand
+    fun unwind_positions<BaseAsset>(
+        vault: &mut StrategyVault<BaseAsset>,
+        amount_needed: u64,
+        _ctx: &mut TxContext
+    ) {
+        // This would iterate through positions and withdraw proportionally
+        // Implementation depends on adapter interface
+        // For now, this is a placeholder that would call adapter withdraw functions
+    }
+
+    /// Add a position to the vault
+    public fun add_position<BaseAsset>(
+        vault: &mut StrategyVault<BaseAsset>,
+        position: Position
+    ) {
+        let position_id = object::id(&position);
+        vec_set::insert(&mut vault.positions, position_id);
+        transfer::share_object(position); // Make position shareable so adapter can access it
+    }
+
+    /// Remove a position from the vault
+    public fun remove_position<BaseAsset>(
+        vault: &mut StrategyVault<BaseAsset>,
+        position_id: ID
+    ) {
+        vec_set::remove(&mut vault.positions, position_id);
+    }
+
+    /// Get treasury balance
+    #[view]
+    public fun get_treasury_balance<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>
+    ): u64 {
+        treasury::balance(&vault.treasury)
+    }
+
+    /// Get position values (returns vector of values for each position)
+    /// Note: This requires calling adapter's get_position_value for each position
+    /// For now, returns placeholder - full implementation requires adapter interface
+    #[view]
+    public fun get_position_values<BaseAsset>(
+        _vault: &StrategyVault<BaseAsset>
+    ): vector<u64> {
+        // This would iterate positions and call adapter::get_position_value()
+        // Returns vector of position values
+        vector::empty()
+    }
+
+    /// Get total strategy value (TVL)
+    /// Computes: treasury_balance + sum of all position values
+    #[view]
+    public fun get_total_strategy_value<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>
+    ): u64 {
+        total_assets(vault)
+    }
+
+    /// Get user share value based on their share count
+    /// Formula: value = (user_shares * total_assets) / total_shares
+    #[view]
+    public fun get_user_share_value<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>,
+        user_shares: u64
+    ): u64 {
+        if (vault.total_shares == 0) {
+            return 0
+        };
+        let total_assets = total_assets(vault);
+        let numerator = (user_shares as u128) * (total_assets as u128);
+        let denominator = vault.total_shares as u128;
+        (numerator / denominator) as u64
+    }
+
+    /// Internal: Calculate total assets (treasury + all positions)
+    /// This is the accurate TVL computation
+    /// 
+    /// Formula: total_assets = treasury.balance + sum(get_position_value(position) for all positions)
+    fun total_assets<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>
+    ): u64 {
+        let treasury_bal = treasury::balance(&vault.treasury);
+        
+        // Sum all position values
+        // In full implementation, this would:
+        // 1. Iterate through vault.positions
+        // 2. For each position, get its adapter_id
+        // 3. Call the adapter's get_position_value(position) function
+        // 4. Sum all position values
+        // 
+        // For now, this is a placeholder that returns treasury balance
+        // Full implementation requires adapter registry lookup and function calls
+        let position_values_sum = 0u64; // TODO: Implement position value aggregation
+        
+        treasury_bal + position_values_sum
+    }
+
+    /// Get total shares
+    #[view]
+    public fun total_shares<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>
+    ): u64 {
+        vault.total_shares
+    }
+
+    /// Get share price (assets per share)
+    #[view]
+    public fun get_share_price<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>
+    ): u64 {
+        if (vault.total_shares == 0) {
+            return 1000000000 // 1:1 with 9 decimals
+        };
+        let total_assets = total_assets(vault);
+        ((total_assets as u128) * 1000000000 / (vault.total_shares as u128)) as u64
+    }
+
+    /// Update allocation config
+    public fun update_allocation_config<BaseAsset>(
+        vault: &mut StrategyVault<BaseAsset>,
+        _cap: &StrategyCap,
+        new_config: AllocationConfig
+    ) {
+        vault.allocation_config = new_config;
+    }
+
+    /// Rebalance strategy (allocate funds to positions based on allocation config)
+    public fun rebalance<BaseAsset>(
+        vault: &mut StrategyVault<BaseAsset>,
+        config: &ProtocolConfig,
+        _cap: &StrategyCap,
+        clock: &Clock,
+        _ctx: &mut TxContext
+    ) {
+        assert!(!registry::is_paused(config), EPaused);
+        
+        // Rebalancing logic would:
+        // 1. Calculate target allocation for each adapter slot
+        // 2. Compare with current position values
+        // 3. Deposit/withdraw from positions to match targets
+        // 4. Update treasury balance
+        
+        vault.last_rebalance_timestamp = clock::timestamp_ms(clock);
+    }
+}
+

@@ -1,0 +1,28 @@
+module suinergy::adapter_interface {
+    /// Adapter interface - all adapters (real and mock) must implement these functions
+    /// This module documents the expected interface
+    /// 
+    /// Since Move doesn't have native traits, adapters implement these functions
+    /// by convention. The vault calls them through the adapter registry.
+    /// 
+    /// Required functions:
+    /// 
+    /// 1. get_position_value(position: &Position, clock: &Clock): u64
+    ///    - Returns current value of position in base asset units
+    ///    - Critical for accurate TVL computation
+    /// 
+    /// 2. deposit(coin: Coin<BaseAsset>, clock: &Clock, ctx: &mut TxContext): Position
+    ///    - Deposits funds into external protocol
+    ///    - Returns Position object representing deployed funds
+    /// 
+    /// 3. withdraw(position: Position, amount: u64, clock: &Clock, ctx: &mut TxContext): Coin<BaseAsset>
+    ///    - Withdraws funds from external protocol
+    ///    - Returns Coin and optionally updated Position
+    /// 
+    /// 4. get_apy(clock: &Clock): u64
+    ///    - Returns current APY in basis points (e.g., 1250 = 12.5%)
+    /// 
+    /// 5. get_health_status(): u8
+    ///    - Returns health status: 0=excellent, 1=good, 2=warning, 3=critical
+}
+

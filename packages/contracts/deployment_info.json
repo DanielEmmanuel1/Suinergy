@@ -1,0 +1,20 @@
+{
+    "network": "testnet",
+    "packageId": "0x24df8687d7140f69d475f8c0a3d1ab0b2626f0791fbf54e65424578422b40e86",
+    "registryCapId": "0x054276a4c7c13469303e9f4669eeabd96c8e17de17d24f07e5a83bc33f896e0e",
+    "upgradeCapId": "0xb8523a8e48a3a4b804b3fad60e296a84f1bfb32874785afac79086d23f2cde83",
+    "protocolConfigId": "0x37f865d3e6048399fc9b4d7b1ec19ba9b14880442a098aae5d537a65e8259064",
+    "deployedAt": "2025-12-05T12:30:00+01:00",
+    "vaults": {
+        "SUI": {
+            "vaultId": "0x3bf74a7eebce194ce13ca2583c74d52df0765072cf289a034bc5a928c28d01fe",
+            "vaultCapId": "0x8a7127e82305518ccc4dc5f1dea2f745ee9f761fb61d9c40f73b49ca3df8563e",
+            "coinType": "0x2::sui::SUI"
+        },
+        "USDC": {
+            "vaultId": "0x16d47da8ca130f69e3a2fea9701294f6a951aa764488e78c00d5facedaec44e8",
+            "vaultCapId": "0x4910aed7dd5db3698422b86f5e9285269081a30800f71df767fcf615f0ca77bd",
+            "coinType": "0xa1ec7fc00a6f40db9693ad1415d0c193ad3906494428cf252621037bd7117e29::usdc::USDC"
+        }
+    }
+}

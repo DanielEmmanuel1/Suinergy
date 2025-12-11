@@ -1,0 +1,69 @@
+module suinergy::balance_reader {
+    use sui::coin::{Self, Coin};
+    use sui::balance::{Self, Balance};
+    use sui::sui::SUI;
+    use sui::coin_metadata;
+    use sui::object;
+    
+    /// Token balance struct returned to frontend
+    public struct UserBalances has copy, drop {
+        sui: u64,
+        usdc: u64,
+        usdt: u64,
+    }
+
+    /// View function to get all token balances for a user
+    /// Queries coin stores directly using Sui's standard library
+    /// 
+    /// This function searches all coin objects under the user's address
+    /// and aggregates amounts by coin type (SUI, USDC, USDT)
+    /// 
+    /// # Arguments
+    /// * `owner` - The address to query balances for
+    /// 
+    /// # Returns
+    /// UserBalances struct with sui, usdc, and usdt balances
+    #[view]
+    public fun get_user_balances(owner: address): UserBalances {
+        // Get SUI balance using standard library
+        let sui_bal = balance::balance_of<SUI>(owner);
+        
+        // For USDC and USDT, we need to query their coin stores
+        // These will be testnet-specific package IDs
+        // The frontend can also query these directly using suiClient.getBalance()
+        // with the specific coin type addresses
+        let usdc_bal = get_coin_balance<USDC>(owner);
+        let usdt_bal = get_coin_balance<USDT>(owner);
+        
+        UserBalances {
+            sui: sui_bal,
+            usdc: usdc_bal,
+            usdt: usdt_bal,
+        }
+    }
+
+    /// Helper function to get balance for a generic coin type
+    /// Returns 0 if coin store doesn't exist or coin type is not found
+    fun get_coin_balance<C>(owner: address): u64 {
+        // Try to get the coin store balance
+        // If coin store doesn't exist, return 0
+        balance::balance_of<C>(owner)
+    }
+
+    /// View function to get SUI balance only
+    #[view]
+    public fun get_sui_balance(owner: address): u64 {
+        balance::balance_of<SUI>(owner)
+    }
+}
+
+/// Testnet USDC coin type
+/// In production, import from the actual testnet USDC package
+/// Example: use 0x<package_id>::usdc::USDC
+public struct USDC has drop {}
+
+/// Testnet USDT coin type
+/// In production, import from the actual testnet USDT package
+/// Example: use 0x<package_id>::usdt::USDT
+public struct USDT has drop {}
+

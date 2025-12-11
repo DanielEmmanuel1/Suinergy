@@ -1,0 +1,73 @@
+module suinergy::vault_share {
+    use sui::object::{Self, UID, ID};
+    use sui::tx_context::{Self, TxContext};
+    use sui::transfer;
+
+    /// Vault share object representing user's ownership in a strategy vault
+    /// This is the receipt token users receive when depositing
+    public struct VaultShare<phantom BaseAsset> has key, store {
+        id: UID,
+        vault_id: ID,
+        shares: u64,
+    }
+
+    /// Mint new vault shares to a user
+    public fun mint<BaseAsset>(
+        total_shares: u64,
+        vault_id: ID,
+        ctx: &mut TxContext
+    ): VaultShare<BaseAsset> {
+        // In a full implementation, this might use dynamic fields keyed by user address
+        // For now, we create a new share object
+        let share = VaultShare<BaseAsset> {
+            id: object::new(ctx),
+            vault_id,
+            shares: total_shares, // This would be the user's portion
+        };
+        transfer::transfer(share, tx_context::sender(ctx));
+        share
+    }
+
+    /// Get shares amount
+    public fun shares<BaseAsset>(share: &VaultShare<BaseAsset>): u64 {
+        share.shares
+    }
+
+    /// Get vault ID
+    public fun vault_id<BaseAsset>(share: &VaultShare<BaseAsset>): ID {
+        share.vault_id
+    }
+
+    /// Burn vault shares (called during withdrawal)
+    public fun burn<BaseAsset>(share: VaultShare<BaseAsset>) {
+        let VaultShare<BaseAsset> { id, vault_id: _, shares: _ } = share;
+        object::delete(id);
+    }
+
+    /// Split shares (for partial withdrawals)
+    public fun split<BaseAsset>(
+        share: &mut VaultShare<BaseAsset>,
+        amount: u64,
+        ctx: &mut TxContext
+    ): VaultShare<BaseAsset> {
+        assert!(share.shares >= amount, 0);
+        share.shares = share.shares - amount;
+        VaultShare<BaseAsset> {
+            id: object::new(ctx),
+            vault_id: share.vault_id,
+            shares: amount,
+        }
+    }
+
+    /// Join shares (merge multiple share objects)
+    public fun join<BaseAsset>(
+        share: &mut VaultShare<BaseAsset>,
+        other: VaultShare<BaseAsset>
+    ) {
+        assert!(share.vault_id == vault_share::vault_id(&other), 1);
+        share.shares = share.shares + vault_share::shares(&other);
+        let VaultShare<BaseAsset> { id, vault_id: _, shares: _ } = other;
+        object::delete(id);
+    }
+}
+

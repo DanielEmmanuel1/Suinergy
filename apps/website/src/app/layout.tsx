@@ -1,12 +1,26 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Bungee, Outfit } from 'next/font/google';
 import './globals.css';
+import { SmoothScroll } from '@/components/providers/smooth-scroll';
+import { Navbar } from '@/components/layout/nav';
+import { Footer } from '@/components/layout/footer';
 
-const inter = Inter({ subsets: ['latin'] });
+const bungee = Bungee({
+    weight: '400',
+    subsets: ['latin'],
+    variable: '--font-heading',
+    display: 'swap',
+});
+
+const outfit = Outfit({
+    subsets: ['latin'],
+    variable: '--font-sans',
+    display: 'swap',
+});
 
 export const metadata: Metadata = {
-    title: 'Suinergy - Sui Yield Aggregator',
-    description: 'Maximize your yields on the Sui blockchain - The premier yield aggregation platform',
+    title: 'Suinergy | High-Yield Sui DeFi Strategies',
+    description: 'Automated DeFi yield strategies on the Sui Network.',
 };
 
 export default function RootLayout({
@@ -15,8 +29,16 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
-            <body className={inter.className}>{children}</body>
+        <html lang="en" className={`${outfit.variable} ${bungee.variable}`}>
+            <body className="font-sans antialiased bg-[#f4f3f0] text-black">
+                <SmoothScroll>
+                    <Navbar />
+                    <main className="min-h-screen pt-20">
+                        {children}
+                    </main>
+                    <Footer />
+                </SmoothScroll>
+            </body>
         </html>
     );
 }

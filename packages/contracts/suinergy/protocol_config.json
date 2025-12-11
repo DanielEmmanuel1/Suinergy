@@ -1,0 +1,27 @@
+﻿{
+  "objectId": "0x7a1b696b29feb33c286b90791be4d7a5121b89d1bc63124827ffc921dd3f07e3",
+  "version": "349181033",
+  "digest": "9dAqf9nB2ar6QBEF7U4iWjDTK4ezACjyA9AuutSTvxSX",
+  "type": "0xb18e10c0d4cd763ae8f2d2972a6397d0d92f1638840a6f868f06d52683bf3d58::registry::ProtocolConfig",
+  "owner": {
+    "Shared": {
+      "initial_shared_version": 349181033
+    }
+  },
+  "previousTransaction": "3eytjoey93XwcB83vxWaUmYK1u3xqNQFGbegqbXBPyXo",
+  "storageRebate": "1679600",
+  "content": {
+    "dataType": "moveObject",
+    "type": "0xb18e10c0d4cd763ae8f2d2972a6397d0d92f1638840a6f868f06d52683bf3d58::registry::ProtocolConfig",
+    "hasPublicTransfer": true,
+    "fields": {
+      "admin": "0xb7ca1a42fc80bd12e488db0bbf086bd32ac604f160edef289e739bd339b395ff",
+      "id": {
+        "id": "0x7a1b696b29feb33c286b90791be4d7a5121b89d1bc63124827ffc921dd3f07e3"
+      },
+      "is_testnet": true,
+      "paused": false,
+      "version": "1"
+    }
+  }
+}

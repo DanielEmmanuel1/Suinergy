@@ -1,0 +1,47 @@
+module suinergy::registry {
+    use sui::object::{UID, ID};
+    use sui::tx_context::{Self, TxContext};
+    use sui::transfer;
+
+    /// Global configuration
+    public struct ProtocolConfig has key, store {
+        id: UID,
+        admin: address,
+        is_testnet: bool,
+        version: u64,
+        paused: bool,
+    }
+
+    /// Admin capability
+    public struct RegistryCap has key, store {
+        id: UID,
+    }
+
+    /// Initialize registry - creates ProtocolConfig and RegistryCap
+    fun init(ctx: &mut TxContext) {
+        let sender = tx_context::sender(ctx);
+        
+        // Create Config
+        transfer::share_object(ProtocolConfig {
+            id: object::new(ctx),
+            admin: sender,
+            is_testnet: true,
+            version: 1,
+            paused: false,
+        });
+
+        // Create Admin Cap
+        transfer::transfer(RegistryCap {
+            id: object::new(ctx),
+        }, sender);
+    }
+
+    public fun is_paused(config: &ProtocolConfig): bool {
+        config.paused
+    }
+
+    public fun is_testnet(config: &ProtocolConfig): bool {
+        config.is_testnet
+    }
+}
+

@@ -1,0 +1,71 @@
+module suinergy::vault_view {
+    use sui::object::ID;
+    use sui::vec_set;
+    use sui::vector;
+    
+    use suinergy::strategy_vault::{Self, StrategyVault};
+    use suinergy::treasury;
+
+    /// View function: Get treasury balance only
+    /// Returns the idle funds in the vault's treasury
+    #[view]
+    public fun get_treasury_balance<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>
+    ): u64 {
+        strategy_vault::get_treasury_balance(vault)
+    }
+
+    /// View function: Get position values for all positions
+    /// Returns a vector of position values (one per position)
+    /// 
+    /// Note: This requires calling each adapter's get_position_value function
+    /// Full implementation would iterate positions and query adapters
+    #[view]
+    public fun get_position_values<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>
+    ): vector<u64> {
+        strategy_vault::get_position_values(vault)
+    }
+
+    /// View function: Get total strategy value (TVL)
+    /// Returns: treasury_balance + sum of all position values
+    #[view]
+    public fun get_total_strategy_value<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>
+    ): u64 {
+        strategy_vault::get_total_strategy_value(vault)
+    }
+
+    /// View function: Get user share value
+    /// Calculates the value of user's shares based on current TVL
+    /// 
+    /// Formula: value = (user_shares * total_assets) / total_shares
+    #[view]
+    public fun get_user_share_value<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>,
+        user_shares: u64
+    ): u64 {
+        strategy_vault::get_user_share_value(vault, user_shares)
+    }
+
+    /// View function: Get share price
+    /// Returns assets per share (with 9 decimals precision)
+    #[view]
+    public fun get_share_price<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>
+    ): u64 {
+        strategy_vault::get_share_price(vault)
+    }
+
+    /// View function: Get total shares
+    #[view]
+    public fun get_total_shares<BaseAsset>(
+        vault: &StrategyVault<BaseAsset>
+    ): u64 {
+        strategy_vault::total_shares(vault)
+    }
+
+    // Allocation breakdown view function removed - tuples not supported in vectors
+    // Use separate view functions for each piece of data if needed
+}
+

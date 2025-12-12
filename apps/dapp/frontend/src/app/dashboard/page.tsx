@@ -75,15 +75,10 @@ export default function DashboardPage() {
         return fullPortfolioData.slice(-days)
     }, [portfolioTimePeriod, fullPortfolioData])
 
-    // RouteGuard handles wallet connection check and redirect
-    // This check is redundant but kept for extra safety
-    if (!currentAccount) {
-        return null
-    }
-
+    // Data handling for disconnected state
     const suiPrice = suiPriceData?.priceUsd ?? 0
     const totalAllocatedSui = positions?.reduce((sum, pos) => sum + pos.amount, 0) ?? 0
-    const totalAllocatedUsd = totalAllocatedSui * suiPrice
+    const totalAllocatedUsd = currentAccount ? totalAllocatedSui * suiPrice : 0
 
     // Calculate weighted APY - avoid division by zero
     const estimatedAPY = positions?.length && totalAllocatedSui > 0
@@ -102,8 +97,7 @@ export default function DashboardPage() {
         : 0
     const estimatedMonthlyEarningsUsd = estimatedMonthlyEarningsSui * suiPrice
 
-    // Filter portfolio data based on time period
-
+    // Dashboard content
     return (
         <MainLayout>
             <div className="space-y-6">
@@ -119,6 +113,23 @@ export default function DashboardPage() {
                             Track your yield allocations, earnings, and portfolio performance
                         </p>
                     </div>
+
+                    {!currentAccount && (
+                        <Card className="mb-6 bg-brand-gradient text-white border-none">
+                            <CardContent className="flex flex-col sm:flex-row items-center justify-between p-6 gap-4">
+                                <div>
+                                    <h3 className="text-xl font-bold mb-2">Connect Your Wallet</h3>
+                                    <p className="text-white/80">
+                                        Connect your wallet to see your portfolio, track earnings, and manage your positions.
+                                    </p>
+                                </div>
+                                {/* The connect button is usually in the header, but we could add one here or just guide them*/}
+                                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                                    <Wallet className="w-8 h-8" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* Main Stats Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

@@ -4,6 +4,7 @@ import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 import { getFullnodeUrl } from '@mysten/sui/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';
+import dynamic from 'next/dynamic';
 
 const networks = {
     mainnet: { url: getFullnodeUrl('mainnet') },
@@ -12,24 +13,31 @@ const networks = {
     localnet: { url: 'http://localhost:9000' },
 };
 
-import { WagmiProvider } from 'wagmi';
-import { wagmiConfig } from '@/wallets/config';
-import { SolanaProvider } from '@/wallets/solana-provider';
+// Dynamically import multichain providers to avoid SSR issues
+const WagmiClientProvider = dynamic(
+    () => import('./wagmi-provider').then(mod => ({ default: mod.WagmiClientProvider })),
+    { ssr: false }
+);
+
+const SolanaClientProvider = dynamic(
+    () => import('./solana-provider').then(mod => ({ default: mod.SolanaClientProvider })),
+    { ssr: false }
+);
 
 export function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient());
 
     return (
-        <WagmiProvider config={wagmiConfig}>
+        <WagmiClientProvider>
             <QueryClientProvider client={queryClient}>
                 <SuiClientProvider networks={networks} defaultNetwork="testnet">
                     <WalletProvider autoConnect>
-                        <SolanaProvider>
+                        <SolanaClientProvider>
                             {children}
-                        </SolanaProvider>
+                        </SolanaClientProvider>
                     </WalletProvider>
                 </SuiClientProvider>
             </QueryClientProvider>
-        </WagmiProvider>
+        </WagmiClientProvider>
     );
 }

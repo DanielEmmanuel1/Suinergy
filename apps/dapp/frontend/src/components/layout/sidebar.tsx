@@ -17,7 +17,6 @@ import { useAppStore } from '@/store/use-app-store'
 
 const navItems = [
     { href: '/markets', label: 'Markets', icon: Store },
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/rewards', label: 'Rewards', icon: Gift },
     { href: '/profile', label: 'Profile', icon: User },
 ]
@@ -85,7 +84,7 @@ export function Sidebar({ isMobileOpen: externalMobileOpen, onMobileClose: exter
                 {/* Mobile Header with Close Button */}
                 <div className="p-4 sm:p-6 border-b border-black/10 flex items-center justify-between flex-shrink-0">
                     <Link
-                        href="/dashboard"
+                        href="/profile"
                         className="flex items-center gap-2"
                         onClick={handleMobileClose}
                     >
@@ -139,7 +138,7 @@ export function Sidebar({ isMobileOpen: externalMobileOpen, onMobileClose: exter
                         {/* Desktop Logo */}
                         <div className="p-6 border-b border-black/10">
                             <div className="flex items-center justify-between gap-3">
-                                <Link href="/dashboard" className="flex items-center gap-3">
+                                <Link href="/profile" className="flex items-center gap-3">
                                     <div className="w-8 h-8 bg-brand-gradient rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0">
                                         S
                                     </div>
@@ -194,7 +193,7 @@ export function Sidebar({ isMobileOpen: externalMobileOpen, onMobileClose: exter
                     <>
                         {/* Collapsed Logo */}
                         <div className="p-4 border-b border-black/10">
-                            <Link href="/dashboard" className="flex justify-center">
+                            <Link href="/profile" className="flex justify-center">
                                 <div className="w-10 h-10 bg-brand-gradient rounded-lg flex items-center justify-center text-white font-bold">
                                     S
                                 </div>

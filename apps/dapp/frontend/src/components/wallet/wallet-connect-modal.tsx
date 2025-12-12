@@ -12,6 +12,29 @@ import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import dynamic from 'next/dynamic'
+
+// Dynamically import WalletConnect button from wagmi-provider to ensure it's within Wagmi context
+const WalletConnectButton = dynamic(
+    () => import('@/providers/wagmi-provider').then(mod => ({ default: mod.WalletConnectButton })),
+    {
+        ssr: false,
+        loading: () => (
+            <button
+                type="button"
+                className="h-auto flex flex-col items-center justify-center gap-1 sm:gap-2 p-3 sm:p-4 md:p-6 hover:bg-[#f4f3f0] transition-all duration-200 border-2 rounded-lg bg-white border-black/10 cursor-pointer"
+                disabled
+            >
+                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-1 bg-[#f4f3f0] rounded-full flex items-center justify-center text-lg sm:text-xl font-semibold text-[#1055C9]">
+                    W
+                </div>
+                <span className="text-[10px] sm:text-xs md:text-sm font-medium text-center text-black">
+                    WalletConnect
+                </span>
+            </button>
+        )
+    }
+)
 
 interface WalletConnectModalProps {
     open: boolean
@@ -23,17 +46,20 @@ const POPULAR_WALLETS = [
     {
         name: 'Phantom',
         iconUrl: '/phantom.png',
-        matchNames: ['phantom']
+        matchNames: ['phantom'],
+        type: 'sui' as const
     },
     {
         name: 'Slush',
         iconUrl: '/slush.png',
-        matchNames: ['slush']
+        matchNames: ['slush'],
+        type: 'sui' as const
     },
     {
         name: 'Surf Wallet',
         iconUrl: '/surf.png',
-        matchNames: ['surf']
+        matchNames: ['surf'],
+        type: 'sui' as const
     },
 ]
 
@@ -42,37 +68,44 @@ const OTHER_WALLETS = [
     {
         name: 'Suiet',
         iconUrl: '/suiet.jpg',
-        matchNames: ['suiet']
+        matchNames: ['suiet'],
+        type: 'sui' as const
     },
     {
         name: 'OKX Wallet',
         iconUrl: '/okx.png',
-        matchNames: ['okx', 'okex']
+        matchNames: ['okx', 'okex'],
+        type: 'sui' as const
     },
     {
         name: 'Martian Wallet',
         iconUrl: '/martian.png',
-        matchNames: ['martian']
+        matchNames: ['martian'],
+        type: 'sui' as const
     },
     {
         name: 'Nightly',
         iconUrl: '/nightly.png',
-        matchNames: ['nightly']
+        matchNames: ['nightly'],
+        type: 'sui' as const
     },
     {
         name: 'Bitget Wallet',
         iconUrl: '/bitget.png',
-        matchNames: ['bitget', 'bitkeep']
+        matchNames: ['bitget', 'bitkeep'],
+        type: 'sui' as const
     },
     {
         name: 'Backpack',
         iconUrl: '/backpack.png',
-        matchNames: ['backpack']
+        matchNames: ['backpack'],
+        type: 'sui' as const
     },
     {
         name: 'Desig',
         iconUrl: '/desig.png',
-        matchNames: ['desig']
+        matchNames: ['desig'],
+        type: 'sui' as const
     },
 ]
 
@@ -185,70 +218,72 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
 
                 <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-6 px-1 sm:px-0">
                     {/* Popular Wallets Section */}
-                    {popularWallets.length > 0 && (
-                        <div>
-                            <h3 className="text-xs sm:text-sm font-semibold text-black mb-2 sm:mb-3">Popular Wallets</h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-                                {popularWallets.map((wallet) => {
-                                    const isConnecting = connectingWallet === wallet.name
-                                    const isDisabled = !wallet.detected || isPending
+                    <div>
+                        <h3 className="text-xs sm:text-sm font-semibold text-black mb-2 sm:mb-3">Popular Wallets</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+                            {/* WalletConnect Button */}
+                            <WalletConnectButton onSuccess={() => onOpenChange(false)} />
 
-                                    return (
-                                        <button
-                                            key={wallet.name}
-                                            type="button"
-                                            className={cn(
-                                                "h-auto flex flex-col items-center justify-center gap-1 sm:gap-2 p-3 sm:p-4 md:p-6",
-                                                "hover:bg-[#f4f3f0] transition-all duration-200",
-                                                "border-2 rounded-lg bg-white",
-                                                wallet.detected
-                                                    ? "border-black/10 hover:border-[#1055C9] cursor-pointer"
-                                                    : "border-black/5 cursor-not-allowed",
-                                                isConnecting && "border-[#1055C9]"
-                                            )}
-                                            onClick={() => wallet.detected && !isPending && handleConnect(wallet.wallet)}
-                                            disabled={isDisabled}
-                                        >
-                                            {wallet.iconUrl ? (
-                                                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-1 flex items-center justify-center">
-                                                    <img
-                                                        src={wallet.iconUrl}
-                                                        alt={wallet.name}
-                                                        className="w-full h-full object-contain"
-                                                        onError={(e) => {
-                                                            const target = e.target as HTMLImageElement
-                                                            target.style.display = 'none'
-                                                            if (target.parentElement) {
-                                                                const fallback = document.createElement('div')
-                                                                fallback.className = 'w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-[#f4f3f0] rounded-full flex items-center justify-center text-lg sm:text-xl'
-                                                                fallback.textContent = wallet.name.charAt(0).toUpperCase()
-                                                                target.parentElement.appendChild(fallback)
-                                                            }
-                                                        }}
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-1 bg-[#f4f3f0] rounded-full flex items-center justify-center text-lg sm:text-xl font-semibold text-[#1055C9]">
-                                                    {wallet.name.charAt(0).toUpperCase()}
-                                                </div>
-                                            )}
-                                            <span className="text-[10px] sm:text-xs md:text-sm font-medium text-center text-black">
-                                                {wallet.name}
+                            {/* Sui Wallets */}
+                            {popularWallets.map((wallet) => {
+                                const isConnecting = connectingWallet === wallet.name
+                                const isDisabled = !wallet.detected || isPending
+
+                                return (
+                                    <button
+                                        key={wallet.name}
+                                        type="button"
+                                        className={cn(
+                                            "h-auto flex flex-col items-center justify-center gap-1 sm:gap-2 p-3 sm:p-4 md:p-6",
+                                            "hover:bg-[#f4f3f0] transition-all duration-200",
+                                            "border-2 rounded-lg bg-white",
+                                            wallet.detected
+                                                ? "border-black/10 hover:border-[#1055C9] cursor-pointer"
+                                                : "border-black/5 cursor-not-allowed",
+                                            isConnecting && "border-[#1055C9]"
+                                        )}
+                                        onClick={() => wallet.detected && !isPending && handleConnect(wallet.wallet)}
+                                        disabled={isDisabled}
+                                    >
+                                        {wallet.iconUrl ? (
+                                            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-1 flex items-center justify-center">
+                                                <img
+                                                    src={wallet.iconUrl}
+                                                    alt={wallet.name}
+                                                    className="w-full h-full object-contain"
+                                                    onError={(e) => {
+                                                        const target = e.target as HTMLImageElement
+                                                        target.style.display = 'none'
+                                                        if (target.parentElement) {
+                                                            const fallback = document.createElement('div')
+                                                            fallback.className = 'w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-[#f4f3f0] rounded-full flex items-center justify-center text-lg sm:text-xl'
+                                                            fallback.textContent = wallet.name.charAt(0).toUpperCase()
+                                                            target.parentElement.appendChild(fallback)
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-1 bg-[#f4f3f0] rounded-full flex items-center justify-center text-lg sm:text-xl font-semibold text-[#1055C9]">
+                                                {wallet.name.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                        <span className="text-[10px] sm:text-xs md:text-sm font-medium text-center text-black">
+                                            {wallet.name}
+                                        </span>
+                                        {isConnecting && (
+                                            <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin text-[#1055C9] mt-1" />
+                                        )}
+                                        {!wallet.detected && (
+                                            <span className="text-[9px] sm:text-[10px] text-muted-foreground mt-1">
+                                                Not installed
                                             </span>
-                                            {isConnecting && (
-                                                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin text-[#1055C9] mt-1" />
-                                            )}
-                                            {!wallet.detected && (
-                                                <span className="text-[9px] sm:text-[10px] text-muted-foreground mt-1">
-                                                    Not installed
-                                                </span>
-                                            )}
-                                        </button>
-                                    )
-                                })}
-                            </div>
+                                        )}
+                                    </button>
+                                )
+                            })}
                         </div>
-                    )}
+                    </div>
 
                     {/* Other Options Section */}
                     {otherWallets.length > 0 && (
@@ -333,6 +368,6 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                     </div>
                 </div>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     )
 }

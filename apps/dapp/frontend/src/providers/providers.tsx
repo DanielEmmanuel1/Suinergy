@@ -29,15 +29,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     return (
         <WagmiClientProvider>
-            <QueryClientProvider client={queryClient}>
-                <SuiClientProvider networks={networks} defaultNetwork="testnet">
-                    <WalletProvider autoConnect>
+            <SuiClientProvider networks={networks} defaultNetwork="testnet">
+                <WalletProvider autoConnect>
+                    <QueryClientProvider client={queryClient}>
                         <SolanaClientProvider>
                             {children}
                         </SolanaClientProvider>
-                    </WalletProvider>
-                </SuiClientProvider>
-            </QueryClientProvider>
+                    </QueryClientProvider>
+                </WalletProvider>
+            </SuiClientProvider>
         </WagmiClientProvider>
     );
 }

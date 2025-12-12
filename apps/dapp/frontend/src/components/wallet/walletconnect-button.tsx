@@ -1,26 +1,10 @@
 'use client';
 
-import { WagmiProvider } from 'wagmi';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useConnect, useAccount, useDisconnect } from 'wagmi';
 import { useState } from 'react';
-import { useConnect } from 'wagmi';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { wagmiConfig } from '@/wallets/config';
 
-export function WagmiClientProvider({ children }: { children: React.ReactNode }) {
-    const [queryClient] = useState(() => new QueryClient());
-
-    return (
-        <WagmiProvider config={wagmiConfig}>
-            <QueryClientProvider client={queryClient}>
-                {children}
-            </QueryClientProvider>
-        </WagmiProvider>
-    );
-}
-
-// WalletConnect button component - must be used within WagmiClientProvider
 interface WalletConnectButtonProps {
     onSuccess: () => void;
 }

@@ -1,11 +1,11 @@
 'use client'
 
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { useTheme } from '@/contexts/theme-context'
 
-interface PortfolioDataPoint {
+export interface PortfolioDataPoint {
     date: string
     value: number
-    earnings: number
 }
 
 interface PortfolioChartProps {
@@ -14,6 +14,9 @@ interface PortfolioChartProps {
 }
 
 export function PortfolioChart({ data, height = 300 }: PortfolioChartProps) {
+    const { theme } = useTheme()
+    const isDark = theme === 'dark'
+
     return (
         <ResponsiveContainer width="100%" height={height}>
             <AreaChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
@@ -29,32 +32,33 @@ export function PortfolioChart({ data, height = 300 }: PortfolioChartProps) {
                 </defs>
                 <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="rgba(0,0,0,0.06)"
+                    stroke={isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"}
                     vertical={false}
                 />
                 <XAxis
                     dataKey="date"
-                    stroke="#000000"
-                    style={{ fontSize: '12px' }}
+                    stroke={isDark ? "#ffffff" : "#000000"}
+                    style={{ fontSize: '12px', fill: isDark ? '#ffffff' : '#000000' }}
                     axisLine={false}
                     tickLine={false}
                 />
                 <YAxis
-                    stroke="#000000"
-                    style={{ fontSize: '12px' }}
+                    stroke={isDark ? "#ffffff" : "#000000"}
+                    style={{ fontSize: '12px', fill: isDark ? '#ffffff' : '#000000' }}
                     axisLine={false}
                     tickLine={false}
                     tickFormatter={(value) => `$${value.toLocaleString()}`}
                 />
                 <Tooltip
                     contentStyle={{
-                        backgroundColor: '#ffffff',
-                        border: '1px solid rgba(0,0,0,0.1)',
+                        backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+                        border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
                         borderRadius: '8px',
                         padding: '8px 12px',
+                        color: isDark ? '#ffffff' : '#000000',
                     }}
                     formatter={(value: number) => [`$${value.toLocaleString()}`, 'Portfolio Value']}
-                    labelStyle={{ color: '#000000', fontWeight: 600 }}
+                    labelStyle={{ color: isDark ? '#ffffff' : '#000000', fontWeight: 600 }}
                 />
                 <Area
                     type="monotone"

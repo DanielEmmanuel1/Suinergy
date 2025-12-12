@@ -251,15 +251,15 @@ export function ProfilePanel() {
                                 <div className="p-2 rounded-xl bg-brand-gradient">
                                     <Activity className="w-5 h-5 text-white" />
                                 </div>
-                                <div>
+                                <div className="dark:text-white">
                                     <CardTitle className="text-lg">Portfolio Performance</CardTitle>
-                                    <p className="text-sm text-muted-foreground">Track your growth across all chains</p>
+                                    <p className="text-sm text-muted-foreground dark:text-white">Track your growth across all chains</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 flex-wrap">
                                 <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-white dark:bg-white/10 border border-black/10 dark:border-white/10">
                                     <div className="w-3 h-3 rounded-full bg-brand-gradient"></div>
-                                    <span className="text-muted-foreground font-medium">Portfolio Value</span>
+                                    <span className="text-muted-foreground font-medium dark:text-white">Portfolio Value</span>
                                 </div>
                                 <div className="flex gap-2">
                                     {(['7D', '30D', '90D'] as TimePeriod[]).map((period) => (
@@ -269,7 +269,7 @@ export function ProfilePanel() {
                                             size="sm"
                                             onClick={() => setPortfolioTimePeriod(period)}
                                             className={cn(
-                                                "transition-all duration-200",
+                                                "transition-all duration-200 dark:text-white",
                                                 portfolioTimePeriod === period
                                                     ? 'bg-brand-gradient text-white shadow-lg'
                                                     : 'hover:bg-[#f4f3f0] dark:hover:bg-white/5'
@@ -282,7 +282,7 @@ export function ProfilePanel() {
                             </div>
                         </div>
                     </div>
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-6 dark:text-white">
                         <div className="w-full h-[200px] sm:h-[250px] md:h-[300px]">
                             <PortfolioChart data={portfolioData} height={250} />
                         </div>
@@ -298,8 +298,8 @@ export function ProfilePanel() {
                                     <PieChart className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-lg">Active Positions</CardTitle>
-                                    <p className="text-sm text-muted-foreground">Your investments across all chains</p>
+                                    <CardTitle className="text-lg dark:text-white">Active Positions</CardTitle>
+                                    <p className="text-sm text-muted-foreground dark:text-white">Your investments across all chains</p>
                                 </div>
                             </div>
                             <Link href="/strategies" className="text-sm font-semibold text-transparent bg-clip-text bg-brand-gradient hover:opacity-80 transition-opacity">
@@ -365,9 +365,9 @@ export function ProfilePanel() {
                             <div className="p-2 rounded-xl bg-brand-gradient">
                                 <Award className="w-5 h-5 text-white" />
                             </div>
-                            <div>
-                                <CardTitle className="text-lg">Earnings Breakdown</CardTitle>
-                                <p className="text-sm text-muted-foreground">Your rewards across all networks</p>
+                            <div className="dark:text-white">
+                                <CardTitle className="text-lg dark:text-white">Earnings Breakdown</CardTitle>
+                                <p className="text-sm text-muted-foreground dark:text-white">Your rewards across all networks</p>
                             </div>
                         </div>
                     </div>

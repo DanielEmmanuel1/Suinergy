@@ -1187,7 +1187,7 @@ export default function StrategyDetailPage() {
             <div className="space-y-4 sm:space-y-6">
                 {/* Breadcrumb Navigation */}
                 <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground overflow-x-auto">
-                    <button onClick={() => router.push('/strategies')} className="hover:text-black transition-colors whitespace-nowrap">
+                    <button onClick={() => router.push('/strategies')} className="hover:text-black dark:hover:text-white transition-colors whitespace-nowrap">
                         Strategies
                     </button>
                     <span>/</span>
@@ -1520,7 +1520,7 @@ export default function StrategyDetailPage() {
                                                 </thead>
                                                 <tbody className="divide-y divide-black/10">
                                                     {strategy.platforms.map((platform: any) => (
-                                                        <tr key={platform.id} className="hover:bg-[#f4f3f0]/50 transition-colors">
+                                                        <tr key={platform.id} className="hover:bg-[#f4f3f0]/50 dark:hover:bg-white/5 transition-colors">
                                                             <td className="px-3 sm:px-4 py-2 sm:py-3">
                                                                 <div className="font-medium text-black dark:text-white text-xs sm:text-sm">
                                                                     <div>{platform.name}</div>
@@ -1552,7 +1552,7 @@ export default function StrategyDetailPage() {
                                                                 </div>
                                                             </td>
                                                             <td className="px-3 sm:px-4 py-2 sm:py-3 hidden sm:table-cell">
-                                                                <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-black cursor-pointer" />
+                                                                <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-black dark:hover:text-white cursor-pointer" />
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -1704,7 +1704,7 @@ export default function StrategyDetailPage() {
                                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                                             <span>Transaction Settings</span>
                                             <button
-                                                className="hover:text-black transition-colors"
+                                                className="hover:text-black dark:hover:text-white transition-colors"
                                                 onClick={() => setTransactionSettingsOpen(true)}
                                             >
                                                 <Settings className="w-4 h-4" />

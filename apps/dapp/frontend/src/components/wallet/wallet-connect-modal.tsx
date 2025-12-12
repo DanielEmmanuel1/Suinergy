@@ -235,7 +235,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                         type="button"
                                         className={cn(
                                             "h-auto flex flex-col items-center justify-center gap-1 sm:gap-2 p-3 sm:p-4 md:p-6",
-                                            "hover:bg-[#f4f3f0] transition-all duration-200",
+                                            "hover:bg-[#f4f3f0] dark:hover:bg-white/5 transition-all duration-200",
                                             "border-2 rounded-lg bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]",
                                             wallet.detected
                                                 ? "border-black/10 hover:border-[#1055C9] cursor-pointer"
@@ -361,7 +361,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                         <button
                             type="button"
                             onClick={handleNoWallet}
-                            className="w-full text-center text-xs sm:text-sm text-muted-foreground hover:text-[#1055C9] transition-colors duration-200 py-2"
+                            className="w-full text-center text-xs sm:text-sm text-muted-foreground hover:text-[#1055C9] dark:hover:text-white transition-colors duration-200 py-2"
                         >
                             I don't have a wallet
                         </button>

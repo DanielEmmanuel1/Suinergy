@@ -54,7 +54,7 @@ export function StrategyTable({ strategies }: StrategyTableProps) {
                     </thead>
                     <tbody className="divide-y divide-[#000000]/10">
                         {strategies.map((strategy) => (
-                            <tr key={strategy.id} className="hover:bg-[#f4f3f0]/50 transition-colors">
+                            <tr key={strategy.id} className="hover:bg-[#f4f3f0]/50 dark:hover:bg-white/5 transition-colors">
                                 <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
                                     <div className="font-medium text-[#000000] text-xs sm:text-sm md:text-base dark:text-white">
                                         <div>{strategy.name}</div>

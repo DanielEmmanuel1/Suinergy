@@ -111,7 +111,7 @@ export function ErrorModal({
                     </div>
                 )}
                 <div className="flex justify-center mt-4">
-                    <Button onClick={handleClose} className="bg-red-500 hover:bg-red-600">
+                    <Button onClick={handleClose} className="bg-red-500 hover:bg-red-600 dark:hover:bg-red-700">
                         Close
                     </Button>
                 </div>

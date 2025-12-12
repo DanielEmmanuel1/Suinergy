@@ -42,7 +42,7 @@ export function WalletConnectButton({ onSuccess }: WalletConnectButtonProps) {
             type="button"
             className={cn(
                 "h-auto flex flex-col items-center justify-center gap-1 sm:gap-2 p-3 sm:p-4 md:p-6",
-                "hover:bg-[#f4f3f0] transition-all duration-200",
+                "hover:bg-[#f4f3f0] dark:hover:bg-white/5 transition-all duration-200",
                 "border-2 rounded-lg bg-white",
                 "border-black/10 hover:border-[#1055C9] cursor-pointer",
                 isConnecting && "border-[#1055C9]"

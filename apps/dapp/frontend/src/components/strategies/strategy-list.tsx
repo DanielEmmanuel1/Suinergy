@@ -11,41 +11,15 @@ import { useAppStore } from '@/store/use-app-store'
 import { StrategyTable } from './strategy-table'
 import { StrategyGrid } from './strategy-grid'
 
-// Mock data - will be replaced with real data hooks
-const mockStrategies = [
-    {
-        id: '1',
-        name: 'Prime USDC Vault',
-        asset: 'USDC',
-        apy: 12.5,
-        apr: 11.8,
-        apyChange: 0.5,
-        tvl: 2500000,
-        capacity: 5000000,
-        remaining: 2500000,
-        userAllocation: 0,
-        risk: 'low' as const,
-        withdrawalLatency: '24h',
-        platformFee: 0.1,
-    },
-    {
-        id: '2',
-        name: 'Sovereign SUI Vault',
-        asset: 'SUI',
-        apy: 8.2,
-        apr: 7.9,
-        apyChange: -0.2,
-        tvl: 5000000,
-        capacity: 10000000,
-        remaining: 5000000,
-        userAllocation: 0,
-        risk: 'low' as const,
-        withdrawalLatency: '7d',
-        platformFee: 0.15,
-    },
-]
+// Strategies are now passed via props
+import { Strategy } from '@/config/chains'
 
-export function StrategyList() {
+interface StrategyListProps {
+    strategies: Strategy[]
+    chainName?: string
+}
+
+export function StrategyList({ strategies, chainName }: StrategyListProps) {
     const { viewMode, setViewMode } = useAppStore()
     const [isMobile, setIsMobile] = useState(false)
 
@@ -72,7 +46,9 @@ export function StrategyList() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div>
-                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-2 font-heading">Yield Strategies</h2>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-2 font-heading">
+                            {chainName ? `${chainName} Strategies` : 'Yield Strategies'}
+                        </h2>
                         <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
                             Browse and allocate to yield-generating strategies
                         </p>
@@ -140,9 +116,9 @@ export function StrategyList() {
                 {/* Strategy Display */}
                 {/* Always show grid on mobile, respect viewMode on desktop */}
                 {effectiveViewMode === 'table' ? (
-                    <StrategyTable strategies={mockStrategies} />
+                    <StrategyTable strategies={strategies} />
                 ) : (
-                    <StrategyGrid strategies={mockStrategies} />
+                    <StrategyGrid strategies={strategies} />
                 )}
             </TabbedContainer>
         </div>

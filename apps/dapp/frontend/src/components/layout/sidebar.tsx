@@ -10,13 +10,14 @@ import {
     User,
     X,
     ChevronLeft,
+    Store,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store/use-app-store'
 
 const navItems = [
+    { href: '/markets', label: 'Markets', icon: Store },
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/strategies', label: 'Strategies', icon: TrendingUp },
     { href: '/rewards', label: 'Rewards', icon: Gift },
     { href: '/profile', label: 'Profile', icon: User },
 ]
@@ -31,9 +32,9 @@ export function Sidebar({ isMobileOpen: externalMobileOpen, onMobileClose: exter
     const { sidebarCollapsed, toggleSidebar } = useAppStore()
     const [internalMobileOpen, setInternalMobileOpen] = useState(false)
     const prevPathnameRef = useRef(pathname)
-    
+
     const isMobileOpen = externalMobileOpen !== undefined ? externalMobileOpen : internalMobileOpen
-    
+
     const handleMobileClose = () => {
         if (externalOnMobileClose) {
             externalOnMobileClose()
@@ -83,8 +84,8 @@ export function Sidebar({ isMobileOpen: externalMobileOpen, onMobileClose: exter
             )}>
                 {/* Mobile Header with Close Button */}
                 <div className="p-4 sm:p-6 border-b border-black/10 flex items-center justify-between flex-shrink-0">
-                    <Link 
-                        href="/dashboard" 
+                    <Link
+                        href="/dashboard"
                         className="flex items-center gap-2"
                         onClick={handleMobileClose}
                     >
@@ -107,7 +108,7 @@ export function Sidebar({ isMobileOpen: externalMobileOpen, onMobileClose: exter
                     {navItems.map((item) => {
                         const Icon = item.icon
                         const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
-                        
+
                         return (
                             <Link
                                 key={item.href}
@@ -159,7 +160,7 @@ export function Sidebar({ isMobileOpen: externalMobileOpen, onMobileClose: exter
                             {navItems.map((item) => {
                                 const Icon = item.icon
                                 const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
-                                
+
                                 return (
                                     <Link
                                         key={item.href}
@@ -205,7 +206,7 @@ export function Sidebar({ isMobileOpen: externalMobileOpen, onMobileClose: exter
                             {navItems.map((item) => {
                                 const Icon = item.icon
                                 const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
-                                
+
                                 return (
                                     <Link
                                         key={item.href}

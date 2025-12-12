@@ -12,14 +12,24 @@ const networks = {
     localnet: { url: 'http://localhost:9000' },
 };
 
-export function Providers({ children }: { children: ReactNode }) {
+import { WagmiProvider } from 'wagmi';
+import { wagmiConfig } from '@/wallets/config';
+import { SolanaProvider } from '@/wallets/solana-provider';
+
+export function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient());
 
     return (
-        <QueryClientProvider client={queryClient}>
-            <SuiClientProvider networks={networks} defaultNetwork="testnet">
-                <WalletProvider autoConnect>{children}</WalletProvider>
-            </SuiClientProvider>
-        </QueryClientProvider>
+        <WagmiProvider config={wagmiConfig}>
+            <QueryClientProvider client={queryClient}>
+                <SuiClientProvider networks={networks} defaultNetwork="testnet">
+                    <WalletProvider autoConnect>
+                        <SolanaProvider>
+                            {children}
+                        </SolanaProvider>
+                    </WalletProvider>
+                </SuiClientProvider>
+            </QueryClientProvider>
+        </WagmiProvider>
     );
 }

@@ -1,85 +1,23 @@
-'use client';
+/**
+ * EVM Wallet Adapter
+ * 
+ * This file is a placeholder for future EVM wallet adapter implementation.
+ * Currently, EVM wallet connections are handled directly via Wagmi hooks
+ * in the WalletConnectButton component (see src/providers/wagmi-provider.tsx).
+ * 
+ * To use EVM wallets in your app:
+ * 1. Import useAccount, useConnect from 'wagmi' in your component
+ * 2. Use the WalletConnectButton component for connection UI
+ * 3. Access wallet state via Wagmi hooks
+ * 
+ * Supported chains: Base, Avalanche, Lisk
+ */
 
-import { WalletAdapter, ChainId } from './index';
-import { ChainAPI } from '@/lib/chain-interface';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { base, avalanche, lisk } from 'wagmi/chains';
+export const EVM_CHAINS = {
+    BASE: 8453,
+    AVALANCHE: 43114,
+    LISK: 1135,
+} as const;
 
-export class EVMAdapter implements WalletAdapter {
-    private chainId: ChainId;
-    private wagmiChainId: number;
+export type EVMChainId = typeof EVM_CHAINS[keyof typeof EVM_CHAINS];
 
-    constructor(chainId: ChainId) {
-        this.chainId = chainId;
-
-        // Map our ChainId to Wagmi chain IDs
-        switch (chainId) {
-            case ChainId.BASE:
-                this.wagmiChainId = base.id;
-                break;
-            case ChainId.AVALANCHE:
-                this.wagmiChainId = avalanche.id;
-                break;
-            case ChainId.LISK:
-                this.wagmiChainId = lisk.id;
-                break;
-            default:
-                throw new Error(`Unsupported EVM chain: ${chainId}`);
-        }
-    }
-
-    async connect(): Promise<string | null> {
-        // This will be called from a component that has access to wagmi hooks
-        // For now, return null - actual connection happens via wagmi hooks in components
-        return null;
-    }
-
-    async disconnect(): Promise<void> {
-        // Disconnect happens via wagmi hooks in components
-    }
-
-    async getAccount(): Promise<string | null> {
-        // Account retrieval happens via wagmi hooks in components
-        return null;
-    }
-
-    getChainId(): ChainId {
-        return this.chainId;
-    }
-
-    getChainAPI(): ChainAPI {
-        // Return a basic ChainAPI implementation for EVM chains
-        return {
-            getBalance: async (address: string) => {
-                // TODO: Implement using wagmi/viem
-                return '0';
-            },
-            sendTransaction: async (params: any) => {
-                // TODO: Implement using wagmi
-                return '';
-            },
-            // Add other required ChainAPI methods
-        } as ChainAPI;
-    }
-}
-
-// Hook-based adapter for use in React components
-export function useEVMWallet(chainId: ChainId) {
-    const { address, isConnected } = useAccount();
-    const { connect, connectors } = useConnect();
-    const { disconnect } = useDisconnect();
-
-    return {
-        address: address || null,
-        isConnected,
-        connect: async () => {
-            const connector = connectors[0]; // Use first available connector (WalletConnect)
-            if (connector) {
-                connect({ connector });
-            }
-        },
-        disconnect: async () => {
-            disconnect();
-        },
-    };
-}

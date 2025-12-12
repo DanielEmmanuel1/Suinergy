@@ -19,15 +19,15 @@ export default function MarketsPage() {
                 <TabbedContainer
                     label="Markets"
                     className="w-full"
-                    tabClassName="bg-white dark:bg-gradient-to-r dark:from-[#1a1a1a] dark:to-[#121212]"
-                    contentClassName="bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]"
+                    tabClassName="bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212] dark:bg-gradient-to-r dark:from-[#1a1a1a] dark:to-[#121212]"
+                    contentClassName="bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212] dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]"
                 >
                     <div className="flex items-start justify-between mb-6 sm:mb-8 gap-4">
                         <div className="text-left flex-1">
                             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-2 font-heading">
                                 Markets
                             </h1>
-                            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl">
+                            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground dark:text-white/70 max-w-2xl">
                                 Explore yield opportunities across supported blockchains. Select a chain to view available vaults.
                             </p>
                         </div>

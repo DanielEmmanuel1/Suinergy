@@ -98,7 +98,7 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
             case 'deposit':
                 return 'bg-brand-gradient'
             case 'withdrawal':
-                return 'bg-white border border-black/20'
+                return 'bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212] border border-black/20 dark:border-white/10'
             case 'earnings':
                 return 'bg-brand-gradient'
             case 'claim':
@@ -185,7 +185,7 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
                                     Transaction Type
                                 </label>
                                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                                    <SelectTrigger className="h-11 bg-white border-black/10 hover:border-[#1055C9]/30 transition-colors">
+                                    <SelectTrigger className="h-11 bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212] border-black/10 dark:border-white/10 hover:border-[#1055C9]/30 transition-colors dark:text-white">
                                         <SelectValue placeholder="All types" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -204,7 +204,7 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
                                     Strategy
                                 </label>
                                 <Select value={strategyFilter} onValueChange={setStrategyFilter}>
-                                    <SelectTrigger className="h-11 bg-white border-black/10 hover:border-[#1055C9]/30 transition-colors">
+                                    <SelectTrigger className="h-11 bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212] border-black/10 dark:border-white/10 hover:border-[#1055C9]/30 transition-colors dark:text-white">
                                         <SelectValue placeholder="All strategies" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -227,7 +227,7 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
                                         placeholder="0x..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="h-11 pl-10 bg-white border-black/10 hover:border-[#1055C9]/30 transition-colors"
+                                        className="h-11 pl-10 bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212] border-black/10 dark:border-white/10 hover:border-[#1055C9]/30 transition-colors dark:text-white dark:placeholder:text-white/50"
                                     />
                                 </div>
                             </div>

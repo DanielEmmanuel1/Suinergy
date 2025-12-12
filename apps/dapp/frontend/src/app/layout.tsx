@@ -34,7 +34,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" className={`${outfit.variable} ${bungee.variable}`}>
-            <body className="font-sans antialiased bg-[#f4f3f0] text-black">
+            <body className="font-sans antialiased bg-[#f4f3f0] text-black dark:text-white">
                 <Providers>
                     <TooltipProvider>
                         {children}

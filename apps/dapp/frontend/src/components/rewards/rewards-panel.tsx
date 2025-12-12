@@ -67,7 +67,7 @@ export function RewardsPanel() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-black">
+                            <div className="text-3xl font-bold text-black dark:text-white">
                                 {mockRewards.sgpPoints.toLocaleString()}
                             </div>
                             <div className="text-sm text-muted-foreground mt-1">Loyalty Points</div>
@@ -103,10 +103,10 @@ export function RewardsPanel() {
                             {mockRewards.receiptTokens.map((token) => (
                                 <div
                                     key={token.id}
-                                    className="flex items-center justify-between p-4 rounded-xl bg-[#f4f3f0] border border-black/10"
+                                    className="flex items-center justify-between p-4 rounded-xl bg-[#f4f3f0] dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212] border border-black/10 dark:border-white/10"
                                 >
                                     <div>
-                                        <div className="font-semibold text-black">{token.name}</div>
+                                        <div className="font-semibold text-black dark:text-white">{token.name}</div>
                                         <div className="text-sm text-muted-foreground">
                                             {token.amount.toLocaleString()} tokens
                                         </div>
@@ -133,14 +133,14 @@ export function RewardsPanel() {
                             {mockRewards.recentActivity.map((activity, index) => (
                                 <div
                                     key={index}
-                                    className="flex items-center justify-between p-3 rounded-lg bg-[#f4f3f0]"
+                                    className="flex items-center justify-between p-3 rounded-lg bg-[#f4f3f0] dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-brand-gradient flex items-center justify-center">
                                             <Gift className="w-5 h-5 text-white" />
                                         </div>
                                         <div>
-                                            <div className="font-medium text-black">{activity.description}</div>
+                                            <div className="font-medium text-black dark:text-white">{activity.description}</div>
                                             <div className="text-xs text-muted-foreground">{activity.timestamp}</div>
                                         </div>
                                     </div>

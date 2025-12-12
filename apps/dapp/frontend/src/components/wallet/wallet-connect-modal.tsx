@@ -238,8 +238,8 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                             "hover:bg-[#f4f3f0] dark:hover:bg-white/5 transition-all duration-200",
                                             "border-2 rounded-lg bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]",
                                             wallet.detected
-                                                ? "border-black/10 hover:border-[#1055C9] cursor-pointer"
-                                                : "border-black/5 cursor-not-allowed",
+                                                ? "border-black/10 dark:border-white/10 hover:border-[#1055C9] cursor-pointer"
+                                                : "border-black/5 dark:border-white/5 cursor-not-allowed",
                                             isConnecting && "border-[#1055C9]"
                                         )}
                                         onClick={() => wallet.detected && !isPending && handleConnect(wallet.wallet)}
@@ -256,7 +256,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                                         target.style.display = 'none'
                                                         if (target.parentElement) {
                                                             const fallback = document.createElement('div')
-                                                            fallback.className = 'w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-[#f4f3f0] rounded-full flex items-center justify-center text-lg sm:text-xl'
+                                                            fallback.className = 'w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-[#f4f3f0] dark:bg-white/10 rounded-full flex items-center justify-center text-lg sm:text-xl'
                                                             fallback.textContent = wallet.name.charAt(0).toUpperCase()
                                                             target.parentElement.appendChild(fallback)
                                                         }
@@ -264,11 +264,11 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-1 bg-[#f4f3f0] rounded-full flex items-center justify-center text-lg sm:text-xl font-semibold text-[#1055C9]">
+                                            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-1 bg-[#f4f3f0] dark:bg-white/10 rounded-full flex items-center justify-center text-lg sm:text-xl font-semibold text-[#1055C9] dark:text-white">
                                                 {wallet.name.charAt(0).toUpperCase()}
                                             </div>
                                         )}
-                                        <span className="text-[10px] sm:text-xs md:text-sm font-medium text-center text-black">
+                                        <span className="text-[10px] sm:text-xs md:text-sm font-medium text-center text-black dark:text-white">
                                             {wallet.name}
                                         </span>
                                         {isConnecting && (
@@ -288,7 +288,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                     {/* Other Options Section */}
                     {otherWallets.length > 0 && (
                         <div>
-                            <h3 className="text-xs sm:text-sm font-semibold text-black mb-2 sm:mb-3">Other options</h3>
+                            <h3 className="text-xs sm:text-sm font-semibold text-black dark:text-white mb-2 sm:mb-3">Other options</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {otherWallets.map((wallet) => {
                                     const isConnecting = connectingWallet === wallet.name
@@ -301,7 +301,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                             className={cn(
                                                 "h-auto flex flex-row items-center justify-start gap-2 sm:gap-3 p-2 sm:p-3",
                                                 "hover:bg-[#f4f3f0] transition-all duration-200",
-                                                "border border-black/10 rounded-lg bg-white",
+                                                "border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]",
                                                 wallet.detected
                                                     ? "hover:border-[#1055C9] cursor-pointer"
                                                     : "cursor-not-allowed",
@@ -321,7 +321,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                                             target.style.display = 'none'
                                                             if (target.parentElement) {
                                                                 const fallback = document.createElement('div')
-                                                                fallback.className = 'w-7 h-7 sm:w-8 sm:h-8 bg-[#f4f3f0] rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold text-[#1055C9]'
+                                                                fallback.className = 'w-7 h-7 sm:w-8 sm:h-8 bg-[#f4f3f0] dark:bg-white/10 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold text-[#1055C9] dark:text-white'
                                                                 fallback.textContent = wallet.name.charAt(0).toUpperCase()
                                                                 target.parentElement.appendChild(fallback)
                                                             }
@@ -329,12 +329,12 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                                     />
                                                 </div>
                                             ) : (
-                                                <div className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0 bg-[#f4f3f0] rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold text-[#1055C9]">
+                                                <div className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0 bg-[#f4f3f0] dark:bg-white/10 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold text-[#1055C9] dark:text-white">
                                                     {wallet.name.charAt(0).toUpperCase()}
                                                 </div>
                                             )}
                                             <div className="flex-1 flex items-center justify-between min-w-0">
-                                                <span className="text-xs sm:text-sm font-medium text-black truncate">
+                                                <span className="text-xs sm:text-sm font-medium text-black dark:text-white truncate">
                                                     {wallet.name}
                                                 </span>
                                                 {isConnecting && (
@@ -357,7 +357,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                     )}
 
                     {/* Don't have wallet option */}
-                    <div className="pt-2 sm:pt-4 border-t border-black/10">
+                    <div className="pt-2 sm:pt-4 border-t border-black/10 dark:border-white/10">
                         <button
                             type="button"
                             onClick={handleNoWallet}

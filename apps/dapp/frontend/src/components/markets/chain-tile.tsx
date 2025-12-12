@@ -32,7 +32,7 @@ export function ChainTile({ chain }: ChainTileProps) {
                             <ArrowRight className="w-4 h-4" />
                         </div>
                     </div>
-                    <CardTitle className="text-xl group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-brand-gradient transition-all">
+                    <CardTitle className="text-xl group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-brand-gradient transition-all dark:text-white">
                         {chain.name}
                     </CardTitle>
                 </CardHeader>
@@ -43,11 +43,11 @@ export function ChainTile({ chain }: ChainTileProps) {
                     <div className="flex items-center gap-4 text-sm font-medium">
                         <div className="flex flex-col">
                             <span className="text-muted-foreground text-xs">Strategies</span>
-                            <span>{chain.strategies.length} Active</span>
+                            <span className="dark:text-white">{chain.strategies.length} Active</span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-muted-foreground text-xs">Total TVL</span>
-                            <span>${(chain.strategies.reduce((acc, s) => acc + s.tvl, 0) / 1000000).toFixed(1)}M</span>
+                            <span className="dark:text-white">${(chain.strategies.reduce((acc, s) => acc + s.tvl, 0) / 1000000).toFixed(1)}M</span>
                         </div>
                     </div>
                 </CardContent>

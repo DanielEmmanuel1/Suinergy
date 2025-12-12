@@ -153,7 +153,7 @@ export function ProfilePanel() {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between p-4 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10">
                                 <span className="text-muted-foreground font-medium">Wallet Address</span>
-                                <span className="font-mono text-sm text-black font-semibold">
+                                <span className="font-mono text-sm text-black dark:text-white font-semibold">
                                     {account?.address.slice(0, 8)}...{account?.address.slice(-6)}
                                 </span>
                             </div>
@@ -215,7 +215,7 @@ export function ProfilePanel() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-black">
+                            <div className="text-3xl font-bold text-black dark:text-white">
                                 ${isNaN(totalEarnedUsd) || !isFinite(totalEarnedUsd) ? '0.00' : totalEarnedUsd.toFixed(2)}
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
@@ -233,7 +233,7 @@ export function ProfilePanel() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-black">
+                            <div className="text-3xl font-bold text-black dark:text-white">
                                 {formatCurrency(netPosition)}
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
@@ -321,7 +321,7 @@ export function ProfilePanel() {
                                                     {position.strategyName.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <div className="font-semibold text-black text-lg">{position.strategyName}</div>
+                                                    <div className="font-semibold text-black dark:text-white text-lg">{position.strategyName}</div>
                                                     <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
                                                         <Badge variant="secondary" className="text-xs">
                                                             {position.receiptTokenBalance.toLocaleString()} tokens
@@ -331,7 +331,7 @@ export function ProfilePanel() {
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <div className="font-bold text-black text-xl">
+                                                <div className="font-bold text-black dark:text-white text-xl">
                                                     ${(position.amount * suiPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </div>
                                                 <div className="text-sm font-semibold text-transparent bg-clip-text bg-brand-gradient mt-1">
@@ -374,7 +374,7 @@ export function ProfilePanel() {
                     <CardContent className="pt-6">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div className="text-center p-6 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10 hover:shadow-lg transition-shadow duration-200">
-                                <div className="text-3xl font-bold text-black mb-2">
+                                <div className="text-3xl font-bold text-black dark:text-white mb-2">
                                     ${isNaN(totalEarnedUsd) || !isFinite(totalEarnedUsd) ? '0.00' : totalEarnedUsd.toFixed(2)}
                                 </div>
                                 <div className="text-sm text-muted-foreground font-medium">Total Earned</div>
@@ -386,7 +386,7 @@ export function ProfilePanel() {
                                 <div className="text-sm text-muted-foreground font-medium">Est. Monthly</div>
                             </div>
                             <div className="text-center p-6 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10 hover:shadow-lg transition-shadow duration-200">
-                                <div className="text-3xl font-bold text-black mb-2">
+                                <div className="text-3xl font-bold text-black dark:text-white mb-2">
                                     ${isNaN(estimatedMonthlyEarningsUsd) || !isFinite(estimatedMonthlyEarningsUsd) ? '0.00' : (estimatedMonthlyEarningsUsd / 30).toFixed(2)}
                                 </div>
                                 <div className="text-sm text-muted-foreground font-medium">Est. Daily</div>
@@ -418,11 +418,11 @@ export function ProfilePanel() {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="p-6 rounded-xl bg-brand-gradient text-white hover:scale-105 transition-transform duration-200 shadow-lg">
                                     <div className="text-sm text-white/90 mb-2 font-medium">$SYN Balance</div>
-                                    <div className="text-3xl font-bold">{rewards.synBalance.toLocaleString()}</div>
+                                    <div className="text-3xl font-bold text-black dark:text-white">{rewards.synBalance.toLocaleString()}</div>
                                 </div>
                                 <div className="p-6 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10 hover:shadow-lg transition-shadow duration-200">
                                     <div className="text-sm text-muted-foreground mb-2 font-medium">SGP Points</div>
-                                    <div className="text-3xl font-bold text-black">{rewards.sgpPoints.toLocaleString()}</div>
+                                    <div className="text-3xl font-bold text-black dark:text-white">{rewards.sgpPoints.toLocaleString()}</div>
                                 </div>
                                 <div className="p-6 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10 hover:shadow-lg transition-shadow duration-200">
                                     <div className="text-sm text-muted-foreground mb-2 font-medium">Current Tier</div>

@@ -85,7 +85,7 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
             case 'deposit':
                 return <ArrowDownCircle className="w-5 h-5 text-white" />
             case 'withdrawal':
-                return <ArrowUpCircle className="w-5 h-5 text-black" />
+                return <ArrowUpCircle className="w-5 h-5 text-black dark:text-white" />
             case 'earnings':
                 return <Coins className="w-5 h-5 text-white" />
             case 'claim':
@@ -162,14 +162,14 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <Filter className="w-4 h-4 text-muted-foreground" />
-                                <h3 className="font-semibold text-black">Filter Transactions</h3>
+                                <h3 className="font-semibold text-black dark:text-white">Filter Transactions</h3>
                             </div>
                             {hasActiveFilters && (
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={clearAllFilters}
-                                    className="h-8 gap-2 text-muted-foreground hover:text-black"
+                                    className="h-8 gap-2 text-muted-foreground hover:text-black dark:hover:text-white"
                                 >
                                     <X className="w-3 h-3" />
                                     Clear all
@@ -304,22 +304,22 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1.5">
-                                                    <span className="font-semibold text-black capitalize text-base">
+                                                    <span className="font-semibold text-black dark:text-white capitalize text-base">
                                                         {tx.type}
                                                     </span>
                                                     {getStatusBadge(tx.status)}
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                                                    <span className="font-semibold text-black">
+                                                    <span className="font-semibold text-black dark:text-white">
                                                         {formatCurrency(tx.amount)} {tx.token}
                                                     </span>
                                                     {showStrategy && tx.strategyName && (
                                                         <>
-                                                            <span className="hidden sm:inline text-black/20">•</span>
+                                                            <span className="hidden sm:inline text-black/20 dark:text-white/20">•</span>
                                                             <span className="truncate max-w-[200px]">{tx.strategyName}</span>
                                                         </>
                                                     )}
-                                                    <span className="hidden sm:inline text-black/20">•</span>
+                                                    <span className="hidden sm:inline text-black/20 dark:text-white/20">•</span>
                                                     <span className="text-xs">{formatDistanceToNow(tx.timestamp, { addSuffix: true })}</span>
                                                 </div>
                                             </div>
@@ -331,7 +331,7 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
                                                 href={`https://suiscan.xyz/mainnet/tx/${tx.txHash}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="p-2 rounded-lg hover:bg-[#f4f3f0] text-muted-foreground hover:text-black transition-colors"
+                                                className="p-2 rounded-lg hover:bg-[#f4f3f0] dark:hover:bg-white/5 text-muted-foreground hover:text-black dark:hover:text-white transition-colors"
                                                 title="View on explorer"
                                             >
                                                 <ExternalLink className="w-4 h-4" />
@@ -376,7 +376,7 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
                                             <ChevronLeft className="w-4 h-4" />
                                         </Button>
                                         <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#f4f3f0] border border-black/5">
-                                            <span className="text-sm font-semibold text-black">{currentPage}</span>
+                                            <span className="text-sm font-semibold text-black dark:text-white">{currentPage}</span>
                                             <span className="text-sm text-muted-foreground">of {totalPages}</span>
                                         </div>
                                         <Button

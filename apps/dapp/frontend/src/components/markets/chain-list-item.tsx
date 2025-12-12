@@ -31,7 +31,7 @@ export function ChainListItem({ chain }: ChainListItemProps) {
                         </div>
 
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-2xl font-bold mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-brand-gradient transition-all">
+                            <h3 className="text-2xl font-bold mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-brand-gradient transition-all dark:text-white">
                                 {chain.name}
                             </h3>
                             <p className="text-muted-foreground text-sm">
@@ -45,11 +45,11 @@ export function ChainListItem({ chain }: ChainListItemProps) {
                         <div className="flex items-center gap-6 text-sm font-medium">
                             <div className="flex flex-col items-center">
                                 <span className="text-muted-foreground text-xs mb-1">Strategies</span>
-                                <span className="text-lg font-bold">{chain.strategies.length} Active</span>
+                                <span className="text-lg font-bold dark:text-white">{chain.strategies.length} Active</span>
                             </div>
                             <div className="flex flex-col items-center">
                                 <span className="text-muted-foreground text-xs mb-1">Total TVL</span>
-                                <span className="text-lg font-bold">${(chain.strategies.reduce((acc, s) => acc + s.tvl, 0) / 1000000).toFixed(1)}M</span>
+                                <span className="text-lg font-bold dark:text-white">${(chain.strategies.reduce((acc, s) => acc + s.tvl, 0) / 1000000).toFixed(1)}M</span>
                             </div>
                         </div>
 

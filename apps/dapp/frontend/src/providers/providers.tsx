@@ -5,6 +5,7 @@ import { getFullnodeUrl } from '@mysten/sui/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { ThemeProvider } from '@/contexts/theme-context';
 
 const networks = {
     mainnet: { url: getFullnodeUrl('mainnet') },
@@ -28,16 +29,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient());
 
     return (
-        <WagmiClientProvider>
-            <SuiClientProvider networks={networks} defaultNetwork="testnet">
-                <WalletProvider autoConnect>
-                    <QueryClientProvider client={queryClient}>
-                        <SolanaClientProvider>
-                            {children}
-                        </SolanaClientProvider>
-                    </QueryClientProvider>
-                </WalletProvider>
-            </SuiClientProvider>
-        </WagmiClientProvider>
+        <ThemeProvider>
+            <WagmiClientProvider>
+                <SuiClientProvider networks={networks} defaultNetwork="testnet">
+                    <WalletProvider autoConnect>
+                        <QueryClientProvider client={queryClient}>
+                            <SolanaClientProvider>
+                                {children}
+                            </SolanaClientProvider>
+                        </QueryClientProvider>
+                    </WalletProvider>
+                </SuiClientProvider>
+            </WagmiClientProvider>
+        </ThemeProvider>
     );
 }

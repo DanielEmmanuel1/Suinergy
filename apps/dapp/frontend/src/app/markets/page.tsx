@@ -19,8 +19,8 @@ export default function MarketsPage() {
                 <TabbedContainer
                     label="Markets"
                     className="w-full"
-                    tabClassName="bg-white"
-                    contentClassName="bg-white"
+                    tabClassName="bg-white dark:bg-gradient-to-r dark:from-[#1a1a1a] dark:to-[#121212]"
+                    contentClassName="bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]"
                 >
                     <div className="flex items-start justify-between mb-6 sm:mb-8 gap-4">
                         <div className="text-left flex-1">
@@ -33,14 +33,14 @@ export default function MarketsPage() {
                         </div>
 
                         {/* View Toggle */}
-                        <div className="flex items-center gap-2 bg-[#f4f3f0] p-1 rounded-lg">
+                        <div className="flex items-center gap-2 bg-[#f4f3f0] dark:bg-white/5 p-1 rounded-lg">
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setViewMode('list')}
                                 className={cn(
                                     "gap-2 h-9 transition-all",
-                                    viewMode === 'list' && "bg-white shadow-sm"
+                                    viewMode === 'list' && "bg-white dark:bg-white/10 shadow-sm"
                                 )}
                             >
                                 <List className="w-4 h-4" />
@@ -52,7 +52,7 @@ export default function MarketsPage() {
                                 onClick={() => setViewMode('grid')}
                                 className={cn(
                                     "gap-2 h-9 transition-all",
-                                    viewMode === 'grid' && "bg-white shadow-sm"
+                                    viewMode === 'grid' && "bg-white dark:bg-white/10 shadow-sm"
                                 )}
                             >
                                 <LayoutGrid className="w-4 h-4" />

@@ -23,17 +23,15 @@ export function TabbedContainer({
         <div className={cn('relative flex flex-col w-full', className)} {...props}>
             {/* Tab Header */}
             <div className="flex items-end relative z-10 -mb-[1px] ml-px">
-                <div className={cn("bg-[#f4f3f0] px-6 py-2 rounded-t-xl border-t border-l border-r border-black/10", tabClassName)}>
-                    <span className={cn("text-xs font-bold tracking-wider uppercase font-heading", 
-                        tabClassName?.includes('bg-[#111]') || tabClassName?.includes('bg-black') || tabClassName?.includes('bg-[#000000]') || tabClassName?.includes('bg-[#000]') ? "text-white" : "text-black/60"
-                    )}>
+                <div className={cn("bg-[#f4f3f0] dark:bg-gradient-to-r dark:from-[#1a1a1a] dark:to-[#121212] px-6 py-2 rounded-t-xl border-t border-l border-r border-black/10 dark:border-white/5", tabClassName)}>
+                    <span className="text-xs font-bold tracking-wider uppercase font-heading text-black/60 dark:text-white/80">
                         {label}
                     </span>
                 </div>
             </div>
 
             {/* Main Content Container */}
-            <div className={cn("relative z-0 bg-[#f4f3f0] rounded-b-xl rounded-tr-xl border border-black/10 p-8 md:p-12 overflow-hidden shadow-sm", contentClassName)}>
+            <div className={cn("relative z-0 bg-[#f4f3f0] dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212] rounded-b-xl rounded-tr-xl border border-black/10 dark:border-white/5 p-8 md:p-12 overflow-hidden shadow-sm dark:shadow-lg dark:shadow-brand-gradient/5", contentClassName)}>
                 {action && (
                     <div className="absolute top-6 right-6 z-20">
                         {action}

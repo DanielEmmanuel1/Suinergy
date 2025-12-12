@@ -30,8 +30,8 @@ export function RewardsPanel() {
             <TabbedContainer
                 label="Rewards"
                 className="w-full"
-                tabClassName="bg-white"
-                contentClassName="bg-white"
+                tabClassName="bg-white dark:bg-gradient-to-r dark:from-[#1a1a1a] dark:to-[#121212]"
+                contentClassName="bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]"
             >
                 <div className="text-left mb-12">
                     <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6 font-heading">

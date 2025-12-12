@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from 'react'
 import Lenis from 'lenis'
 import { Sidebar } from './sidebar'
 import { WalletButton } from '../wallet/wallet-button'
+import { ThemeToggle } from '../theme-toggle'
 import { Menu, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAdapterRegistry } from '@/hooks/use-adapter-registry'
@@ -43,22 +44,22 @@ export function MainLayout({ children }: MainLayoutProps) {
     }, [])
 
     return (
-        <div className="min-h-screen bg-[#f4f3f0] flex">
+        <div className="min-h-screen bg-[#f4f3f0] dark:bg-[#121212] flex transition-colors duration-200">
             <Sidebar isMobileOpen={isMobileMenuOpen} onMobileClose={() => setIsMobileMenuOpen(false)} />
             <main className="flex-1 flex flex-col min-h-screen w-full lg:w-auto">
                 {/* Top Bar */}
-                <header className="sticky top-0 z-30 bg-white border-b border-black/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+                <header className="sticky top-0 z-30 bg-white dark:bg-gradient-to-r dark:from-[#1a1a1a] dark:to-[#121212] border-b border-black/10 dark:border-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between transition-colors duration-200 dark:shadow-lg dark:shadow-brand-gradient/5">
                     <div className="flex items-center gap-3">
-                        <h1 className="text-lg sm:text-xl font-semibold text-black font-heading">Suinergy dApp</h1>
+                        <h1 className="text-lg sm:text-xl font-semibold text-black dark:text-white font-heading">Suinergy dApp</h1>
                         <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 border border-orange-300 rounded">
+                            <span className="px-2 py-0.5 text-xs font-medium bg-orange-100 dark:bg-gradient-to-r dark:from-orange-900/40 dark:to-orange-800/40 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700/50 rounded">
                                 TESTNET
                             </span>
                             {hasMockAdapters && (
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-700 border border-yellow-300 rounded flex items-center gap-1">
+                                            <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 dark:bg-gradient-to-r dark:from-yellow-900/40 dark:to-yellow-800/40 text-yellow-700 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-700/50 rounded flex items-center gap-1">
                                                 <AlertTriangle className="w-3 h-3" />
                                                 MOCK
                                             </span>
@@ -72,6 +73,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        <ThemeToggle />
                         <Button
                             variant="outline"
                             size="icon"

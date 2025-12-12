@@ -40,8 +40,8 @@ export function StrategyList({ strategies, chainName }: StrategyListProps) {
             <TabbedContainer
                 label="Strategies"
                 className="w-full"
-                tabClassName="bg-white"
-                contentClassName="bg-white"
+                tabClassName="bg-white dark:bg-gradient-to-r dark:from-[#1a1a1a] dark:to-[#121212]"
+                contentClassName="bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]"
             >
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">

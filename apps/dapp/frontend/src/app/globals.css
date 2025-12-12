@@ -2,120 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 0 0% 100%;
-  /* #FFFFFF */
-  --foreground: 0 0% 0%;
-  /* #000000 */
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 0%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 0%;
-  --primary: 212 80% 42%;
-  /* #1565c0 */
-  --primary-foreground: 0 0% 100%;
-  --secondary: 40 17% 95%;
-  /* #f4f3f0 */
-  --secondary-foreground: 0 0% 0%;
-  --muted: 40 17% 95%;
-  --muted-foreground: 0 0% 45%;
-  --accent: 359 63% 44%;
-  /* #b92b27 */
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 90%;
-  --input: 0 0% 90%;
-  --ring: 212 80% 42%;
-  --radius: 0.5rem;
-}
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 0 0% 3.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 3.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 3.9%;
+        --primary: 0 0% 9%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 0 0% 96.1%;
+        --secondary-foreground: 0 0% 9%;
+        --muted: 0 0% 96.1%;
+        --muted-foreground: 0 0% 45.1%;
+        --accent: 0 0% 96.1%;
+        --accent-foreground: 0 0% 9%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 89.8%;
+        --input: 0 0% 89.8%;
+        --ring: 0 0% 3.9%;
+        --radius: 0.5rem;
+    }
 
-.dark {
-  --background: 0 0% 0%;
-  --foreground: 0 0% 100%;
-  --card: 0 0% 5%;
-  --card-foreground: 0 0% 100%;
-  --popover: 0 0% 5%;
-  --popover-foreground: 0 0% 100%;
-  --primary: 212 80% 42%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 10%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 0 0% 10%;
-  --muted-foreground: 0 0% 65%;
-  --accent: 359 63% 44%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 15%;
-  --input: 0 0% 15%;
-  --ring: 212 80% 42%;
+    .dark {
+        --background: 220 13% 7%;
+        --foreground: 0 0% 100%;
+        --card: 220 13% 7%;
+        --card-foreground: 0 0% 100%;
+        --popover: 220 13% 10%;
+        --popover-foreground: 0 0% 100%;
+        --primary: 0 0% 100%;
+        --primary-foreground: 220 13% 7%;
+        --secondary: 220 13% 15%;
+        --secondary-foreground: 0 0% 100%;
+        --muted: 220 13% 15%;
+        --muted-foreground: 0 0% 70%;
+        --accent: 220 13% 15%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 220 13% 20%;
+        --input: 220 13% 20%;
+        --ring: 0 0% 83.1%;
+    }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+    * {
+        @apply border-border;
+    }
 
-  body {
-    @apply bg-background text-foreground;
-  }
+    body {
+        @apply bg-background text-foreground;
+    }
 }
 
-@keyframes gradient {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-/* Gradient Borders & Utilities */
+/* Dark mode gradient enhancements */
 @layer utilities {
-  .gradient-border {
-    position: relative;
-    background: white;
-    background-clip: padding-box;
-    border: solid 2px transparent;
-  }
+    .dark .gradient-card {
+        background: linear-gradient(135deg, rgba(185, 43, 39, 0.1) 0%, rgba(21, 101, 192, 0.1) 100%);
+        border: 1px solid rgba(185, 43, 39, 0.2);
+    }
 
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: -1;
-    margin: -2px;
-    border-radius: inherit;
-    background: linear-gradient(to right, #b92b27, #1565c0);
-  }
+    .dark .gradient-card-hover:hover {
+        background: linear-gradient(135deg, rgba(185, 43, 39, 0.15) 0%, rgba(21, 101, 192, 0.15) 100%);
+        border-color: rgba(185, 43, 39, 0.3);
+    }
 
-  .gradient-border-hover {
-    transition: all 0.3s ease;
-  }
-
-  .gradient-border-hover:hover {
-    box-shadow: 0 0 20px rgba(185, 43, 39, 0.3), 0 0 40px rgba(21, 101, 192, 0.2);
-  }
-
-  /* Text gradient utility */
-  .text-brand-gradient {
-    @apply text-transparent bg-clip-text;
-    background-image: linear-gradient(to right, #b92b27, #1565c0);
-  }
-
-  /* Hide scrollbar but keep scrolling functionality */
-  .custom-scrollbar-hide {
-    -ms-overflow-style: none !important; /* IE and Edge */
-    scrollbar-width: none !important; /* Firefox */
-  }
-
-  .custom-scrollbar-hide::-webkit-scrollbar {
-    display: none !important; /* Chrome, Safari, Opera */
-    width: 0 !important;
-    height: 0 !important;
-  }
+    .dark .gradient-glow {
+        box-shadow: 0 0 20px rgba(185, 43, 39, 0.1), 0 0 40px rgba(21, 101, 192, 0.1);
+    }
 }

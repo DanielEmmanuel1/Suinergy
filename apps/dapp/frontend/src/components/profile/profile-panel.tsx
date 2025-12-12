@@ -103,8 +103,8 @@ export function ProfilePanel() {
             <TabbedContainer
                 label="Profile"
                 className="w-full"
-                tabClassName="bg-white"
-                contentClassName="bg-white"
+                tabClassName="bg-white dark:bg-gradient-to-r dark:from-[#1a1a1a] dark:to-[#121212]"
+                contentClassName="bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]"
             >
                 {/* Hero Header with Multichain Indicator */}
                 <div className="relative mb-8 overflow-hidden rounded-2xl bg-brand-gradient p-8 text-white shadow-lg">
@@ -151,13 +151,13 @@ export function ProfilePanel() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 rounded-xl bg-[#f4f3f0] border border-black/5">
+                            <div className="flex items-center justify-between p-4 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10">
                                 <span className="text-muted-foreground font-medium">Wallet Address</span>
                                 <span className="font-mono text-sm text-black font-semibold">
                                     {account?.address.slice(0, 8)}...{account?.address.slice(-6)}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between p-4 rounded-xl bg-[#f4f3f0] border border-black/5">
+                            <div className="flex items-center justify-between p-4 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10">
                                 <span className="text-muted-foreground font-medium">Network</span>
                                 <Badge variant="secondary" className="bg-brand-gradient text-white border-none">
                                     Sui Testnet
@@ -257,7 +257,7 @@ export function ProfilePanel() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 flex-wrap">
-                                <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-white border border-black/10">
+                                <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-white dark:bg-white/10 border border-black/10 dark:border-white/10">
                                     <div className="w-3 h-3 rounded-full bg-brand-gradient"></div>
                                     <span className="text-muted-foreground font-medium">Portfolio Value</span>
                                 </div>
@@ -272,7 +272,7 @@ export function ProfilePanel() {
                                                 "transition-all duration-200",
                                                 portfolioTimePeriod === period
                                                     ? 'bg-brand-gradient text-white shadow-lg'
-                                                    : 'hover:bg-[#f4f3f0]'
+                                                    : 'hover:bg-[#f4f3f0] dark:hover:bg-white/5'
                                             )}
                                         >
                                             {period}
@@ -373,19 +373,19 @@ export function ProfilePanel() {
                     </div>
                     <CardContent className="pt-6">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div className="text-center p-6 rounded-xl bg-[#f4f3f0] border border-black/5 hover:shadow-lg transition-shadow duration-200">
+                            <div className="text-center p-6 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10 hover:shadow-lg transition-shadow duration-200">
                                 <div className="text-3xl font-bold text-black mb-2">
                                     ${isNaN(totalEarnedUsd) || !isFinite(totalEarnedUsd) ? '0.00' : totalEarnedUsd.toFixed(2)}
                                 </div>
                                 <div className="text-sm text-muted-foreground font-medium">Total Earned</div>
                             </div>
-                            <div className="text-center p-6 rounded-xl bg-[#f4f3f0] border border-black/5 hover:shadow-lg transition-shadow duration-200">
+                            <div className="text-center p-6 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10 hover:shadow-lg transition-shadow duration-200">
                                 <div className="text-3xl font-bold text-transparent bg-clip-text bg-brand-gradient mb-2">
                                     ${isNaN(estimatedMonthlyEarningsUsd) || !isFinite(estimatedMonthlyEarningsUsd) ? '0.00' : estimatedMonthlyEarningsUsd.toFixed(2)}
                                 </div>
                                 <div className="text-sm text-muted-foreground font-medium">Est. Monthly</div>
                             </div>
-                            <div className="text-center p-6 rounded-xl bg-[#f4f3f0] border border-black/5 hover:shadow-lg transition-shadow duration-200">
+                            <div className="text-center p-6 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10 hover:shadow-lg transition-shadow duration-200">
                                 <div className="text-3xl font-bold text-black mb-2">
                                     ${isNaN(estimatedMonthlyEarningsUsd) || !isFinite(estimatedMonthlyEarningsUsd) ? '0.00' : (estimatedMonthlyEarningsUsd / 30).toFixed(2)}
                                 </div>
@@ -420,11 +420,11 @@ export function ProfilePanel() {
                                     <div className="text-sm text-white/90 mb-2 font-medium">$SYN Balance</div>
                                     <div className="text-3xl font-bold">{rewards.synBalance.toLocaleString()}</div>
                                 </div>
-                                <div className="p-6 rounded-xl bg-[#f4f3f0] border border-black/5 hover:shadow-lg transition-shadow duration-200">
+                                <div className="p-6 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10 hover:shadow-lg transition-shadow duration-200">
                                     <div className="text-sm text-muted-foreground mb-2 font-medium">SGP Points</div>
                                     <div className="text-3xl font-bold text-black">{rewards.sgpPoints.toLocaleString()}</div>
                                 </div>
-                                <div className="p-6 rounded-xl bg-[#f4f3f0] border border-black/5 hover:shadow-lg transition-shadow duration-200">
+                                <div className="p-6 rounded-xl bg-[#f4f3f0] dark:bg-white/5 border border-black/5 dark:border-white/10 hover:shadow-lg transition-shadow duration-200">
                                     <div className="text-sm text-muted-foreground mb-2 font-medium">Current Tier</div>
                                     <div className="text-3xl font-bold text-transparent bg-clip-text bg-brand-gradient">
                                         {rewards.currentTier}

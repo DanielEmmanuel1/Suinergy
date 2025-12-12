@@ -22,13 +22,13 @@ const WalletConnectButton = dynamic(
         loading: () => (
             <button
                 type="button"
-                className="h-auto flex flex-col items-center justify-center gap-1 sm:gap-2 p-3 sm:p-4 md:p-6 hover:bg-[#f4f3f0] transition-all duration-200 border-2 rounded-lg bg-white border-black/10 cursor-pointer"
+                className="h-auto flex flex-col items-center justify-center gap-1 sm:gap-2 p-3 sm:p-4 md:p-6 hover:bg-[#f4f3f0] dark:hover:bg-white/5 transition-all duration-200 border-2 rounded-lg bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212] border-black/10 dark:border-white/10 cursor-pointer"
                 disabled
             >
                 <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-1 bg-[#f4f3f0] rounded-full flex items-center justify-center text-lg sm:text-xl font-semibold text-[#1055C9]">
                     W
                 </div>
-                <span className="text-[10px] sm:text-xs md:text-sm font-medium text-center text-black">
+                <span className="text-[10px] sm:text-xs md:text-sm font-medium text-center text-black dark:text-white">
                     WalletConnect
                 </span>
             </button>
@@ -206,9 +206,9 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white mx-2 sm:mx-4">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212] mx-2 sm:mx-4">
                 <DialogHeader className="px-1 sm:px-0">
-                    <DialogTitle className="text-xl sm:text-2xl md:text-3xl font-bold text-black font-heading">
+                    <DialogTitle className="text-xl sm:text-2xl md:text-3xl font-bold text-black dark:text-white font-heading">
                         Connect Your Wallet
                     </DialogTitle>
                     <DialogDescription className="text-xs sm:text-sm md:text-base text-muted-foreground">
@@ -219,7 +219,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                 <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-6 px-1 sm:px-0">
                     {/* Popular Wallets Section */}
                     <div>
-                        <h3 className="text-xs sm:text-sm font-semibold text-black mb-2 sm:mb-3">Popular Wallets</h3>
+                        <h3 className="text-xs sm:text-sm font-semibold text-black dark:text-white mb-2 sm:mb-3">Popular Wallets</h3>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                             {/* WalletConnect Button */}
                             <WalletConnectButton onSuccess={() => onOpenChange(false)} />
@@ -236,7 +236,7 @@ export function WalletConnectModal({ open, onOpenChange }: WalletConnectModalPro
                                         className={cn(
                                             "h-auto flex flex-col items-center justify-center gap-1 sm:gap-2 p-3 sm:p-4 md:p-6",
                                             "hover:bg-[#f4f3f0] transition-all duration-200",
-                                            "border-2 rounded-lg bg-white",
+                                            "border-2 rounded-lg bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]",
                                             wallet.detected
                                                 ? "border-black/10 hover:border-[#1055C9] cursor-pointer"
                                                 : "border-black/5 cursor-not-allowed",

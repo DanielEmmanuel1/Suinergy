@@ -72,8 +72,8 @@ export default function ChainMarketPage() {
                 <TabbedContainer
                     label={`${config.name} Market`}
                     className="w-full"
-                    tabClassName="bg-white"
-                    contentClassName="bg-white"
+                    tabClassName="bg-white dark:bg-gradient-to-r dark:from-[#1a1a1a] dark:to-[#121212]"
+                    contentClassName="bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212]"
                 >
                     {/* Market Header */}
                     <div className="relative mb-8 overflow-hidden rounded-2xl bg-brand-gradient p-8 text-white shadow-lg">

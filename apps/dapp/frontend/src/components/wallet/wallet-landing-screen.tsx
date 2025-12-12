@@ -14,7 +14,7 @@ export function WalletLandingScreen() {
             <div className="w-full max-w-2xl">
                 {/* Header Section */}
                 <div className="text-center mb-8 sm:mb-12">
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-3 sm:mb-4 font-heading leading-tight">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black dark:text-white mb-3 sm:mb-4 font-heading leading-tight">
                         Make your assets work for you
                     </h1>
                     <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl mx-auto">
@@ -30,16 +30,16 @@ export function WalletLandingScreen() {
                 <div className="relative flex flex-col w-full">
                     {/* Tab Header */}
                     <div className="flex items-end relative z-10 -mb-[1px] ml-px">
-                        <div className="bg-white px-6 py-2 rounded-t-xl border-t border-l border-r border-black/10">
-                            <span className="text-xs font-bold tracking-wider uppercase font-heading text-black/60">
+                        <div className="bg-white dark:bg-gradient-to-r dark:from-[#1a1a1a] dark:to-[#121212] px-6 py-2 rounded-t-xl border-t border-l border-r border-black/10 dark:border-white/10">
+                            <span className="text-xs font-bold tracking-wider uppercase font-heading text-black/60 dark:text-white/80">
                                 Connect Wallet
                             </span>
                         </div>
                     </div>
                     {/* Content */}
-                    <div className="relative z-0 bg-white rounded-b-xl rounded-tr-xl border border-black/10 p-6 sm:p-8 md:p-12">
+                    <div className="relative z-0 bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:to-[#121212] rounded-b-xl rounded-tr-xl border border-black/10 dark:border-white/10 p-6 sm:p-8 md:p-12">
                         <div className="text-center mb-6 sm:mb-8">
-                            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-black mb-2 sm:mb-3 font-heading">
+                            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-black dark:text-white mb-2 sm:mb-3 font-heading">
                                 Connect wallet to see your portfolio
                             </h2>
                             <p className="text-sm sm:text-base text-muted-foreground">

@@ -158,7 +158,7 @@ export function TransactionHistory({ transactions, showStrategy = true }: Transa
             <CardContent className="p-6">
                 {/* Collapsible Filter Section */}
                 {showFilters && (
-                    <div className="mb-6 p-6 rounded-xl bg-gradient-to-br from-[#f4f3f0] to-white border border-black/5">
+                    <div className="mb-6 p-6 rounded-xl bg-gradient-to-br from-[#f4f3f0] to-white dark:from-[#1a1a1a] dark:to-[#121212] border border-black/5 dark:border-white/10">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <Filter className="w-4 h-4 text-muted-foreground" />

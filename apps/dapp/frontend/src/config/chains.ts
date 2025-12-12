@@ -20,6 +20,8 @@ export interface Strategy {
         name: string
         allocation: number
         apy: number
+        apyContribution: number
+        yieldType: 'lending' | 'lp' | 'staking' | 'emissions' | 'structured'
         risk: 'low' | 'medium' | 'high'
         health: 'excellent' | 'good' | 'fair'
         color: string

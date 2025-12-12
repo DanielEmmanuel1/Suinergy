@@ -56,7 +56,7 @@ export function StrategyTable({ strategies }: StrategyTableProps) {
                         {strategies.map((strategy) => (
                             <tr key={strategy.id} className="hover:bg-[#f4f3f0]/50 transition-colors">
                                 <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
-                                    <div className="font-medium text-[#000000] text-xs sm:text-sm md:text-base">
+                                    <div className="font-medium text-[#000000] text-xs sm:text-sm md:text-base dark:text-white">
                                         <div>{strategy.name}</div>
                                         <div className="sm:hidden mt-1">
                                             <Badge variant="secondary" className="text-xs">{strategy.asset}</Badge>
@@ -83,13 +83,13 @@ export function StrategyTable({ strategies }: StrategyTableProps) {
                                     </div>
                                 </td>
                                 <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hidden md:table-cell">
-                                    <span className="text-[#000000] text-xs sm:text-sm">{strategy.apr}%</span>
+                                    <span className="text-[#000000] text-xs sm:text-sm dark:text-white">{strategy.apr}%</span>
                                 </td>
                                 <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hidden lg:table-cell">
-                                    <span className="text-[#000000] text-xs sm:text-sm">{formatCurrency(strategy.tvl)}</span>
+                                    <span className="text-[#000000] text-xs sm:text-sm dark:text-white">{formatCurrency(strategy.tvl)}</span>
                                 </td>
                                 <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hidden lg:table-cell">
-                                    <span className="text-[#000000] text-xs sm:text-sm">{formatCurrency(strategy.remaining)}</span>
+                                    <span className="text-[#000000] text-xs sm:text-sm dark:text-white">{formatCurrency(strategy.remaining)}</span>
                                 </td>
                                 <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hidden sm:table-cell">
                                     <Badge

@@ -144,12 +144,12 @@ export default function ChainMarketPage() {
                         <Card className="border-black/10 hover:shadow-lg transition-shadow duration-300">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                                    <Coins className="w-4 h-4" />
+                                    <Coins className="w-4 h-4 dark:text-white" />
                                     Total Earned
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-3xl font-bold text-black">
+                                <div className="text-3xl font-bold text-black dark:text-white">
                                     {formatCurrency(totalEarnedYields)}
                                 </div>
                                 <div className="text-xs text-muted-foreground mt-1">
@@ -167,7 +167,7 @@ export default function ChainMarketPage() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-3xl font-bold text-black">
+                                <div className="text-3xl font-bold text-black dark:text-white">
                                     {config.strategies.length}
                                 </div>
                                 <div className="text-xs text-muted-foreground mt-1">
@@ -213,7 +213,7 @@ export default function ChainMarketPage() {
                         <CardContent className="pt-6">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {/* Highest Yielding Strategy */}
-                                <div className="p-4 rounded-xl bg-[#f4f3f0] border border-black/5">
+                                <div className="p-4 rounded-xl bg-[#f4f3f0] border border-black/5 dark:bg-[#1a1a1a]">
                                     <div className="text-sm text-muted-foreground mb-2">Highest Yielding Strategy</div>
                                     <div className="text-xl font-bold text-transparent bg-clip-text bg-brand-gradient mb-1">
                                         {highestAPY.toFixed(2)}% APY
@@ -224,9 +224,9 @@ export default function ChainMarketPage() {
                                 </div>
 
                                 {/* Total Depositors */}
-                                <div className="p-4 rounded-xl bg-[#f4f3f0] border border-black/5">
+                                <div className="p-4 rounded-xl bg-[#f4f3f0] border border-black/5 dark:bg-[#1a1a1a]">
                                     <div className="text-sm text-muted-foreground mb-2">Total Depositors</div>
-                                    <div className="text-xl font-bold text-black mb-1">
+                                    <div className="text-xl font-bold text-black mb-1 dark:text-white">
                                         {Math.floor(totalTVL / 50000).toLocaleString()}
                                     </div>
                                     <div className="text-xs text-muted-foreground">
@@ -235,9 +235,9 @@ export default function ChainMarketPage() {
                                 </div>
 
                                 {/* 24h Volume */}
-                                <div className="p-4 rounded-xl bg-[#f4f3f0] border border-black/5">
+                                <div className="p-4 rounded-xl bg-[#f4f3f0] border border-black/5 dark:bg-[#1a1a1a]">
                                     <div className="text-sm text-muted-foreground mb-2">24h Volume</div>
-                                    <div className="text-xl font-bold text-black mb-1">
+                                    <div className="text-xl font-bold text-black mb-1 dark:text-white">
                                         {formatCurrency(totalTVL * 0.15)}
                                     </div>
                                     <div className="text-xs text-muted-foreground">

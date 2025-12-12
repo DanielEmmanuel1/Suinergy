@@ -1247,7 +1247,7 @@ export default function StrategyDetailPage() {
                                             <CardTitle className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground leading-tight">Total Supplied</CardTitle>
                                         </CardHeader>
                                         <CardContent className="px-2 sm:px-3 md:px-6 pb-2 sm:pb-3 md:pb-6 pt-1 sm:pt-2">
-                                            <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-black leading-tight">{formatCurrency(strategy.tvl)}</div>
+                                            <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-black dark:text-white leading-tight">{formatCurrency(strategy.tvl)}</div>
                                         </CardContent>
                                     </Card>
                                     <Card className="border-black/10">
@@ -1255,7 +1255,7 @@ export default function StrategyDetailPage() {
                                             <CardTitle className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground leading-tight">Total Borrowed</CardTitle>
                                         </CardHeader>
                                         <CardContent className="px-2 sm:px-3 md:px-6 pb-2 sm:pb-3 md:pb-6 pt-1 sm:pt-2">
-                                            <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-black leading-tight">{formatCurrency(totalBorrowed)}</div>
+                                            <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-black dark:text-white leading-tight">{formatCurrency(totalBorrowed)}</div>
                                         </CardContent>
                                     </Card>
                                     <Card className="border-black/10">
@@ -1263,7 +1263,7 @@ export default function StrategyDetailPage() {
                                             <CardTitle className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground leading-tight">Utilization</CardTitle>
                                         </CardHeader>
                                         <CardContent className="px-2 sm:px-3 md:px-6 pb-2 sm:pb-3 md:pb-6 pt-1 sm:pt-2">
-                                            <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-black leading-tight">{utilization.toFixed(2)}%</div>
+                                            <div className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-black dark:text-white leading-tight">{utilization.toFixed(2)}%</div>
                                         </CardContent>
                                     </Card>
                                     <Card className="bg-brand-gradient border-transparent">
@@ -1325,7 +1325,7 @@ export default function StrategyDetailPage() {
                                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
                                                 <XAxis
                                                     dataKey="date"
-                                                    stroke="#000000"
+                                                    className="dark:stroke-white stroke-black"
                                                     style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
@@ -1333,7 +1333,7 @@ export default function StrategyDetailPage() {
                                                 />
                                                 <YAxis
                                                     yAxisId="left"
-                                                    stroke="#000000"
+                                                    className="dark:stroke-white stroke-black"
                                                     style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
@@ -1343,7 +1343,7 @@ export default function StrategyDetailPage() {
                                                 <YAxis
                                                     yAxisId="right"
                                                     orientation="right"
-                                                    stroke="#000000"
+                                                    className="dark:stroke-white stroke-black"
                                                     style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
@@ -1447,14 +1447,14 @@ export default function StrategyDetailPage() {
                                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
                                                 <XAxis
                                                     dataKey="date"
-                                                    stroke="#000000"
+                                                    className="dark:stroke-white stroke-black"
                                                     style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
                                                     interval="preserveStartEnd"
                                                 />
                                                 <YAxis
-                                                    stroke="#000000"
+                                                    className="dark:stroke-white stroke-black"
                                                     style={{ fontSize: '10px' }}
                                                     axisLine={false}
                                                     tickLine={false}
@@ -1481,19 +1481,19 @@ export default function StrategyDetailPage() {
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 mt-2 sm:mt-3 md:mt-4">
                                             <div>
                                                 <div className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mb-0.5 sm:mb-1 leading-tight">1D Growth</div>
-                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black leading-tight">+{formatCurrency(4270)}</div>
+                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black dark:text-white leading-tight">+{formatCurrency(4270)}</div>
                                             </div>
                                             <div>
                                                 <div className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mb-0.5 sm:mb-1 leading-tight">7D Growth</div>
-                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black leading-tight">+{formatCurrency(162410)}</div>
+                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black dark:text-white leading-tight">+{formatCurrency(162410)}</div>
                                             </div>
                                             <div>
                                                 <div className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mb-0.5 sm:mb-1 leading-tight">30D Growth</div>
-                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black leading-tight">+{formatCurrency(1740000)}</div>
+                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black dark:text-white leading-tight">+{formatCurrency(1740000)}</div>
                                             </div>
                                             <div>
                                                 <div className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mb-0.5 sm:mb-1 leading-tight">180D Growth</div>
-                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black leading-tight">+{formatCurrency(3320000)}</div>
+                                                <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black dark:text-white leading-tight">+{formatCurrency(3320000)}</div>
                                             </div>
                                         </div>
                                     </CardContent>
@@ -1522,7 +1522,7 @@ export default function StrategyDetailPage() {
                                                     {strategy.platforms.map((platform: any) => (
                                                         <tr key={platform.id} className="hover:bg-[#f4f3f0]/50 transition-colors">
                                                             <td className="px-3 sm:px-4 py-2 sm:py-3">
-                                                                <div className="font-medium text-black text-xs sm:text-sm">
+                                                                <div className="font-medium text-black dark:text-white text-xs sm:text-sm">
                                                                     <div>{platform.name}</div>
                                                                     <div className="sm:hidden mt-1">
                                                                         <div className="w-6 h-6 rounded-lg bg-brand-gradient inline-flex items-center justify-center text-white font-bold text-xs mr-2">
@@ -1538,13 +1538,13 @@ export default function StrategyDetailPage() {
                                                                 </div>
                                                             </td>
                                                             <td className="px-3 sm:px-4 py-2 sm:py-3">
-                                                                <div className="font-semibold text-black text-xs sm:text-sm">{platform.allocation}%</div>
+                                                                <div className="font-semibold text-black dark:text-white text-xs sm:text-sm">{platform.allocation}%</div>
                                                             </td>
                                                             <td className="px-3 sm:px-4 py-2 sm:py-3 hidden md:table-cell">
-                                                                <div className="text-black text-xs sm:text-sm">{formatCurrency(platform.supplied)}</div>
+                                                                <div className="text-black dark:text-white text-xs sm:text-sm">{formatCurrency(platform.supplied)}</div>
                                                             </td>
                                                             <td className="px-3 sm:px-4 py-2 sm:py-3 hidden lg:table-cell">
-                                                                <div className="text-black text-xs sm:text-sm">{platform.utilization.toFixed(2)}%</div>
+                                                                <div className="text-black dark:text-white text-xs sm:text-sm">{platform.utilization.toFixed(2)}%</div>
                                                             </td>
                                                             <td className="px-3 sm:px-4 py-2 sm:py-3">
                                                                 <div className="font-semibold text-transparent bg-clip-text bg-brand-gradient text-xs sm:text-sm">
@@ -1721,11 +1721,11 @@ export default function StrategyDetailPage() {
                                     <CardContent className="space-y-2 sm:space-y-3 text-xs sm:text-sm px-3 sm:px-6 pb-4 sm:pb-6">
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Token</span>
-                                            <span className="font-medium text-black">{strategy.asset}</span>
+                                            <span className="font-medium text-black dark:text-white">{strategy.asset}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Risk Manager</span>
-                                            <span className="font-medium text-black">Suinergy</span>
+                                            <span className="font-medium text-black dark:text-white">Suinergy</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Vault Profile</span>
@@ -1733,7 +1733,7 @@ export default function StrategyDetailPage() {
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Deployment Date</span>
-                                            <span className="font-medium text-black">{new Date(strategy.deploymentDate).toLocaleDateString()}</span>
+                                            <span className="font-medium text-black dark:text-white">{new Date(strategy.deploymentDate).toLocaleDateString()}</span>
                                         </div>
                                         <Separator />
                                         <div className="flex justify-between">
@@ -1742,11 +1742,11 @@ export default function StrategyDetailPage() {
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Management Fee</span>
-                                            <span className="font-medium text-black">{strategy.managementFee}%</span>
+                                            <span className="font-medium text-black dark:text-white">{strategy.managementFee}%</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Performance Fee</span>
-                                            <span className="font-medium text-black">{strategy.performanceFee}%</span>
+                                            <span className="font-medium text-black dark:text-white">{strategy.performanceFee}%</span>
                                         </div>
                                     </CardContent>
                                 </Card>

@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
-import { 
-    TrendingUp, 
-    Activity, 
-    Info, 
-    Zap, 
-    RefreshCw, 
+import {
+    TrendingUp,
+    Activity,
+    Info,
+    Zap,
+    RefreshCw,
     Target,
     CheckCircle2,
     AlertCircle
@@ -107,7 +107,7 @@ export function StrategyTransparency({ strategyId, strategyName, platforms }: St
                                     </div>
 
                                     {/* Platform Name */}
-                                    <div className="font-semibold text-black mb-1">{platform.name}</div>
+                                    <div className="font-semibold text-black dark:text-white mb-1">{platform.name}</div>
 
                                     {/* Allocation Percentage */}
                                     <div className="text-3xl font-bold text-transparent bg-clip-text bg-brand-gradient mb-2">
@@ -117,7 +117,7 @@ export function StrategyTransparency({ strategyId, strategyName, platforms }: St
                                     {/* APY Contribution */}
                                     <div className="flex items-center justify-between text-sm mb-3">
                                         <span className="text-muted-foreground">APY Contribution</span>
-                                        <span className="font-semibold text-black">{platform.apyContribution.toFixed(2)}%</span>
+                                        <span className="font-semibold text-black dark:text-white">{platform.apyContribution.toFixed(2)}%</span>
                                     </div>
 
                                     {/* Yield Type Badge */}
@@ -127,7 +127,7 @@ export function StrategyTransparency({ strategyId, strategyName, platforms }: St
 
                                     {/* Platform APY */}
                                     <div className="text-xs text-muted-foreground">
-                                        Platform APY: <span className="font-medium text-black">{platform.apy}%</span>
+                                        Platform APY: <span className="font-medium text-black dark:text-white">{platform.apy}%</span>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -173,7 +173,7 @@ export function StrategyTransparency({ strategyId, strategyName, platforms }: St
                                     <Legend
                                         verticalAlign="bottom"
                                         height={36}
-                                        formatter={(value) => <span className="text-xs text-black">{value}</span>}
+                                        formatter={(value) => <span className="text-xs text-black dark:text-white">{value}</span>}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
@@ -196,10 +196,10 @@ export function StrategyTransparency({ strategyId, strategyName, platforms }: St
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: platform.color }} />
-                                                    <span className="text-sm font-medium text-black">{platform.name}</span>
+                                                    <span className="text-sm font-medium text-black dark:text-white">{platform.name}</span>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-sm font-semibold text-black">{platform.userAllocation.toFixed(1)}%</div>
+                                                    <div className="text-sm font-semibold text-black dark:text-white">{platform.userAllocation.toFixed(1)}%</div>
                                                     <div className="text-xs text-muted-foreground">
                                                         ${((userPosition!.amount * platform.userAllocation) / 100).toLocaleString()}
                                                     </div>
@@ -219,7 +219,7 @@ export function StrategyTransparency({ strategyId, strategyName, platforms }: St
                                     <Separator className="my-3" />
                                     <div className="flex items-center justify-between pt-2">
                                         <span className="text-sm text-muted-foreground">Total Position</span>
-                                        <span className="text-lg font-bold text-black">
+                                        <span className="text-lg font-bold text-black dark:text-white">
                                             ${userPosition!.amount.toLocaleString()}
                                         </span>
                                     </div>
@@ -256,7 +256,7 @@ export function StrategyTransparency({ strategyId, strategyName, platforms }: St
                                     <Zap className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <div className="font-semibold text-black mb-1">Auto-Compounding</div>
+                                    <div className="font-semibold text-black dark:text-white mb-1">Auto-Compounding</div>
                                     <div className="text-sm text-muted-foreground">
                                         Rewards are automatically reinvested to maximize compound growth
                                     </div>
@@ -267,7 +267,7 @@ export function StrategyTransparency({ strategyId, strategyName, platforms }: St
                                     <RefreshCw className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <div className="font-semibold text-black mb-1">Periodic Rebalancing</div>
+                                    <div className="font-semibold text-black dark:text-white mb-1">Periodic Rebalancing</div>
                                     <div className="text-sm text-muted-foreground">
                                         Positions are rebalanced when yields shift to maintain optimal allocation
                                     </div>
@@ -278,7 +278,7 @@ export function StrategyTransparency({ strategyId, strategyName, platforms }: St
                                     <TrendingUp className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <div className="font-semibold text-black mb-1">Yield Harvesting</div>
+                                    <div className="font-semibold text-black dark:text-white mb-1">Yield Harvesting</div>
                                     <div className="text-sm text-muted-foreground">
                                         Emissions and fees are harvested and distributed across platforms
                                     </div>
@@ -289,7 +289,7 @@ export function StrategyTransparency({ strategyId, strategyName, platforms }: St
                                     <Target className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <div className="font-semibold text-black mb-1">Target Allocation</div>
+                                    <div className="font-semibold text-black dark:text-white mb-1">Target Allocation</div>
                                     <div className="text-sm text-muted-foreground">
                                         Strategy maintains target allocations to stabilize APY performance
                                     </div>

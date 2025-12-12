@@ -104,7 +104,7 @@ export function StrategyList({ strategies, chainName }: StrategyListProps) {
                                 </p>
                             </div>
                             <div>
-                                <div className="font-semibold text-black mb-1">APR (Annual Percentage Rate)</div>
+                                <div className="font-semibold text-black dark:text-white mb-1">APR (Annual Percentage Rate)</div>
                                 <p className="text-muted-foreground">
                                     Simple interest rate without compounding. The base rate before reinvestment effects.
                                 </p>

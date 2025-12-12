@@ -65,7 +65,7 @@ export function StrategyGrid({ strategies }: StrategyGridProps) {
                     <CardHeader>
                         <div className="flex items-start justify-between">
                             <div>
-                                <CardTitle className="text-lg text-black">{strategy.name}</CardTitle>
+                                <CardTitle className="text-lg text-black dark:text-white">{strategy.name}</CardTitle>
                                 <Badge variant="secondary" className="mt-2">
                                     {strategy.asset}
                                 </Badge>
@@ -102,7 +102,7 @@ export function StrategyGrid({ strategies }: StrategyGridProps) {
                                 )}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                                APR: <span className="text-black">{strategy.apr}%</span>
+                                APR: <span className="text-black dark:text-white">{strategy.apr}%</span>
                             </div>
                         </div>
 
@@ -110,7 +110,7 @@ export function StrategyGrid({ strategies }: StrategyGridProps) {
                         <div>
                             <div className="flex items-center justify-between text-sm mb-2">
                                 <span className="text-muted-foreground">Capacity</span>
-                                <span className="text-black font-medium">
+                                <span className="text-black dark:text-white font-medium">
                                     {formatCurrency(strategy.tvl)} / {formatCurrency(strategy.capacity)}
                                 </span>
                             </div>

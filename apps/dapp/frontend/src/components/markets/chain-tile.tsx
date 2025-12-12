@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ChainConfig } from '@/config/chains'
 import { cn } from '@/lib/utils'
 
@@ -18,8 +19,14 @@ export function ChainTile({ chain }: ChainTileProps) {
 
                 <CardHeader>
                     <div className="flex items-center justify-between mb-2">
-                        <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center text-white text-xl font-bold bg-gradient-to-br shadow-md", chain.color)}>
-                            {chain.name.charAt(0)}
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white border border-black/5 shadow-md group-hover:scale-110 transition-transform duration-200">
+                            <Image
+                                src={`/chains/${chain.id}.png`}
+                                alt={`${chain.name} logo`}
+                                width={32}
+                                height={32}
+                                className="object-contain"
+                            />
                         </div>
                         <div className="bg-secondary/50 rounded-full p-2 group-hover:bg-brand-gradient group-hover:text-white transition-colors">
                             <ArrowRight className="w-4 h-4" />

@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 0 0% 3.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 3.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 3.9%;
+        --primary: 0 0% 9%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 0 0% 96.1%;
+        --secondary-foreground: 0 0% 9%;
+        --muted: 0 0% 96.1%;
+        --muted-foreground: 0 0% 45.1%;
+        --accent: 0 0% 96.1%;
+        --accent-foreground: 0 0% 9%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 89.8%;
+        --input: 0 0% 89.8%;
+        --ring: 0 0% 3.9%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        --background: 220 13% 7%;
+        --foreground: 0 0% 100%;
+        --card: 220 13% 7%;
+        --card-foreground: 0 0% 100%;
+        --popover: 220 13% 10%;
+        --popover-foreground: 0 0% 100%;
+        --primary: 0 0% 100%;
+        --primary-foreground: 220 13% 7%;
+        --secondary: 220 13% 15%;
+        --secondary-foreground: 0 0% 100%;
+        --muted: 220 13% 15%;
+        --muted-foreground: 0 0% 70%;
+        --accent: 220 13% 15%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 220 13% 20%;
+        --input: 220 13% 20%;
+        --ring: 0 0% 83.1%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* Dark mode gradient enhancements */
+@layer utilities {
+    .dark .gradient-card {
+        background: linear-gradient(135deg, rgba(185, 43, 39, 0.1) 0%, rgba(21, 101, 192, 0.1) 100%);
+        border: 1px solid rgba(185, 43, 39, 0.2);
+    }
+
+    .dark .gradient-card-hover:hover {
+        background: linear-gradient(135deg, rgba(185, 43, 39, 0.15) 0%, rgba(21, 101, 192, 0.15) 100%);
+        border-color: rgba(185, 43, 39, 0.3);
+    }
+
+    .dark .gradient-glow {
+        box-shadow: 0 0 20px rgba(185, 43, 39, 0.1), 0 0 40px rgba(21, 101, 192, 0.1);
+    }
+}
